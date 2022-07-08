@@ -29,6 +29,8 @@ public interface HasNativeMergeMapArgs {
 
   Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>> getNativeLibraryMergeSequence();
 
+  Optional<ImmutableList<Pattern>> getNativeLibraryMergeSequenceBlocklist();
+
   Optional<BuildTarget> getNativeLibraryMergeGlue();
 
   Optional<BuildTarget> getNativeLibraryMergeCodeGenerator();

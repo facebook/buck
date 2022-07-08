@@ -1158,8 +1158,10 @@ android_binary(
     native_library_merge_code_generator = "//native/merge:codegen",
     native_library_merge_glue = "//native/merge:glue_1",
     native_library_merge_sequence = [
-        ("no-merge", [".*/merge:B"]),
         ("lib1.so", [".*/merge:A"]),
+    ],
+    native_library_merge_sequence_blocklist = [
+        ".*/merge:B",
     ],
     deps = [
         "//java/com/sample/lib:lib",

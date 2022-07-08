@@ -204,6 +204,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.isIgnoreAaptProguardConfig(),
         args.getNativeLibraryMergeMap(),
         args.getNativeLibraryMergeSequence(),
+        args.getNativeLibraryMergeSequenceBlocklist(),
         args.getNativeLibraryMergeGlue(),
         args.getNativeLibraryMergeCodeGenerator(),
         args.getNativeLibraryMergeLocalizedSymbols(),

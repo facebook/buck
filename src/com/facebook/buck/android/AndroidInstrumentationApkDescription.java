@@ -260,6 +260,7 @@ public class AndroidInstrumentationApkDescription
             false,
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeSequence */ Optional.empty(),
+            /* nativeLibraryMergeSequenceBlocklist */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
             Optional.empty(),

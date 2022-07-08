@@ -92,6 +92,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final Optional<ImmutableMap<String, ImmutableList<Pattern>>> nativeLibraryMergeMap;
   private final Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>>
       nativeLibraryMergeSequence;
+  private final Optional<ImmutableList<Pattern>> nativeLibraryMergeSequenceBlocklist;
   private final Optional<BuildTarget> nativeLibraryMergeGlue;
   private final Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols;
   private final ImmutableList<Pattern> relinkerWhitelist;
@@ -111,6 +112,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       DownwardApiConfig downwardApiConfig,
       Optional<ImmutableMap<String, ImmutableList<Pattern>>> nativeLibraryMergeMap,
       Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>> nativeLibraryMergeSequence,
+      Optional<ImmutableList<Pattern>> nativeLibraryMergeSequenceBlocklist,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       RelinkerMode relinkerMode,
@@ -128,6 +130,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.downwardApiConfig = downwardApiConfig;
     this.nativeLibraryMergeMap = nativeLibraryMergeMap;
     this.nativeLibraryMergeSequence = nativeLibraryMergeSequence;
+    this.nativeLibraryMergeSequenceBlocklist = nativeLibraryMergeSequenceBlocklist;
     this.nativeLibraryMergeGlue = nativeLibraryMergeGlue;
     this.relinkerMode = relinkerMode;
     this.relinkerWhitelist = relinkerWhitelist;
@@ -269,6 +272,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               nativePlatforms,
               nativeLibraryMergeMap,
               nativeLibraryMergeSequence,
+              nativeLibraryMergeSequenceBlocklist,
               nativeLibraryMergeGlue,
               nativeLibraryMergeLocalizedSymbols,
               nativeLinkables);

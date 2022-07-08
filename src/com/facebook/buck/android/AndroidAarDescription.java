@@ -294,6 +294,7 @@ public class AndroidAarDescription
             downwardApiConfig,
             args.getNativeLibraryMergeMap(),
             args.getNativeLibraryMergeSequence(),
+            args.getNativeLibraryMergeSequenceBlocklist(),
             args.getNativeLibraryMergeGlue(),
             args.getNativeLibraryMergeLocalizedSymbols(),
             args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,

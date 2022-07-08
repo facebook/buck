@@ -120,8 +120,6 @@ import org.immutables.value.Value;
  * Future work could identify cases where the original build rules are sufficient.
  */
 class NativeLibraryMergeEnhancer {
-  private static String NO_MERGE = "no-merge";
-
   private NativeLibraryMergeEnhancer() {}
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -135,6 +133,7 @@ class NativeLibraryMergeEnhancer {
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Optional<ImmutableMap<String, ImmutableList<Pattern>>> mergeMap,
       Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>> mergeSequence,
+      Optional<ImmutableList<Pattern>> mergeSequenceBlocklist,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       ImmutableMap<TargetCpuType, NativeLinkableEnhancementResult> nativeLinkables) {
@@ -198,7 +197,13 @@ class NativeLibraryMergeEnhancer {
       ImmutableMap<NativeLinkable, APKModule> linkableAssetMap = linkableAssetMapBuilder.build();
       Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
           makeConstituentMap(
-              buildTarget, mergeMap, mergeSequence, graphBuilder, allLinkables, linkableAssetMap);
+              buildTarget,
+              mergeMap,
+              mergeSequence,
+              mergeSequenceBlocklist,
+              graphBuilder,
+              allLinkables,
+              linkableAssetMap);
 
       Iterable<MergedNativeLibraryConstituents> orderedConstituents =
           getOrderedMergedConstituents(buildTarget, graphBuilder, linkableMembership);
@@ -340,6 +345,7 @@ class NativeLibraryMergeEnhancer {
       BuildTarget buildTarget,
       Optional<ImmutableMap<String, ImmutableList<Pattern>>> mergeMap,
       Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>> mergeSequence,
+      Optional<ImmutableList<Pattern>> mergeSequenceBlocklist,
       ActionGraphBuilder graphBuilder,
       Iterable<NativeLinkable> allLinkables,
       ImmutableMap<NativeLinkable, APKModule> linkableAssetMap) {
@@ -355,7 +361,11 @@ class NativeLibraryMergeEnhancer {
     } else {
       allConstituents =
           makeConstituentListFromMergeSequence(
-              mergeSequence.get(), graphBuilder, allLinkables, linkableAssetMap);
+              mergeSequence.get(),
+              mergeSequenceBlocklist.orElse(ImmutableList.of()),
+              graphBuilder,
+              allLinkables,
+              linkableAssetMap);
     }
 
     Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership = new HashMap<>();
@@ -435,6 +445,7 @@ class NativeLibraryMergeEnhancer {
 
   private static List<MergedNativeLibraryConstituents> makeConstituentListFromMergeSequence(
       final ImmutableList<Pair<String, ImmutableList<Pattern>>> mergeSequence,
+      final ImmutableList<Pattern> mergeSequenceBlocklist,
       final ActionGraphBuilder graphBuilder,
       final Iterable<NativeLinkable> allLinkables,
       final ImmutableMap<NativeLinkable, APKModule> linkableAssetMap) {
@@ -454,23 +465,8 @@ class NativeLibraryMergeEnhancer {
     // - NativeLinkables without NativeLinkTargetInputs cannot be merged.
     // - Non-asset linkables are rare and often cannot be merged with other libraries. It's
     //   expeditious to simply not merge them.
-    // - Linkables matching patterns from "no-merge" merge sequence steps (DEPRECATED) are
-    //   explicitly excluded from merging.
+    // - Linkables in native_library_merge_sequence_blocklist are explicitly excluded from merging.
     final ImmutableSet.Builder<NativeLinkable> excludedLinkablesBuilder = ImmutableSet.builder();
-
-    final ImmutableList.Builder<Pattern> mergeSequenceBlocklistBuilder = ImmutableList.builder();
-    for (Pair<String, ImmutableList<Pattern>> mergedNativeLibraryDefinition : mergeSequence) {
-      String mergedSoName = mergedNativeLibraryDefinition.getFirst();
-      List<Pattern> rootTargetPatterns = mergedNativeLibraryDefinition.getSecond();
-
-      if (!NO_MERGE.equals(mergedSoName)) {
-        continue;
-      }
-
-      mergeSequenceBlocklistBuilder.addAll(rootTargetPatterns);
-    }
-    final ImmutableList<Pattern> mergeSequenceBlocklist = mergeSequenceBlocklistBuilder.build();
-
     for (NativeLinkable linkable : allLinkables) {
       if (!linkableAssetMap.containsKey(linkable)
           || !doesLinkableHaveLinkTargetInput(linkable, graphBuilder)) {
@@ -495,10 +491,6 @@ class NativeLibraryMergeEnhancer {
     for (Pair<String, ImmutableList<Pattern>> mergedNativeLibraryDefinition : mergeSequence) {
       String mergedSoName = mergedNativeLibraryDefinition.getFirst();
       List<Pattern> rootTargetPatterns = mergedNativeLibraryDefinition.getSecond();
-
-      if (NO_MERGE.equals(mergedSoName)) {
-        continue;
-      }
 
       final ImmutableSet.Builder<NativeLinkable> newMergedLinkablesBuilder = ImmutableSet.builder();
       final ImmutableSet.Builder<NativeLinkable> newUnmergedLinkablesBuilder =
