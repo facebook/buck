@@ -17,6 +17,7 @@
 package com.facebook.buck.remoteexecution.event.listener;
 
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
 import com.facebook.buck.remoteexecution.event.CasBlobUploadEvent.Finished;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
 /** Remote execution events sent to the event bus. */
 public class RemoteExecutionEventListener
     implements BuckEventListener, RemoteExecutionStatsProvider {
+  private static final Logger LOG = Logger.get(RemoteExecutionEventListener.class);
   private final Map<State, LongAdder> actionStateCount;
   private final LongAdder totalBuildRules;
 
@@ -59,12 +61,22 @@ public class RemoteExecutionEventListener
   private final LongAdder downloadLargeBytes;
   private final LongAdder downloadsSmall;
   private final LongAdder downloadSmallBytes;
+  private final LongAdder downloadsArtifactsCache;
+  private final LongAdder downloadArtifactsCacheBytes;
+  private final LongAdder downloadsRemoteExecutionCache;
+  private final LongAdder downloadRemoteExecutionCacheBytes;
+
   private final LongAdder uploads;
   private final LongAdder uploadBytes;
   private final LongAdder uploadsLarge;
   private final LongAdder uploadLargeBytes;
   private final LongAdder uploadsSmall;
   private final LongAdder uploadSmallBytes;
+  private final LongAdder uploadsArtifactsCache;
+  private final LongAdder uploadArtifactsCacheBytes;
+  private final LongAdder uploadsRemoteExecutionCache;
+  private final LongAdder uploadRemoteExecutionCacheBytes;
+
   private final LongAdder findMissingCount;
   private final LongAdder findMissingSmallCount;
   private final LongAdder findMissingLargeCount;
@@ -169,12 +181,30 @@ public class RemoteExecutionEventListener
     this.downloadLargeBytes = new LongAdder();
     this.downloadsSmall = new LongAdder();
     this.downloadSmallBytes = new LongAdder();
+    // *ArtifactsCache* and *RemoteExecution* are used to differentiate
+    // downloads for artifact cache CAS and downloads for Remote execution CAS.
+    // downloadsArtifactsCache + downloadsRemoteExecutionCache should be equal to downloads
+    // (same for *Bytes fields).
+    this.downloadsArtifactsCache = new LongAdder();
+    this.downloadArtifactsCacheBytes = new LongAdder();
+    this.downloadsRemoteExecutionCache = new LongAdder();
+    this.downloadRemoteExecutionCacheBytes = new LongAdder();
+
     this.uploads = new LongAdder();
     this.uploadBytes = new LongAdder();
     this.uploadsLarge = new LongAdder();
     this.uploadLargeBytes = new LongAdder();
     this.uploadsSmall = new LongAdder();
     this.uploadSmallBytes = new LongAdder();
+    // *ArtifactsCache* and *RemoteExecution* are used to differentiate
+    // uploads for artifact cache CAS and downloads for Remote execution CAS.
+    // uploadsArtifactsCache + uploadsRemoteExecutionCache should be equal to uploads
+    // (same for *Bytes fields).
+    this.uploadsArtifactsCache = new LongAdder();
+    this.uploadArtifactsCacheBytes = new LongAdder();
+    this.uploadsRemoteExecutionCache = new LongAdder();
+    this.uploadRemoteExecutionCacheBytes = new LongAdder();
+
     this.findMissingCount = new LongAdder();
     this.findMissingSmallCount = new LongAdder();
     this.findMissingLargeCount = new LongAdder();
@@ -228,6 +258,20 @@ public class RemoteExecutionEventListener
     uploadLargeBytes.add(event.getStartedEvent().getLargeSizeBytes());
     uploadsSmall.add(event.getStartedEvent().getSmallBlobCount());
     uploadSmallBytes.add(event.getStartedEvent().getSmallSizeBytes());
+
+    switch (event.getStartedEvent().getBlobFetcherType()) {
+      case ArtifactsCache:
+        uploadsArtifactsCache.add(event.getStartedEvent().getBlobCount());
+        uploadArtifactsCacheBytes.add(event.getStartedEvent().getSizeBytes());
+        break;
+      case RemoteExecution:
+        uploadsRemoteExecutionCache.add(event.getStartedEvent().getBlobCount());
+        uploadRemoteExecutionCacheBytes.add(event.getStartedEvent().getSizeBytes());
+        break;
+      default:
+        LOG.warn(
+            "unknown blob fetcher type " + event.getStartedEvent().getBlobFetcherType().name());
+    }
   }
 
   /** Event specific subscriber method. */
@@ -240,6 +284,20 @@ public class RemoteExecutionEventListener
     downloadLargeBytes.add(event.getStartedEvent().getLargeSizeBytes());
     downloadsSmall.add(event.getStartedEvent().getSmallBlobCount());
     downloadSmallBytes.add(event.getStartedEvent().getSmallSizeBytes());
+
+    switch (event.getStartedEvent().getBlobFetcherType()) {
+      case ArtifactsCache:
+        downloadsArtifactsCache.add(event.getStartedEvent().getBlobCount());
+        downloadArtifactsCacheBytes.add(event.getStartedEvent().getSizeBytes());
+        break;
+      case RemoteExecution:
+        downloadsRemoteExecutionCache.add(event.getStartedEvent().getBlobCount());
+        downloadRemoteExecutionCacheBytes.add(event.getStartedEvent().getSizeBytes());
+        break;
+      default:
+        LOG.warn(
+            "unknown blob fetcher type " + event.getStartedEvent().getBlobFetcherType().name());
+    }
   }
 
   @Subscribe
@@ -380,8 +438,48 @@ public class RemoteExecutionEventListener
   }
 
   @Override
+  public int getArtifactCacheCasDownloads() {
+    return downloadsArtifactsCache.intValue();
+  }
+
+  @Override
+  public long getArtifactCacheCasDownloadSizeBytes() {
+    return downloadArtifactsCacheBytes.sum();
+  }
+
+  @Override
+  public int getRemoteExecutionCasDownloads() {
+    return downloadsRemoteExecutionCache.intValue();
+  }
+
+  @Override
+  public long getRemoteExecutionCasDownloadSizeBytes() {
+    return downloadRemoteExecutionCacheBytes.sum();
+  }
+
+  @Override
   public int getCasUploads() {
     return uploads.intValue();
+  }
+
+  @Override
+  public int getArtifactCacheCasUploads() {
+    return uploadsArtifactsCache.intValue();
+  }
+
+  @Override
+  public long getArtifactCacheCasUploadSizeBytes() {
+    return uploadArtifactsCacheBytes.sum();
+  }
+
+  @Override
+  public int getRemoteExecutionCasUploads() {
+    return uploadsRemoteExecutionCache.intValue();
+  }
+
+  @Override
+  public long getRemoteExecutionCasUploadSizeBytes() {
+    return uploadRemoteExecutionCacheBytes.sum();
   }
 
   @Override

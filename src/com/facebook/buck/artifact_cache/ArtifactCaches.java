@@ -40,6 +40,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
+import com.facebook.buck.remoteexecution.event.GrpcAsyncBlobFetcherType;
 import com.facebook.buck.remoteexecution.grpc.GrpcChannelFactory;
 import com.facebook.buck.remoteexecution.grpc.GrpcContentAddressableStorageClient;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
@@ -737,7 +738,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                     new GrpcProtocol(),
                     buckEventBus,
                     metadata,
-                    strategyConfig.getOutputMaterializationThreads()));
+                    strategyConfig.getOutputMaterializationThreads(),
+                    GrpcAsyncBlobFetcherType.ArtifactsCache));
       } catch (SSLException e) {
         LOG.error(e, "Exception creating GRPC channel, not enabling CAS client.");
       }

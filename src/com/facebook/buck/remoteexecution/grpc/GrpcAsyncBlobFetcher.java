@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.event.CasBlobBatchInfo;
 import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
+import com.facebook.buck.remoteexecution.event.GrpcAsyncBlobFetcherType;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.Scope;
@@ -57,6 +58,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
   private final BuckEventBus buckEventBus;
   private final Protocol protocol;
   private final int casDeadline;
+  private final GrpcAsyncBlobFetcherType blobFetcherType;
 
   public GrpcAsyncBlobFetcher(
       String instanceName,
@@ -65,13 +67,15 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
       BuckEventBus buckEventBus,
       RemoteExecutionMetadata metadata,
       Protocol protocol,
-      int casDeadline) {
+      int casDeadline,
+      GrpcAsyncBlobFetcherType blobFetcherType) {
     this.instanceName = instanceName;
     this.storageStub = GrpcHeaderHandler.wrapStubToSendMetadata(storageStub, metadata);
     this.byteStreamStub = GrpcHeaderHandler.wrapStubToSendMetadata(byteStreamStub, metadata);
     this.buckEventBus = buckEventBus;
     this.protocol = protocol;
     this.casDeadline = casDeadline;
+    this.blobFetcherType = blobFetcherType;
   }
 
   @Override
@@ -96,7 +100,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
     CasBlobBatchInfo info = new CasBlobBatchInfo(new long[] {digest.getSize()});
     return closeScopeWhenFutureCompletes(
-        CasBlobDownloadEvent.sendEvent(buckEventBus, info),
+        CasBlobDownloadEvent.sendEvent(buckEventBus, info, blobFetcherType),
         Futures.transform(
             GrpcRemoteExecutionClients.readByteStream(
                 instanceName, digest, byteStreamStub, data::concat, casDeadline),
@@ -112,7 +116,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
     CasBlobBatchInfo info = new CasBlobBatchInfo(new long[] {digest.getSize()});
     return closeScopeWhenFutureCompletes(
-        CasBlobDownloadEvent.sendEvent(buckEventBus, info),
+        CasBlobDownloadEvent.sendEvent(buckEventBus, info, blobFetcherType),
         GrpcRemoteExecutionClients.readByteStream(
             instanceName,
             digest,
@@ -133,7 +137,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
     CasBlobBatchInfo info =
         new CasBlobBatchInfo(
             requests.keySet().stream().mapToLong(Protocol.Digest::getSize).toArray());
-    Scope scope = CasBlobDownloadEvent.sendEvent(buckEventBus, info);
+    Scope scope = CasBlobDownloadEvent.sendEvent(buckEventBus, info, blobFetcherType);
     BatchReadBlobsRequest.Builder requestBuilder = BatchReadBlobsRequest.newBuilder();
     requestBuilder.setInstanceName(instanceName);
     int emptyDigestsCountSoFar = 0;

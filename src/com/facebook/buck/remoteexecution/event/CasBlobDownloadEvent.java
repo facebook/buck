@@ -34,8 +34,9 @@ public abstract class CasBlobDownloadEvent extends AbstractBuckEvent implements 
   }
 
   /** Send the Started and returns a Scoped object that sends the Finished event. */
-  public static Scope sendEvent(final BuckEventBus eventBus, CasBlobBatchInfo batchInfo) {
-    final Started startedEvent = new Started(batchInfo);
+  public static Scope sendEvent(
+      final BuckEventBus eventBus, CasBlobBatchInfo batchInfo, GrpcAsyncBlobFetcherType type) {
+    final Started startedEvent = new Started(batchInfo, type);
     eventBus.post(startedEvent);
     return () -> eventBus.post(new Finished(startedEvent));
   }
@@ -43,10 +44,12 @@ public abstract class CasBlobDownloadEvent extends AbstractBuckEvent implements 
   /** Download to the CAS has started. */
   public static final class Started extends CasBlobDownloadEvent {
     private final CasBlobBatchInfo batchInfo;
+    private final GrpcAsyncBlobFetcherType blobFetcherType;
 
-    public Started(CasBlobBatchInfo batchInfo) {
+    public Started(CasBlobBatchInfo batchInfo, GrpcAsyncBlobFetcherType blobFetcherType) {
       super(EventKey.unique());
       this.batchInfo = batchInfo;
+      this.blobFetcherType = blobFetcherType;
     }
 
     public int getBlobCount() {
@@ -71,6 +74,10 @@ public abstract class CasBlobDownloadEvent extends AbstractBuckEvent implements 
 
     public long getLargeSizeBytes() {
       return batchInfo.getLargeBlobSize();
+    }
+
+    public GrpcAsyncBlobFetcherType getBlobFetcherType() {
+      return blobFetcherType;
     }
 
     @Override

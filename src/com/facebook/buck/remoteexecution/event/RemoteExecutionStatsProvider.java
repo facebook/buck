@@ -25,13 +25,16 @@ public interface RemoteExecutionStatsProvider {
   /** Current state of all remote execution Actions. */
   ImmutableMap<State, Integer> getActionsPerState();
 
-  /** Total number of downloads. */
+  /**
+   * Total number of downloads. This is equal to: 1) getRemoteExecutionCasDownloads() +
+   * getArtifactCacheCasDownloads() 2) getCasSmallDownloads() + getCasLargeDownloads()
+   */
   int getCasDownloads();
 
-  /** Number of "small" downloads (usually go to zippy). */
+  /** Number of "small" downloads (these downloads usually go to zippy). */
   int getCasSmallDownloads();
 
-  /** Number of "large" downloads (usually go to manifold). */
+  /** Number of "large" downloads (these downloads usually go to manifold). */
   int getCasLargeDownloads();
 
   /** Number of "small" downloaded bytes from CAS. */
@@ -40,16 +43,47 @@ public interface RemoteExecutionStatsProvider {
   /** Number of "large" downloaded bytes from CAS. */
   long getCasLargeDownloadSizeBytes();
 
-  /** Total number of downloaded bytes from CAS. */
+  /**
+   * Total number of downloaded bytes from CAS. This is equal to: 1)
+   * getRemoteExecutionCasDownloadSizeBytes() + getArtifactCacheCasDownloadSizeBytes() 2)
+   * getCasSmallDownloadSizeBytes() + getCasLargeDownloadSizeBytes()
+   */
   long getCasDownloadSizeBytes();
 
-  /** Total number of downloads. */
+  /**
+   * CAS can be used as an artifact cache or as a storage of Remote execution inputs and outputs.
+   * This method returns number of downloads for CAS used as an artifact cache.
+   */
+  int getArtifactCacheCasDownloads();
+
+  /**
+   * Size of CAS downloads for artifact cache. See comment above for difference between "CAS for
+   * artifact cache" and "CAS for remote execution"
+   */
+  long getArtifactCacheCasDownloadSizeBytes();
+
+  /**
+   * CAS downloads for artifact cache. See comment above for difference between "CAS for artifact
+   * cache" and "CAS for remote execution"
+   */
+  int getRemoteExecutionCasDownloads();
+
+  /**
+   * Size of CAS downloads for artifact cache. See comment above for difference between "CAS for
+   * artifact cache" and "CAS for remote execution"
+   */
+  long getRemoteExecutionCasDownloadSizeBytes();
+
+  /**
+   * Total number of uploads. This is equal to 1) getRemoteExecutionCasUploads() +
+   * getArtifactCacheCasUploads() 2) getCasSmallUploads() + getCasLargeUploads()
+   */
   int getCasUploads();
 
-  /** Number of "small" uploads (usually go to zippy). */
+  /** Number of "small" uploads (these uploads usually go to zippy). */
   int getCasSmallUploads();
 
-  /** Number of "large" uploads (usually go to manifold). */
+  /** Number of "large" uploads (these uploads usually go to manifold). */
   int getCasLargeUploads();
 
   /** Number of "small" uploaded bytes from CAS. */
@@ -58,8 +92,36 @@ public interface RemoteExecutionStatsProvider {
   /** Number of "large" uploaded bytes from CAS. */
   long getCasLargeUploadSizeBytes();
 
-  /** Total of uploaded bytes to CAS. */
+  /**
+   * Total of uploaded bytes to CAS. This is equal to: 1) getRemoteExecutionCasUploadSizeBytes() +
+   * getArtifactCacheCasUploadSizeBytes() 2) getCasSmallUploadSizeBytes() +
+   * getCasLargeUploadSizeBytes()
+   */
   long getCasUploadSizeBytes();
+
+  /**
+   * CAS uploads for artifact cache. See comment above for difference between "CAS for artifact
+   * cache" and "CAS for remote execution"
+   */
+  int getArtifactCacheCasUploads();
+
+  /**
+   * Size of CAS uploads for artifact cache. See comment above for difference between "CAS for
+   * artifact cache" and "CAS for remote execution"
+   */
+  long getArtifactCacheCasUploadSizeBytes();
+
+  /**
+   * CAS uploads for artifact cache. See comment above for difference between "CAS for artifact
+   * cache" and "CAS for remote execution"
+   */
+  int getRemoteExecutionCasUploads();
+
+  /**
+   * Size of CAS uploads for artifact cache. See comment above for difference between "CAS for
+   * artifact cache" and "CAS for remote execution"
+   */
+  long getRemoteExecutionCasUploadSizeBytes();
 
   /** Total number of digests that were sent in findMissing calls. */
   long getCasFindMissingCount();

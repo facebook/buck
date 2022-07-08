@@ -29,6 +29,7 @@ import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
+import com.facebook.buck.remoteexecution.event.GrpcAsyncBlobFetcherType;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.util.function.ThrowingConsumer;
@@ -270,6 +271,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
         protocol,
         buckEventBus,
         metadataProvider.get(),
-        strategyConfig.getOutputMaterializationThreads());
+        strategyConfig.getOutputMaterializationThreads(),
+        GrpcAsyncBlobFetcherType.RemoteExecution);
   }
 }
