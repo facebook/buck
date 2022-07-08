@@ -1149,9 +1149,8 @@ android_binary(
 android_binary(
     name = "app_with_merge_sequence_and_exclusions",
     application_module_configs = {
-        "native.merge.C": [
-            "//native/merge:C",
-            "//native/merge:D",
+        "native.merge.A": [
+            "//native/merge:A",
         ],
     },
     keystore = "//keystores:debug",
@@ -1159,10 +1158,8 @@ android_binary(
     native_library_merge_code_generator = "//native/merge:codegen",
     native_library_merge_glue = "//native/merge:glue_1",
     native_library_merge_sequence = [
-        ("no-merge", [".*/merge:E"]),
-        ("lib1.so", [".*/merge:D"]),
         ("no-merge", [".*/merge:B"]),
-        ("lib2.so", [".*/merge:A"]),
+        ("lib1.so", [".*/merge:A"]),
     ],
     deps = [
         "//java/com/sample/lib:lib",
