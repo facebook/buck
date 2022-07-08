@@ -428,33 +428,36 @@ use_split_dex = True
 
   <p>Merged library names must begin with <code>lib</code> and end with <code>.so</code>.
 
-  <p>Using <code>no-merge</code> in place of a merged library name causes any previously unmerged
-  targets matched by that sequence entry's patterns to not be added to any merged libraries.
+  <p>This is an advanced option for apps with many native libraries.
+  For more details,
+  see <a href="https://github.com/fbsamples/android-native-library-merging-demo">this article</a>.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name : 'native_library_merge_sequence_blocklist' /}
+  {{param default : '[]' /}}
+  {param desc}
+  <p>Defines a list of regular expressions for which matching native library targets will
+  not be merged by <code>native_library_merge_sequence</code>. Blocked targets' unblocked
+  dependencies will still be merged.
 
   {literal}<pre class="prettyprint lang-py">
   android_binary(
       # ... other args ...
+      native_library_merge_sequence_blocklist = [
+          "^//my_libs:lib1$",
+      ],
       native_library_merge_sequence = [
-          ("no-merge", [
-              "^//my_libs:lib1$",
-          ]),
-          # libmerged1.so does not contain :lib1 or its dependencies
+          # libmerged1.so contains :lib1 and any
+          # dependencies of :lib1 *or* :lib2
           ("libmerged1.so", [
               "^//my_libs:lib1$",
               "^//my_libs:lib2$",
           ]),
-          # :lib2 was already added to libmerged1.so and is unaffected
-          ("no-merge", [
-              "^//my_libs:lib2$",
-              "^//my_libs:lib3$",
-          ]),
           ...
       ],
   )</pre>{/literal}
-
-  <p>This is an advanced option for apps with many native libraries.
-  For more details,
-  see <a href="https://github.com/fbsamples/android-native-library-merging-demo">this article</a>.
   {/param}
 {/call}
 
