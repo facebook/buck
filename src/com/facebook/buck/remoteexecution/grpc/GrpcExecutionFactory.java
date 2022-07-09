@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
+import com.facebook.buck.remoteexecution.event.GrpcAsyncBlobFetcherType;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
@@ -59,7 +60,7 @@ public class GrpcExecutionFactory {
     ManagedChannel channel = InProcessChannelBuilder.forName("unique").build();
 
     return new GrpcRemoteExecutionClients(
-        "in-process",
+        GrpcAsyncBlobFetcherType.InProcess,
         channel,
         channel,
         CAS_DEADLINE_S,
@@ -122,7 +123,7 @@ public class GrpcExecutionFactory {
     casChannelBuilder.flowControlWindow(100 * 1024 * 1024);
 
     return new GrpcRemoteExecutionClients(
-        "buck",
+        GrpcAsyncBlobFetcherType.RemoteExecution,
         executionEngineChannel,
         strategyConfig.getNumEngineConnections(),
         casChannelBuilder.build(),

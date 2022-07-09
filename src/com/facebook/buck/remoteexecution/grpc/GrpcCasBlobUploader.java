@@ -59,17 +59,14 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   private final ContentAddressableStorageFutureStub storageStub;
   private final BuckEventBus buckEventBus;
   private final ByteStreamStub byteStreamStub;
-  private final String instanceName;
   private final GrpcAsyncBlobFetcherType blobFetcherType;
 
   public GrpcCasBlobUploader(
-      String instanceName,
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
       BuckEventBus buckEventBus,
       RemoteExecutionMetadata metadata,
       GrpcAsyncBlobFetcherType blobFetcherType) {
-    this.instanceName = instanceName;
     this.storageStub = GrpcHeaderHandler.wrapStubToSendMetadata(storageStub, metadata);
     this.byteStreamStub = GrpcHeaderHandler.wrapStubToSendMetadata(byteStreamStub, metadata);
     this.buckEventBus = buckEventBus;
@@ -80,7 +77,7 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   public ImmutableSet<String> getMissingHashes(Set<Digest> requiredDigests) throws IOException {
     try {
       FindMissingBlobsRequest.Builder requestBuilder = FindMissingBlobsRequest.newBuilder();
-      requestBuilder.setInstanceName(instanceName);
+      requestBuilder.setInstanceName(blobFetcherType.toString());
       requiredDigests.forEach(digest -> requestBuilder.addBlobDigests((GrpcProtocol.get(digest))));
       CasBlobBatchInfo info =
           new CasBlobBatchInfo(
@@ -107,7 +104,7 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
             blobs.stream().mapToLong(blob -> blob.getDigest().getSize()).toArray());
     try (Scope ignored = CasBlobUploadEvent.sendEvent(buckEventBus, info, blobFetcherType)) {
       BatchUpdateBlobsRequest.Builder requestBuilder = BatchUpdateBlobsRequest.newBuilder();
-      requestBuilder.setInstanceName(instanceName);
+      requestBuilder.setInstanceName(blobFetcherType.toString());
       for (UploadDataSupplier blob : blobs) {
         try (InputStream dataStream = blob.get()) {
           requestBuilder.addRequests(
@@ -144,7 +141,7 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
     CasBlobBatchInfo info = new CasBlobBatchInfo(new long[] {uploadSize});
     try (Scope ignored = CasBlobUploadEvent.sendEvent(buckEventBus, info, blobFetcherType)) {
       InputStream dataStream = blob.get();
-      String name = GrpcRemoteExecutionClients.getResourceName(instanceName, blob.getDigest());
+      String name = GrpcRemoteExecutionClients.getResourceName(blobFetcherType, blob.getDigest());
 
       SettableFuture<UploadResult> result = SettableFuture.create();
       StreamObserver<ByteStreamProto.WriteResponse> responseObserver =

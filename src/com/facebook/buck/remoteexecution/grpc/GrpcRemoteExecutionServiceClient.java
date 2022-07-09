@@ -25,6 +25,7 @@ import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
+import com.facebook.buck.remoteexecution.event.GrpcAsyncBlobFetcherType;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.grpc.GrpcHeaderHandler.StubAndResponseMetadata;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
@@ -63,19 +64,19 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
   private final ExecutionStub executionStub;
   private final ByteStreamStub byteStreamStub;
-  private final String instanceName;
+  private final GrpcAsyncBlobFetcherType blobFetcherType;
   private final Protocol protocol;
   private final int casDeadline;
 
   public GrpcRemoteExecutionServiceClient(
       ExecutionStub executionStub,
       ByteStreamStub byteStreamStub,
-      String instanceName,
+      GrpcAsyncBlobFetcherType blobFetcherType,
       Protocol protocol,
       int casDeadline) {
     this.executionStub = executionStub;
     this.byteStreamStub = byteStreamStub;
-    this.instanceName = instanceName;
+    this.blobFetcherType = blobFetcherType;
     this.protocol = protocol;
     this.casDeadline = casDeadline;
   }
@@ -182,7 +183,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
         .getStub()
         .execute(
             ExecuteRequest.newBuilder()
-                .setInstanceName(instanceName)
+                .setInstanceName(blobFetcherType.toString())
                 .setActionDigest(GrpcProtocol.get(actionDigest))
                 .setSkipCacheLookup(false)
                 .build(),
@@ -320,7 +321,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
         Data data = new Data();
         try {
           GrpcRemoteExecutionClients.readByteStream(
-                  instanceName, digest, byteStreamStub, data::concat, casDeadline)
+                  blobFetcherType, digest, byteStreamStub, data::concat, casDeadline)
               .get();
         } catch (InterruptedException | ExecutionException e) {
           throw new RuntimeException(e);

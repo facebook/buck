@@ -56,30 +56,28 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
       int casDeadline,
-      String instanceName,
       Protocol protocol,
       BuckEventBus buckEventBus,
       RemoteExecutionMetadata metadata,
       int outputMaterializationThreads,
-      GrpcAsyncBlobFetcherType type) {
+      GrpcAsyncBlobFetcherType blobFetcherType) {
     this.uploader =
         new MultiThreadedBlobUploader(
             FIND_MISSING_CHECK_LIMIT,
             SIZE_LIMIT,
             MostExecutors.newMultiThreadExecutor("blob-uploader", EXECUTOR_THREADS),
             new GrpcCasBlobUploader(
-                instanceName, storageStub, byteStreamStub, buckEventBus, metadata, type));
+                storageStub, byteStreamStub, buckEventBus, metadata, blobFetcherType));
 
     this.fetcher =
         new GrpcAsyncBlobFetcher(
-            instanceName,
             storageStub,
             byteStreamStub,
             buckEventBus,
             metadata,
             protocol,
             casDeadline,
-            type);
+            blobFetcherType);
     this.outputsMaterializer =
         new OutputsMaterializer(
             SIZE_LIMIT,

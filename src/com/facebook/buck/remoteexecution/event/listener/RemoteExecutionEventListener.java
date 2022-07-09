@@ -268,6 +268,9 @@ public class RemoteExecutionEventListener
         uploadsRemoteExecutionCache.add(event.getStartedEvent().getBlobCount());
         uploadRemoteExecutionCacheBytes.add(event.getStartedEvent().getSizeBytes());
         break;
+      case InProcess:
+        // We shouldn't see any uploads/downloads for in-process blob fetcher
+        break;
       default:
         LOG.warn(
             "unknown blob fetcher type " + event.getStartedEvent().getBlobFetcherType().name());
@@ -293,6 +296,9 @@ public class RemoteExecutionEventListener
       case RemoteExecution:
         downloadsRemoteExecutionCache.add(event.getStartedEvent().getBlobCount());
         downloadRemoteExecutionCacheBytes.add(event.getStartedEvent().getSizeBytes());
+        break;
+      case InProcess:
+        // We shouldn't see any uploads/downloads for in-process blob fetcher
         break;
       default:
         LOG.warn(

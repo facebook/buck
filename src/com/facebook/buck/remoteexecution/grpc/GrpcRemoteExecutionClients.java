@@ -59,7 +59,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   private AtomicLong executionEngineChannelCtr;
   private final ManagedChannel casChannel;
   private final MetadataProvider metadataProvider;
-  private final String instanceName;
+  private final GrpcAsyncBlobFetcherType blobFetcherType;
   private final int casDeadline;
   private final ByteStreamStub byteStreamStub;
 
@@ -72,7 +72,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   }
 
   public GrpcRemoteExecutionClients(
-      String instanceName,
+      GrpcAsyncBlobFetcherType blobFetcherType,
       ManagedChannel executionEngineChannel,
       ManagedChannel casChannel,
       int casDeadline,
@@ -80,7 +80,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       BuckEventBus buckEventBus,
       RemoteExecutionStrategyConfig strategyConfig) {
     this(
-        instanceName,
+        blobFetcherType,
         new ManagedChannel[] {executionEngineChannel},
         casChannel,
         casDeadline,
@@ -100,7 +100,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
 
   /** Creates multiple channels to engine for load balancing */
   public GrpcRemoteExecutionClients(
-      String instanceName,
+      GrpcAsyncBlobFetcherType blobFetcherType,
       NettyChannelBuilder executionEngineChannel,
       int numEngineConnections,
       ManagedChannel casChannel,
@@ -109,7 +109,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       BuckEventBus buckEventBus,
       RemoteExecutionStrategyConfig strategyConfig) {
     this(
-        instanceName,
+        blobFetcherType,
         createExecutionChannels(executionEngineChannel, numEngineConnections),
         casChannel,
         casDeadline,
@@ -119,7 +119,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   }
 
   private GrpcRemoteExecutionClients(
-      String instanceName,
+      GrpcAsyncBlobFetcherType blobFetcherType,
       ManagedChannel[] executionEngineChannels,
       ManagedChannel casChannel,
       int casDeadline,
@@ -130,7 +130,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
     this.executionEngineChannelCtr = new AtomicLong(0);
     this.casChannel = casChannel;
     this.metadataProvider = metadataProvider;
-    this.instanceName = instanceName;
+    this.blobFetcherType = blobFetcherType;
     this.casDeadline = casDeadline;
 
     this.byteStreamStub = ByteStreamGrpc.newStub(casChannel);
@@ -139,24 +139,26 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
             ContentAddressableStorageGrpc.newFutureStub(casChannel),
             this.byteStreamStub,
             casDeadline,
-            instanceName,
+            blobFetcherType,
             PROTOCOL,
             buckEventBus,
             strategyConfig);
   }
 
-  public static String getResourceName(String instanceName, Protocol.Digest digest) {
-    return String.format("%s/blobs/%s/%d", instanceName, digest.getHash(), digest.getSize());
+  public static String getResourceName(
+      GrpcAsyncBlobFetcherType blobFetcherType, Protocol.Digest digest) {
+    return String.format(
+        "%s/blobs/%s/%d", blobFetcherType.toString(), digest.getHash(), digest.getSize());
   }
 
   /** Reads a ByteStream onto the arg consumer. */
   public static ListenableFuture<Unit> readByteStream(
-      String instanceName,
+      GrpcAsyncBlobFetcherType blobFetcherType,
       Protocol.Digest digest,
       ByteStreamStub byteStreamStub,
       ThrowingConsumer<ByteString, IOException> dataConsumer,
       int casDeadline) {
-    String name = getResourceName(instanceName, digest);
+    String name = getResourceName(blobFetcherType, digest);
     SettableFuture<Unit> future = SettableFuture.create();
     byteStreamStub
         .withDeadlineAfter(casDeadline, TimeUnit.SECONDS)
@@ -212,7 +214,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
     return new GrpcRemoteExecutionServiceClient(
         executionStub,
         GrpcHeaderHandler.wrapStubToSendMetadata(byteStreamStub, metadataProvider.get()),
-        instanceName,
+        blobFetcherType,
         getProtocol(),
         casDeadline);
   }
@@ -259,7 +261,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
       int casDeadline,
-      String instanceName,
+      GrpcAsyncBlobFetcherType blobFetcherType,
       Protocol protocol,
       BuckEventBus buckEventBus,
       RemoteExecutionStrategyConfig strategyConfig) {
@@ -267,11 +269,10 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
         storageStub,
         byteStreamStub,
         casDeadline,
-        instanceName,
         protocol,
         buckEventBus,
         metadataProvider.get(),
         strategyConfig.getOutputMaterializationThreads(),
-        GrpcAsyncBlobFetcherType.RemoteExecution);
+        blobFetcherType);
   }
 }

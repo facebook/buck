@@ -734,7 +734,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                     ContentAddressableStorageGrpc.newFutureStub(channel),
                     ByteStreamGrpc.newStub(channel),
                     buckConfig.getCasDeadline(),
-                    "buckcache",
                     new GrpcProtocol(),
                     buckEventBus,
                     metadata,

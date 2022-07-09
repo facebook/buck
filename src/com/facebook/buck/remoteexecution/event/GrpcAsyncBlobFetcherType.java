@@ -20,4 +20,15 @@ package com.facebook.buck.remoteexecution.event;
 public enum GrpcAsyncBlobFetcherType {
   ArtifactsCache,
   RemoteExecution,
+  InProcess;
+
+  public String toString() {
+    if (this == GrpcAsyncBlobFetcherType.ArtifactsCache) {
+      return "buckcache";
+    } else if (this == GrpcAsyncBlobFetcherType.RemoteExecution) {
+      return "buck";
+    } else {
+      return "in-process";
+    }
+  }
 }

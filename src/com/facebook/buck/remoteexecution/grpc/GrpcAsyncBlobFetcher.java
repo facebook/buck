@@ -52,7 +52,6 @@ import java.util.concurrent.TimeUnit;
 /** GRPC implementation of the AsyncBlobFetcher. */
 public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
-  private final String instanceName;
   private final ByteStreamStub byteStreamStub;
   private final ContentAddressableStorageFutureStub storageStub;
   private final BuckEventBus buckEventBus;
@@ -61,7 +60,6 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
   private final GrpcAsyncBlobFetcherType blobFetcherType;
 
   public GrpcAsyncBlobFetcher(
-      String instanceName,
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
       BuckEventBus buckEventBus,
@@ -69,7 +67,6 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
       Protocol protocol,
       int casDeadline,
       GrpcAsyncBlobFetcherType blobFetcherType) {
-    this.instanceName = instanceName;
     this.storageStub = GrpcHeaderHandler.wrapStubToSendMetadata(storageStub, metadata);
     this.byteStreamStub = GrpcHeaderHandler.wrapStubToSendMetadata(byteStreamStub, metadata);
     this.buckEventBus = buckEventBus;
@@ -103,7 +100,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
         CasBlobDownloadEvent.sendEvent(buckEventBus, info, blobFetcherType),
         Futures.transform(
             GrpcRemoteExecutionClients.readByteStream(
-                instanceName, digest, byteStreamStub, data::concat, casDeadline),
+                blobFetcherType, digest, byteStreamStub, data::concat, casDeadline),
             ignored -> data.get(),
             MoreExecutors.directExecutor()));
   }
@@ -118,7 +115,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
     return closeScopeWhenFutureCompletes(
         CasBlobDownloadEvent.sendEvent(buckEventBus, info, blobFetcherType),
         GrpcRemoteExecutionClients.readByteStream(
-            instanceName,
+            blobFetcherType,
             digest,
             byteStreamStub,
             byteString -> {
@@ -139,7 +136,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
             requests.keySet().stream().mapToLong(Protocol.Digest::getSize).toArray());
     Scope scope = CasBlobDownloadEvent.sendEvent(buckEventBus, info, blobFetcherType);
     BatchReadBlobsRequest.Builder requestBuilder = BatchReadBlobsRequest.newBuilder();
-    requestBuilder.setInstanceName(instanceName);
+    requestBuilder.setInstanceName(blobFetcherType.toString());
     int emptyDigestsCountSoFar = 0;
     for (Protocol.Digest digest : requests.keySet()) {
       if (digest.isEmpty()) {
