@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.cd.params;
+package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaCDBuckConfig;
+import com.facebook.buck.jvm.cd.params.DefaultRulesCDParams;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import javax.annotation.Nullable;
 
-/** Utility class used to create {@link RulesCDParams} */
-public class CDParamsUtils {
+/** Utility class used to create {@link RulesCDParams} for Java rules. */
+public class JavaCDParams {
 
   @Nullable private static RulesCDParams cdParams;
 
   /** Returns {@link RulesCDParams} built from configuration values */
-  public static RulesCDParams getJavaCDParams(
+  public static RulesCDParams get(
       JavaBuckConfig javaBuckConfig, JavaCDBuckConfig javaCDBuckConfig) {
     if (cdParams == null) {
       cdParams =

@@ -83,7 +83,7 @@ public abstract class DefaultRulesCDParams implements RulesCDParams {
   public abstract boolean isIncludeAllBucksEnvVariables();
 
   /** Creates {@link DefaultRulesCDParams} */
-  static DefaultRulesCDParams of(
+  public static DefaultRulesCDParams of(
       boolean hasCDEnabled,
       Iterable<String> startCommandOptions,
       int workerToolPoolSize,

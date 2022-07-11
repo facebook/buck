@@ -40,13 +40,13 @@ import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.cd.params.CDParamsUtils;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDParams;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -272,7 +272,7 @@ public class AndroidPrebuiltAarDescription
         args.getMavenCoords(),
         args.isUseSystemLibraryLoader(),
         withDownwardApi,
-        CDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
+        JavaCDParams.get(javaBuckConfig, javaCDBuckConfig));
   }
 
   @Override

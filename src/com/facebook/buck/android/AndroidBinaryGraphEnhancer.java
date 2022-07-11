@@ -45,13 +45,13 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.cd.params.CDParamsUtils;
 import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDParams;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.Javac;
@@ -414,7 +414,7 @@ public class AndroidBinaryGraphEnhancer {
                   .getDelegate()
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
-              CDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
+              JavaCDParams.get(javaBuckConfig, javaCDBuckConfig));
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
