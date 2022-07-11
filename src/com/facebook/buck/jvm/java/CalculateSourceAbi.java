@@ -89,13 +89,12 @@ public class CalculateSourceAbi
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       JarBuildStepsFactory<?> jarBuildStepsFactory,
-      SourcePathRuleFinder ruleFinder,
-      RulesCDParams cdParams) {
+      SourcePathRuleFinder ruleFinder) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new SourceAbiBuildable(buildTarget, projectFilesystem, jarBuildStepsFactory, cdParams));
+        new SourceAbiBuildable(buildTarget, projectFilesystem, jarBuildStepsFactory));
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
     this.sourcePathToOutput =
@@ -103,7 +102,7 @@ public class CalculateSourceAbi
             jarBuildStepsFactory.getSourcePathToOutput(
                 getBuildTarget(), getProjectFilesystem().getBuckPaths()));
     this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
-    this.usePipelining = !cdParams.pipeliningDisabled();
+    this.usePipelining = !jarBuildStepsFactory.getRulesCDParams().pipeliningDisabled();
   }
 
   /** Buildable implementation. */
@@ -123,11 +122,10 @@ public class CalculateSourceAbi
     public SourceAbiBuildable(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
-        JarBuildStepsFactory<?> jarBuildStepsFactory,
-        RulesCDParams cdParams) {
+        JarBuildStepsFactory<?> jarBuildStepsFactory) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
-      this.cdParams = cdParams;
+      this.cdParams = jarBuildStepsFactory.getRulesCDParams();
       CompilerOutputPaths outputPaths =
           CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
       this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());

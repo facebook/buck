@@ -111,8 +111,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         null,
         false,
         false,
-        false,
-        javaCDParams);
+        false);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

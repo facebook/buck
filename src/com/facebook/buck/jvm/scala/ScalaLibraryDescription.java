@@ -36,7 +36,6 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -61,7 +60,6 @@ public class ScalaLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig scalaBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavaCDBuckConfig javaCDBuckConfig;
   private final JavacFactory javacFactory;
   private final DownwardApiConfig downwardApiConfig;
 
@@ -69,13 +67,11 @@ public class ScalaLibraryDescription
       ToolchainProvider toolchainProvider,
       ScalaBuckConfig scalaBuckConfig,
       JavaBuckConfig javaBuckConfig,
-      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.scalaBuckConfig = scalaBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
-    this.javaCDBuckConfig = javaCDBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
   }
 
@@ -144,7 +140,6 @@ public class ScalaLibraryDescription
                 context.getActionGraphBuilder(),
                 scalaBuckConfig,
                 javaBuckConfig,
-                javaCDBuckConfig,
                 downwardApiConfig,
                 args,
                 javacFactory,

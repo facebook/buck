@@ -49,6 +49,7 @@ public class AndroidLibraryBuilder
       (language, factory, toolchainTargetConfiguration) ->
           new JavaConfiguredCompilerFactory(
               DEFAULT_JAVA_CONFIG,
+              DEFAULT_JAVACD_CONFIG,
               DEFAULT_DOWNWARD_API_CONFIG,
               AndroidClasspathProvider::new,
               factory);

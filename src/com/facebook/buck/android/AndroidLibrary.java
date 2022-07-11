@@ -30,7 +30,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateSourceAbi;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
@@ -59,7 +58,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       JavaBuckConfig javaBuckConfig,
-      RulesCDParams cdParams,
       DownwardApiConfig downwardApiConfig,
       JavacFactory javacFactory,
       JavacOptions libraryJavacOptions,
@@ -74,7 +72,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         params,
         graphBuilder,
         javaBuckConfig,
-        cdParams,
         downwardApiConfig,
         javacFactory,
         libraryJavacOptions,
@@ -108,8 +105,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
-      boolean neverMarkAsUnusedDependency,
-      RulesCDParams cdParams) {
+      boolean neverMarkAsUnusedDependency) {
     super(
         buildTarget,
         projectFilesystem,
@@ -131,8 +127,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         sourceAbi,
         isDesugarEnabled,
         isInterfaceMethodsDesugarEnabled,
-        neverMarkAsUnusedDependency,
-        cdParams);
+        neverMarkAsUnusedDependency);
     this.manifestFile = manifestFile;
     this.type = jvmLanguage.map(this::evalType).orElseGet(super::getType);
   }
@@ -179,7 +174,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         BuildRuleParams params,
         ActionGraphBuilder graphBuilder,
         JavaBuckConfig javaBuckConfig,
-        RulesCDParams cdParams,
         DownwardApiConfig downwardApiConfig,
         JavacFactory javacFactory,
         JavacOptions libraryJavacOptions,
@@ -198,7 +192,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               graphBuilder,
               compilerFactory,
               javaBuckConfig,
-              cdParams,
               downwardApiConfig,
               args,
               cellPathResolver);
@@ -223,8 +216,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               sourceAbi,
               isDesugarEnabled,
               isInterfaceMethodsDesugarEnabled,
-              neverMarkAsUnusedDependency,
-              constructorCDParams) ->
+              neverMarkAsUnusedDependency) ->
               new AndroidLibrary(
                   target,
                   filesystem,
@@ -248,8 +240,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   sourceAbi,
                   isDesugarEnabled,
                   isInterfaceMethodsDesugarEnabled,
-                  neverMarkAsUnusedDependency,
-                  constructorCDParams));
+                  neverMarkAsUnusedDependency));
       delegateBuilder.setJavacOptions(libraryJavacOptions);
       delegateBuilder.setTests(args.getTests());
 

@@ -50,6 +50,7 @@ public class RobolectricTestBuilder
   public static final AndroidLibraryCompilerFactory DEFAULT_ANDROID_COMPILER_FACTORY =
       new DefaultAndroidLibraryCompilerFactory(
           DEFAULT_JAVA_CONFIG,
+          DEFAULT_JAVACD_CONFIG,
           new ScalaBuckConfig(FakeBuckConfig.empty()),
           new KotlinBuckConfig(FakeBuckConfig.empty()),
           CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);

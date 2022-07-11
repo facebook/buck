@@ -42,7 +42,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.EmptyJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
@@ -138,7 +137,6 @@ public class DefaultJavaLibrary
       ActionGraphBuilder graphBuilder,
       ConfiguredCompilerFactory compilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig,
-      RulesCDParams cdParams,
       DownwardApiConfig downwardApiConfig,
       @Nullable JavaLibraryDescription.CoreArg args,
       CellPathResolver cellPathResolver) {
@@ -150,7 +148,6 @@ public class DefaultJavaLibrary
         graphBuilder,
         compilerFactory,
         javaBuckConfig,
-        cdParams,
         downwardApiConfig,
         args,
         cellPathResolver);
@@ -182,8 +179,7 @@ public class DefaultJavaLibrary
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
-      boolean neverMarkAsUnusedDependency,
-      RulesCDParams cdParams) {
+      boolean neverMarkAsUnusedDependency) {
     super(
         buildTarget,
         projectFilesystem,
@@ -194,8 +190,7 @@ public class DefaultJavaLibrary
             jarBuildStepsFactory,
             unusedDependenciesAction,
             unusedDependenciesFinderFactory,
-            sourceAbi,
-            cdParams));
+            sourceAbi));
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(

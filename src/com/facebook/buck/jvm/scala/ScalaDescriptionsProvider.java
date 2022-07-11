@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -37,13 +36,10 @@ public class ScalaDescriptionsProvider implements DescriptionProvider {
     BuckConfig buckConfig = context.getBuckConfig();
     ScalaBuckConfig scalaConfig = new ScalaBuckConfig(buckConfig);
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
-    JavaCDBuckConfig javaCDBuckConfig = buckConfig.getView(JavaCDBuckConfig.class);
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     return Arrays.asList(
-        new ScalaLibraryDescription(
-            toolchainProvider, scalaConfig, javaConfig, javaCDBuckConfig, downwardApiConfig),
-        new ScalaTestDescription(
-            toolchainProvider, scalaConfig, javaConfig, javaCDBuckConfig, downwardApiConfig));
+        new ScalaLibraryDescription(toolchainProvider, scalaConfig, javaConfig, downwardApiConfig),
+        new ScalaTestDescription(toolchainProvider, scalaConfig, javaConfig, downwardApiConfig));
   }
 }

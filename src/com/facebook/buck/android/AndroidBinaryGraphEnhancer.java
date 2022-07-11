@@ -533,9 +533,9 @@ public class AndroidBinaryGraphEnhancer {
                 toolchainProvider,
                 paramsForCompileUberRDotJava,
                 graphBuilder,
-                new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory),
+                new JavaConfiguredCompilerFactory(
+                    javaBuckConfig, javaCDBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
-                JavaCDParams.get(javaBuckConfig, javaCDBuckConfig),
                 downwardApiConfig,
                 null,
                 cellPathResolver)

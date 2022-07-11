@@ -23,10 +23,8 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.cd.params.DefaultRulesCDParams;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
 
@@ -41,7 +39,6 @@ final class ScalaLibraryBuilder {
       ActionGraphBuilder graphBuilder,
       ScalaBuckConfig scalaBuckConfig,
       JavaBuckConfig javaBuckConfig,
-      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig,
       JavaLibraryDescription.CoreArg args,
       JavacFactory javacFactory,
@@ -54,7 +51,6 @@ final class ScalaLibraryBuilder {
         graphBuilder,
         new ScalaConfiguredCompilerFactory(scalaBuckConfig, downwardApiConfig, javacFactory),
         javaBuckConfig,
-        DefaultRulesCDParams.DISABLED,
         downwardApiConfig,
         args,
         cellPathResolver);

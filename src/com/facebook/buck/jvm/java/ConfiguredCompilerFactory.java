@@ -21,6 +21,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.jvm.cd.params.DefaultRulesCDParams;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -52,6 +54,14 @@ public abstract class ConfiguredCompilerFactory {
   @Nullable
   public JavaBuckConfig.UnusedDependenciesConfig getUnusedDependenciesAction() {
     return JavaBuckConfig.UnusedDependenciesConfig.IGNORE;
+  }
+
+  /**
+   * Get the compiler daemon parameters associated with this language and compiler. Defaults to a
+   * sentinel value that disables compiler daemons.
+   */
+  public RulesCDParams getCDParams() {
+    return DefaultRulesCDParams.DISABLED;
   }
 
   public boolean shouldDesugarInterfaceMethods() {

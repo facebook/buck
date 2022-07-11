@@ -65,7 +65,6 @@ public class FauxScalaLibraryBuilder
             .build(),
         scalaBuckConfig,
         null,
-        javaCDBuckConfig,
         downwardApiConfig);
   }
 

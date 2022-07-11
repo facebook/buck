@@ -33,7 +33,6 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
@@ -80,8 +79,7 @@ public abstract class DefaultJavaLibraryRules {
         @Nullable CalculateSourceAbi previousRuleInPipeline,
         boolean isDesugarEnabled,
         boolean isInterfaceMethodsDesugarEnabled,
-        boolean neverMarkAsUnusedDependency,
-        RulesCDParams cdParams);
+        boolean neverMarkAsUnusedDependency);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -121,9 +119,6 @@ public abstract class DefaultJavaLibraryRules {
   @org.immutables.builder.Builder.Parameter
   @Nullable
   abstract JavaBuckConfig getJavaBuckConfig();
-
-  @org.immutables.builder.Builder.Parameter
-  abstract RulesCDParams getCDParams();
 
   @org.immutables.builder.Builder.Parameter
   abstract CellPathResolver getCellPathResolver();
@@ -466,8 +461,7 @@ public abstract class DefaultJavaLibraryRules {
             null,
             isDesugarRequired(),
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
-            args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-            getCDParams());
+            args != null && args.getNeverMarkAsUnusedDependency().orElse(false));
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -510,8 +504,7 @@ public abstract class DefaultJavaLibraryRules {
                 sourceAbiRule,
                 isDesugarRequired(),
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
-                args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-                getCDParams());
+                args != null && args.getNeverMarkAsUnusedDependency().orElse(false));
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -558,11 +551,7 @@ public abstract class DefaultJavaLibraryRules {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return graphBuilder.addToIndex(
         new CalculateSourceAbi(
-            sourceOnlyAbiTarget,
-            projectFilesystem,
-            jarBuildStepsFactory,
-            graphBuilder,
-            getCDParams()));
+            sourceOnlyAbiTarget, projectFilesystem, jarBuildStepsFactory, graphBuilder));
   }
 
   @Nullable
@@ -580,7 +569,7 @@ public abstract class DefaultJavaLibraryRules {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return graphBuilder.addToIndex(
         new CalculateSourceAbi(
-            sourceAbiTarget, projectFilesystem, jarBuildStepsFactory, graphBuilder, getCDParams()));
+            sourceAbiTarget, projectFilesystem, jarBuildStepsFactory, graphBuilder));
   }
 
   @Nullable
@@ -674,7 +663,6 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   JarBuildStepsFactory<?> getJarBuildStepsFactory() {
-    JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
     JavacOptions javacOptions = getJavacOptions();
 
     DefaultJavaLibraryClasspaths classpaths = getClasspaths();
@@ -694,13 +682,12 @@ public abstract class DefaultJavaLibraryRules {
         classpaths.getDependencyInfos(),
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
-        getCDParams());
+        getConfiguredCompilerFactory().getCDParams());
   }
 
   @Value.Lazy
   JarBuildStepsFactory<?> getJarBuildStepsFactoryForSourceOnlyAbi() {
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
     JavacOptions javacOptions = getJavacOptions();
     return JarBuildStepsFactory.of(
         getLibraryTarget(),
@@ -719,7 +706,7 @@ public abstract class DefaultJavaLibraryRules {
         getClasspaths().getDependencyInfosForSourceOnlyAbi(),
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
-        getCDParams());
+        getConfiguredCompilerFactory().getCDParams());
   }
 
   private ResourcesParameters getResourcesParameters() {
@@ -772,7 +759,6 @@ public abstract class DefaultJavaLibraryRules {
         ActionGraphBuilder graphBuilder,
         ConfiguredCompilerFactory configuredCompilerFactory,
         @Nullable JavaBuckConfig javaBuckConfig,
-        RulesCDParams cdParams,
         DownwardApiConfig downwardApiConfig,
         @Nullable JavaLibraryDescription.CoreArg args,
         CellPathResolver cellPathResolver) {
@@ -786,7 +772,6 @@ public abstract class DefaultJavaLibraryRules {
           getUnusedDependenciesAction(
               configuredCompilerFactory.getUnusedDependenciesAction(), args),
           javaBuckConfig,
-          cdParams,
           cellPathResolver,
           downwardApiConfig,
           args);

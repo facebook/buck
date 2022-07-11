@@ -106,6 +106,38 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       JarBuildStepsFactory<?> jarBuildStepsFactory,
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
+      @Nullable CalculateSourceAbi sourceAbi) {
+    this(
+        buildTarget,
+        filesystem,
+        jarBuildStepsFactory,
+        unusedDependenciesAction,
+        unusedDependenciesFinderFactory,
+        sourceAbi,
+        jarBuildStepsFactory.getRulesCDParams());
+  }
+
+  @VisibleForTesting
+  DefaultJavaLibraryBuildable(
+      DefaultJavaLibraryBuildable libraryBuildable,
+      ProjectFilesystem filesystem,
+      RulesCDParams cdParams) {
+    this(
+        libraryBuildable.buildTarget,
+        filesystem,
+        libraryBuildable.jarBuildStepsFactory,
+        libraryBuildable.unusedDependenciesAction,
+        libraryBuildable.unusedDependenciesFinderFactory,
+        null,
+        cdParams);
+  }
+
+  private DefaultJavaLibraryBuildable(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
+      JarBuildStepsFactory<?> jarBuildStepsFactory,
+      UnusedDependenciesAction unusedDependenciesAction,
+      Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
       RulesCDParams cdParams) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
@@ -127,21 +159,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     this.pathToClassHashesOutputPath = new PublicOutputPath(pathToClassHashes);
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
-  }
-
-  @VisibleForTesting
-  DefaultJavaLibraryBuildable(
-      DefaultJavaLibraryBuildable libraryBuildable,
-      ProjectFilesystem filesystem,
-      RulesCDParams cdParams) {
-    this(
-        libraryBuildable.buildTarget,
-        filesystem,
-        libraryBuildable.jarBuildStepsFactory,
-        libraryBuildable.unusedDependenciesAction,
-        libraryBuildable.unusedDependenciesFinderFactory,
-        null,
-        cdParams);
   }
 
   RelPath getPathToClassHashes(ProjectFilesystem filesystem) {

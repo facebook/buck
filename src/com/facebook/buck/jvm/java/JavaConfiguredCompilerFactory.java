@@ -24,12 +24,14 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
       extraClasspathProviderSupplier;
@@ -37,10 +39,12 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   public JavaConfiguredCompilerFactory(
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig,
       JavacFactory javacFactory) {
     this(
         javaBuckConfig,
+        javaCDBuckConfig,
         downwardApiConfig,
         (toolchainProvider, toolchainTargetConfiguration) -> ExtraClasspathProvider.EMPTY,
         javacFactory);
@@ -48,11 +52,13 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   public JavaConfiguredCompilerFactory(
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig,
       BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
           extraClasspathProviderSupplier,
       JavacFactory javacFactory) {
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;
     this.javacFactory = javacFactory;
@@ -66,6 +72,11 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Override
   public JavaBuckConfig.UnusedDependenciesConfig getUnusedDependenciesAction() {
     return javaBuckConfig.getUnusedDependenciesAction();
+  }
+
+  @Override
+  public RulesCDParams getCDParams() {
+    return JavaCDParams.get(javaBuckConfig, javaCDBuckConfig);
   }
 
   @Override

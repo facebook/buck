@@ -61,7 +61,8 @@ public class JavaTestRunnerDescription
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
     this.defaultJavaCompilerFactory =
-        new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory);
+        new JavaConfiguredCompilerFactory(
+            javaBuckConfig, javaCDBuckConfig, downwardApiConfig, javacFactory);
   }
 
   @Override
@@ -101,7 +102,6 @@ public class JavaTestRunnerDescription
                 graphBuilder,
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
-                JavaCDParams.get(javaBuckConfig, javaCDBuckConfig),
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())

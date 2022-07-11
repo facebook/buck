@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
@@ -30,16 +31,19 @@ import com.facebook.buck.jvm.scala.ScalaConfiguredCompilerFactory;
 
 public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompilerFactory {
   private final JavaBuckConfig javaConfig;
+  private final JavaCDBuckConfig javaCDConfig;
   private final ScalaBuckConfig scalaConfig;
   private final KotlinBuckConfig kotlinBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
 
   public DefaultAndroidLibraryCompilerFactory(
       JavaBuckConfig javaConfig,
+      JavaCDBuckConfig javaCDConfig,
       ScalaBuckConfig scalaConfig,
       KotlinBuckConfig kotlinBuckConfig,
       DownwardApiConfig downwardApiConfig) {
     this.javaConfig = javaConfig;
+    this.javaCDConfig = javaCDConfig;
     this.scalaConfig = scalaConfig;
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
@@ -53,7 +57,11 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
     switch (language) {
       case JAVA:
         return new JavaConfiguredCompilerFactory(
-            javaConfig, downwardApiConfig, AndroidClasspathProvider::new, javacFactory);
+            javaConfig,
+            javaCDConfig,
+            downwardApiConfig,
+            AndroidClasspathProvider::new,
+            javacFactory);
       case SCALA:
         return new ScalaConfiguredCompilerFactory(
             scalaConfig, downwardApiConfig, AndroidClasspathProvider::new, javacFactory);

@@ -95,7 +95,8 @@ public class JavaLibraryDescription
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
     this.defaultJavaCompilerFactory =
-        new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory);
+        new JavaConfiguredCompilerFactory(
+            javaBuckConfig, javaCDBuckConfig, downwardApiConfig, javacFactory);
   }
 
   private Optional<UnresolvedInferPlatform> unresolvedInferPlatform(
@@ -249,7 +250,6 @@ public class JavaLibraryDescription
                 graphBuilder,
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
-                JavaCDParams.get(javaBuckConfig, javaCDBuckConfig),
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())

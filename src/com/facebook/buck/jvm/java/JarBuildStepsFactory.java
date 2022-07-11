@@ -765,6 +765,10 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     };
   }
 
+  public RulesCDParams getRulesCDParams() {
+    return cdParams;
+  }
+
   private CDParams createCDParams(ProjectFilesystem filesystem) {
     return CDParams.of(cdParams, filesystem);
   }
