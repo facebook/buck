@@ -62,6 +62,11 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
   }
 
   @Override
+  public int getRemoteExecutionCasUploads() {
+    return 0;
+  }
+
+  @Override
   public long getCasSmallDownloadSizeBytes() {
     return 0;
   }
@@ -74,6 +79,11 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
   @Override
   public long getCasDownloadSizeBytes() {
     return casDownladedBytes;
+  }
+
+  @Override
+  public long getRemoteExecutionCasUploadSizeBytes() {
+    return 0;
   }
 
   @Override
@@ -148,6 +158,36 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
 
   @Override
   public long getTaskTotalAvailableRemoteMemory() {
+    return 0;
+  }
+
+  @Override
+  public int getArtifactCacheCasUploads() {
+    return 0;
+  }
+
+  @Override
+  public long getArtifactCacheCasUploadSizeBytes() {
+    return 0;
+  }
+
+  @Override
+  public int getArtifactCacheCasDownloads() {
+    return 0;
+  }
+
+  @Override
+  public long getArtifactCacheCasDownloadSizeBytes() {
+    return 0;
+  }
+
+  @Override
+  public int getRemoteExecutionCasDownloads() {
+    return 0;
+  }
+
+  @Override
+  public long getRemoteExecutionCasDownloadSizeBytes() {
     return 0;
   }
 

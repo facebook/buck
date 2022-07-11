@@ -22,6 +22,7 @@ public enum GrpcAsyncBlobFetcherType {
   RemoteExecution,
   InProcess;
 
+  @Override
   public String toString() {
     if (this == GrpcAsyncBlobFetcherType.ArtifactsCache) {
       return "buckcache";
