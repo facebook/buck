@@ -188,7 +188,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
   @Override
   public KotlinExtraParams createExtraParams(BuildContext context, AbsPath rootPath) {
     return KotlinExtraParams.of(
-        context,
+        context.getSourcePathResolver(),
         rootPath,
         standardLibraryClasspath,
         annotationProcessingClassPath,

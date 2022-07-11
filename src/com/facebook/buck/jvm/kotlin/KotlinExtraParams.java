@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -32,8 +31,6 @@ import java.util.stream.Collectors;
 /** Extra params for creating Kotlin compile steps. */
 @BuckStyleValue
 public abstract class KotlinExtraParams implements CompileToJarStepFactory.ExtraParams {
-
-  public abstract BuildContext getBuildContext();
 
   public abstract AbsPath getResolvedStandardLibraryClassPath();
 
@@ -52,7 +49,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
 
   /** Resolve extra params. */
   public static KotlinExtraParams of(
-      BuildContext buildContext,
+      SourcePathResolverAdapter resolver,
       AbsPath rootPath,
       SourcePath standardLibraryClassPath,
       SourcePath annotationProcessingClassPath,
@@ -61,9 +58,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       ImmutableList<SourcePath> friendPaths,
       ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
       JavacOptions javacOptions) {
-    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     return ImmutableKotlinExtraParams.ofImpl(
-        buildContext,
         resolver.getAbsolutePath(standardLibraryClassPath),
         resolver.getAbsolutePath(annotationProcessingClassPath),
         kotlinCompilerPlugins.entrySet().stream()
