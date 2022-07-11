@@ -32,6 +32,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.cd.serialization.AbsPathSerializer;
 import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.BuildTargetValueSerializer;
@@ -49,7 +50,6 @@ import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -70,16 +70,16 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
 
   private final BuildJavaCommand.Builder commandBuilder = BuildJavaCommand.newBuilder();
   protected final Type type;
-  private final JavaCDParams javaCDParams;
+  private final CDParams cdParams;
 
   protected JavaCDStepsBuilderBase(
       boolean hasAnnotationProcessing,
       SpoolMode spoolMode,
       boolean withDownwardApi,
       Type type,
-      JavaCDParams javaCDParams) {
+      CDParams cdParams) {
     this.type = type;
-    this.javaCDParams = javaCDParams;
+    this.cdParams = cdParams;
     BaseCommandParams.Builder baseCommandParamsBuilder =
         commandBuilder.getBaseCommandParamsBuilder();
     baseCommandParamsBuilder.setHasAnnotationProcessing(hasAnnotationProcessing);
@@ -104,8 +104,8 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     }
 
     BuildJavaCommand buildJavaCommand = commandBuilder.build();
-    if (javaCDParams.hasJavaCDEnabled()) {
-      return ImmutableList.of(new JavaCDWorkerToolStep(buildJavaCommand, javaCDParams));
+    if (cdParams.isEnabled()) {
+      return ImmutableList.of(new JavaCDWorkerToolStep(buildJavaCommand, cdParams));
     }
     return new JavaStepsBuilder(buildJavaCommand).getSteps();
   }

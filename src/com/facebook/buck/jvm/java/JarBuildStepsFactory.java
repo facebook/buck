@@ -43,6 +43,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.params.CDParams;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.cd.serialization.java.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.JarParametersSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacOptionsSerializer;
@@ -57,8 +59,6 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
-import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
@@ -118,7 +118,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
   @AddToRuleKey private final boolean withDownwardApi;
 
-  @AddToRuleKey private final RulesJavaCDParams javaCDParams;
+  @AddToRuleKey private final RulesCDParams cdParams;
 
   /** Creates {@link JarBuildStepsFactory} */
   public static <T extends CompileToJarStepFactory.ExtraParams> JarBuildStepsFactory<T> of(
@@ -137,7 +137,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableList<JavaDependencyInfo> dependencyInfos,
       boolean isRequiredForSourceOnlyAbi,
       boolean withDownwardApi,
-      RulesJavaCDParams javaCDParams) {
+      RulesCDParams cdParams) {
     return new JarBuildStepsFactory<>(
         libraryTarget,
         configuredCompiler,
@@ -154,7 +154,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         dependencyInfos,
         isRequiredForSourceOnlyAbi,
         withDownwardApi,
-        javaCDParams);
+        cdParams);
   }
 
   /** Contains information about a Java classpath dependency. */
@@ -293,7 +293,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableList<JavaDependencyInfo> dependencyInfos,
       boolean isRequiredForSourceOnlyAbi,
       boolean withDownwardApi,
-      RulesJavaCDParams javaCDParams) {
+      RulesCDParams cdParams) {
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
     this.javac = javac;
@@ -310,7 +310,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     this.withDownwardApi = withDownwardApi;
     this.abiClasspath = this.dependencyInfos.getAbiClasspath();
     this.isRequiredForSourceOnlyAbi = isRequiredForSourceOnlyAbi;
-    this.javaCDParams = javaCDParams;
+    this.cdParams = cdParams;
   }
 
   public boolean producesJar() {
@@ -761,12 +761,12 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
           hasAnnotationProcessing(),
           withDownwardApi,
           configuredCompiler.getSpoolMode(),
-          createJavaCDParams(projectFilesystem));
+          createCDParams(projectFilesystem));
     };
   }
 
-  private JavaCDParams createJavaCDParams(ProjectFilesystem filesystem) {
-    return JavaCDParams.of(javaCDParams, filesystem);
+  private CDParams createCDParams(ProjectFilesystem filesystem) {
+    return CDParams.of(cdParams, filesystem);
   }
 
   boolean hasAnnotationProcessing() {
@@ -806,7 +806,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         && Objects.equal(dependencyInfos, that.dependencyInfos)
         && Objects.equal(abiClasspath, that.abiClasspath)
         && Objects.equal(classesToRemoveFromJar, that.classesToRemoveFromJar)
-        && Objects.equal(javaCDParams, that.javaCDParams);
+        && Objects.equal(cdParams, that.cdParams);
   }
 
   @Override
@@ -828,7 +828,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         abiGenerationMode,
         abiCompatibilityMode,
         withDownwardApi,
-        javaCDParams);
+        cdParams);
   }
 
   @Override
@@ -850,7 +850,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         .add("abiGenerationMode", abiGenerationMode)
         .add("abiCompatibilityMode", abiCompatibilityMode)
         .add("withDownwardApi", withDownwardApi)
-        .add("javaCDParams", javaCDParams)
+        .add("cdParams", cdParams)
         .toString();
   }
 }

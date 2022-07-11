@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.creator;
 
+import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DaemonJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaCDStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 
 /** Creator that creates an appropriate {@link JavaCompileStepsBuilderFactory}. */
 public class JavaCompileStepsBuilderFactoryCreator {
@@ -31,12 +31,12 @@ public class JavaCompileStepsBuilderFactoryCreator {
   /** Returns specific implementation of {@link JavaCompileStepsBuilderFactory}. */
   public static <T extends CompileToJarStepFactory.ExtraParams>
       JavaCompileStepsBuilderFactory createFactory(
-          CompileToJarStepFactory<T> configuredCompiler, JavaCDParams javaCDParams) {
+          CompileToJarStepFactory<T> configuredCompiler, CDParams cdParams) {
 
     if (configuredCompiler.supportsCompilationDaemon()) {
       DaemonJavacToJarStepFactory daemonJavacToJarStepFactory =
           (DaemonJavacToJarStepFactory) configuredCompiler;
-      return new JavaCDStepsBuilderFactory(daemonJavacToJarStepFactory, javaCDParams);
+      return new JavaCDStepsBuilderFactory(daemonJavacToJarStepFactory, cdParams);
     }
 
     return new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);

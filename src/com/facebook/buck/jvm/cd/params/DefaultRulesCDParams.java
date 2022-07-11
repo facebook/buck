@@ -14,69 +14,92 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.jvm.cd.params;
 
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.google.common.collect.ImmutableList;
 
-/**
- * Broken implementation of {@link RulesJavaCDParams} that is missing an annotation for one field.
- * Used in test {@link DefaultJavaLibraryTest#testSerializationFailure()}
- */
+/** Default implementation of {@link RulesCDParams} interface. */
 @BuckStyleValue
-public abstract class BrokenJavaCDParams implements RulesJavaCDParams {
+public abstract class DefaultRulesCDParams implements RulesCDParams {
 
   @Override
-  @AddToRuleKey
-  public abstract boolean hasJavaCDEnabled();
+  @ExcludeFromRuleKey(
+      reason = "running with or without compiler daemon should not be a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  public abstract boolean isEnabled();
 
   @Override
-  @AddToRuleKey
+  @ExcludeFromRuleKey(
+      reason = "start compiler daemon jvm options is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
   public abstract ImmutableList<String> getStartCommandOptions();
 
   @Override
   @ExcludeFromRuleKey(
+      reason = "worker tool pool size is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getWorkerToolPoolSize();
 
   @Override
-  @AddToRuleKey
+  @ExcludeFromRuleKey(
+      reason = "worker tool max instances size is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
   public abstract int getWorkerToolMaxInstancesSize();
 
   @Override
   @ExcludeFromRuleKey(
+      reason = "borrow from the pool is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getBorrowFromPoolTimeoutInSeconds();
 
   @Override
   @ExcludeFromRuleKey(
+      reason = "max wait for the result is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getMaxWaitForResultTimeoutInSeconds();
 
   @Override
   @ExcludeFromRuleKey(
+      reason = "pipelining disabled option is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract boolean pipeliningDisabled();
 
   @Override
   @ExcludeFromRuleKey(
+      reason = "env variables option is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract boolean isIncludeAllBucksEnvVariables();
 
-  public abstract boolean getParamWithNoAnnotation();
-
-  public static BrokenJavaCDParams of() {
-    return ImmutableBrokenJavaCDParams.ofImpl(
-        false, ImmutableList.of(), 1, 1, 1, 1, false, false, false);
+  /** Creates {@link DefaultRulesCDParams} */
+  static DefaultRulesCDParams of(
+      boolean hasCDEnabled,
+      Iterable<String> startCommandOptions,
+      int workerToolPoolSize,
+      int workerToolMaxInstancesSize,
+      int borrowFromPoolTimeoutInSeconds,
+      int maxWaitForResultTimeoutInSeconds,
+      boolean pipeliningDisabled,
+      boolean includeAllBucksEnvVariables) {
+    return ImmutableDefaultRulesCDParams.ofImpl(
+        hasCDEnabled,
+        startCommandOptions,
+        workerToolPoolSize,
+        workerToolMaxInstancesSize,
+        borrowFromPoolTimeoutInSeconds,
+        maxWaitForResultTimeoutInSeconds,
+        pipeliningDisabled,
+        includeAllBucksEnvVariables);
   }
 }

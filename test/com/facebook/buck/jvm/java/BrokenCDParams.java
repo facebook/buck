@@ -14,92 +14,69 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.params;
+package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.google.common.collect.ImmutableList;
 
-/** Default implementation of {@link RulesJavaCDParams} interface. */
+/**
+ * Broken implementation of {@link RulesCDParams} that is missing an annotation for one field. Used
+ * in test {@link DefaultJavaLibraryTest#testSerializationFailure()}
+ */
 @BuckStyleValue
-public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
+public abstract class BrokenCDParams implements RulesCDParams {
 
   @Override
-  @ExcludeFromRuleKey(
-      reason = "running with or without javacd should not be a part of a rule key",
-      serialization = DefaultFieldSerialization.class,
-      inputs = IgnoredFieldInputs.class)
-  public abstract boolean hasJavaCDEnabled();
+  @AddToRuleKey
+  public abstract boolean isEnabled();
 
   @Override
-  @ExcludeFromRuleKey(
-      reason = "start javacd jvm options is not a part of a rule key",
-      serialization = DefaultFieldSerialization.class,
-      inputs = IgnoredFieldInputs.class)
+  @AddToRuleKey
   public abstract ImmutableList<String> getStartCommandOptions();
 
   @Override
   @ExcludeFromRuleKey(
-      reason = "javacd worker tool pool size is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getWorkerToolPoolSize();
 
   @Override
-  @ExcludeFromRuleKey(
-      reason = "javacd worker tool max instances size is not a part of a rule key",
-      serialization = DefaultFieldSerialization.class,
-      inputs = IgnoredFieldInputs.class)
+  @AddToRuleKey
   public abstract int getWorkerToolMaxInstancesSize();
 
   @Override
   @ExcludeFromRuleKey(
-      reason = "javacd borrow from the pool is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getBorrowFromPoolTimeoutInSeconds();
 
   @Override
   @ExcludeFromRuleKey(
-      reason = "javacd max wait for the result is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getMaxWaitForResultTimeoutInSeconds();
 
   @Override
   @ExcludeFromRuleKey(
-      reason = "pipelining disabled option is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract boolean pipeliningDisabled();
 
   @Override
   @ExcludeFromRuleKey(
-      reason = "javacd env variables option is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract boolean isIncludeAllBucksEnvVariables();
 
-  /** Creates {@link DefaultRulesJavaCDParams} */
-  static DefaultRulesJavaCDParams of(
-      boolean hasJavaCDEnabled,
-      Iterable<String> startCommandOptions,
-      int workerToolPoolSize,
-      int workerToolMaxInstancesSize,
-      int borrowFromPoolTimeoutInSeconds,
-      int maxWaitForResultTimeoutInSeconds,
-      boolean pipeliningDisabled,
-      boolean includeAllBucksEnvVariables) {
-    return ImmutableDefaultRulesJavaCDParams.ofImpl(
-        hasJavaCDEnabled,
-        startCommandOptions,
-        workerToolPoolSize,
-        workerToolMaxInstancesSize,
-        borrowFromPoolTimeoutInSeconds,
-        maxWaitForResultTimeoutInSeconds,
-        pipeliningDisabled,
-        includeAllBucksEnvVariables);
+  public abstract boolean getParamWithNoAnnotation();
+
+  public static BrokenCDParams of() {
+    return ImmutableBrokenCDParams.ofImpl(
+        false, ImmutableList.of(), 1, 1, 1, 1, false, false, false);
   }
 }

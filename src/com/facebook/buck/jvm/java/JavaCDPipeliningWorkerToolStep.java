@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
+import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
 import com.facebook.buck.worker.WorkerProcessPool;
@@ -78,7 +78,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   private static final int MAX_WAIT_TIME_FOR_PIPELINE_FINISH_EVENT_SECONDS = 1;
 
-  private final JavaCDParams javaCDParams;
+  private final CDParams cdParams;
   private final boolean runWithoutPool;
 
   private final PipeliningCommand.Builder builder = PipeliningCommand.newBuilder();
@@ -98,10 +98,10 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       boolean hasAnnotationProcessing,
       boolean withDownwardApi,
       BaseCommandParams.SpoolMode spoolMode,
-      JavaCDParams javaCDParams) {
+      CDParams cdParams) {
     super("javacd_pipelining");
-    this.javaCDParams = javaCDParams;
-    this.runWithoutPool = javaCDParams.getWorkerToolPoolSize() == 0;
+    this.cdParams = cdParams;
+    this.runWithoutPool = cdParams.getWorkerToolPoolSize() == 0;
 
     builder
         .getBaseCommandParamsBuilder()
@@ -143,7 +143,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     ActionId actionId = context.getActionId();
     LOG.debug("Start execution for action id: %s", actionId);
     ImmutableList<String> launchJavaCDCommand =
-        JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams, context.getRuleCellRoot());
+        JavaCDWorkerStepUtils.getLaunchJavaCDCommand(cdParams, context.getRuleCellRoot());
 
     if (workerToolExecutor == null) {
       // the first execution
@@ -157,13 +157,13 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       if (runWithoutPool) {
         workerToolExecutor =
             JavaCDWorkerStepUtils.getLaunchedWorker(
-                context, launchJavaCDCommand, javaCDParams.isIncludeAllBucksEnvVariables());
+                context, launchJavaCDCommand, cdParams.isIncludeAllBucksEnvVariables());
       } else {
         WorkerProcessPool<WorkerToolExecutor> workerToolPool =
-            JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
+            JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, cdParams);
         borrowedWorkerTool =
             JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
-                workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
+                workerToolPool, cdParams.getBorrowFromPoolTimeoutInSeconds());
         workerToolExecutor = borrowedWorkerTool.get();
       }
 
@@ -182,8 +182,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     try {
       LOG.debug("Waiting for the result event associated with action id: %s", actionId);
       ResultEvent resultEvent =
-          resultEventFuture.get(
-              javaCDParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
+          resultEventFuture.get(cdParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
       LOG.debug(
           "Result event (exit code = %s) for action id: %s has been received",
           resultEvent.getExitCode(), actionId);

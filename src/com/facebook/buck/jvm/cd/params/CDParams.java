@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.params;
+package com.facebook.buck.jvm.cd.params;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -24,55 +24,53 @@ import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 /**
- * Params related to javacd. Used to pass into javacd worker tool step. Doesn't implement {@link
+ * Compiler Daemon params. Used to pass into daemon worker tool step. Doesn't implement {@link
  * AddsToRuleKey} interface.
  */
 @BuckStyleValue
-public abstract class JavaCDParams {
+public abstract class CDParams {
 
-  abstract RulesJavaCDParams getRulesJavaCDParams();
+  abstract RulesCDParams getRulesCDParams();
 
   @Value.Derived
-  public boolean hasJavaCDEnabled() {
-    return getRulesJavaCDParams().hasJavaCDEnabled();
+  public boolean isEnabled() {
+    return getRulesCDParams().isEnabled();
   }
 
   @Value.Derived
   public ImmutableList<String> getStartCommandOptions() {
-    return getRulesJavaCDParams().getStartCommandOptions();
+    return getRulesCDParams().getStartCommandOptions();
   }
 
   @Value.Derived
   public int getWorkerToolPoolSize() {
-    return getRulesJavaCDParams().getWorkerToolPoolSize();
+    return getRulesCDParams().getWorkerToolPoolSize();
   }
 
   @Value.Derived
   public int getWorkerToolMaxInstancesSize() {
-    return getRulesJavaCDParams().getWorkerToolMaxInstancesSize();
+    return getRulesCDParams().getWorkerToolMaxInstancesSize();
   }
 
   @Value.Derived
   public int getBorrowFromPoolTimeoutInSeconds() {
-    return getRulesJavaCDParams().getBorrowFromPoolTimeoutInSeconds();
+    return getRulesCDParams().getBorrowFromPoolTimeoutInSeconds();
   }
 
   @Value.Derived
   public int getMaxWaitForResultTimeoutInSeconds() {
-    return getRulesJavaCDParams().getMaxWaitForResultTimeoutInSeconds();
+    return getRulesCDParams().getMaxWaitForResultTimeoutInSeconds();
   }
 
   @Value.Derived
   public boolean isIncludeAllBucksEnvVariables() {
-    return getRulesJavaCDParams().isIncludeAllBucksEnvVariables();
+    return getRulesCDParams().isIncludeAllBucksEnvVariables();
   }
 
   public abstract RelPath getLogDirectory();
 
-  /** Creates {@link JavaCDParams} */
-  public static JavaCDParams of(
-      RulesJavaCDParams rulesJavaCDParams, ProjectFilesystem projectFilesystem) {
-    return ImmutableJavaCDParams.ofImpl(
-        rulesJavaCDParams, projectFilesystem.getBuckPaths().getLogDir());
+  /** Creates {@link CDParams} */
+  public static CDParams of(RulesCDParams rulesCDParams, ProjectFilesystem projectFilesystem) {
+    return ImmutableCDParams.ofImpl(rulesCDParams, projectFilesystem.getBuckPaths().getLogDir());
   }
 }

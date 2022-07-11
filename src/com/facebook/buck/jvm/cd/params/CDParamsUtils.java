@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.params;
+package com.facebook.buck.jvm.cd.params;
 
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import javax.annotation.Nullable;
 
-/** Utility class used to create {@link RulesJavaCDParams} */
-public class JavaCDParamsUtils {
+/** Utility class used to create {@link RulesCDParams} */
+public class CDParamsUtils {
 
-  @Nullable private static RulesJavaCDParams javaCDParams;
+  @Nullable private static RulesCDParams cdParams;
 
-  /** Returns {@link RulesJavaCDParams} built from configuration values */
-  public static RulesJavaCDParams getJavaCDParams(
+  /** Returns {@link RulesCDParams} built from configuration values */
+  public static RulesCDParams getJavaCDParams(
       JavaBuckConfig javaBuckConfig, JavaCDBuckConfig javaCDBuckConfig) {
-    if (javaCDParams == null) {
-      javaCDParams =
-          DefaultRulesJavaCDParams.of(
+    if (cdParams == null) {
+      cdParams =
+          DefaultRulesCDParams.of(
               javaBuckConfig.isJavaCDEnabled(),
               javaCDBuckConfig.getJvmFlags(),
               javaCDBuckConfig.getWorkerToolSize(),
@@ -40,6 +40,6 @@ public class JavaCDParamsUtils {
               javaBuckConfig.isPipeliningDisabled(),
               javaCDBuckConfig.isPathAllEnvVariablesToJavacd());
     }
-    return javaCDParams;
+    return cdParams;
   }
 }

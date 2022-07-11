@@ -14,7 +14,7 @@ buck_java_library(
         "//src/com/facebook/buck/jvm/java/stepsbuilder:stepsbuilder",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/impl:impl",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd:javacd",
-        "//src/com/facebook/buck/jvm/java/stepsbuilder/params:params",
+        "//src/com/facebook/buck/jvm/cd/params:params",
         "//third-party/java/guava:guava",
     ],
 )

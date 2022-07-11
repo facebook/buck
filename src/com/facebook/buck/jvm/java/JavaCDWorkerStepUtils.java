@@ -22,7 +22,7 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downward.model.ResultEvent;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
+import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.env.BuckClasspath;
@@ -100,10 +100,10 @@ public class JavaCDWorkerStepUtils {
 
   /** Returns the startup command for launching javacd process. */
   public static ImmutableList<String> getLaunchJavaCDCommand(
-      JavaCDParams javaCDParams, AbsPath ruleCellRoot) {
-    ImmutableList<String> startCommandOptions = javaCDParams.getStartCommandOptions();
+      CDParams cdParams, AbsPath ruleCellRoot) {
+    ImmutableList<String> startCommandOptions = cdParams.getStartCommandOptions();
     ImmutableList<String> commonJvmParams =
-        getCommonJvmParams(ruleCellRoot.resolve(javaCDParams.getLogDirectory()));
+        getCommonJvmParams(ruleCellRoot.resolve(cdParams.getLogDirectory()));
 
     String classpath =
         Objects.requireNonNull(
@@ -153,16 +153,13 @@ public class JavaCDWorkerStepUtils {
 
   /** Returns {@link WorkerProcessPool} created for the passed {@code command} */
   public static WorkerProcessPool<WorkerToolExecutor> getWorkerToolPool(
-      IsolatedExecutionContext context,
-      ImmutableList<String> startupCommand,
-      JavaCDParams javaCDParams) {
+      IsolatedExecutionContext context, ImmutableList<String> startupCommand, CDParams cdParams) {
     return WorkerToolPoolFactory.getPool(
         context,
         startupCommand,
-        getLaunchWorkerSupplier(
-            context, startupCommand, javaCDParams.isIncludeAllBucksEnvVariables()),
-        javaCDParams.getWorkerToolPoolSize(),
-        javaCDParams.getWorkerToolMaxInstancesSize());
+        getLaunchWorkerSupplier(context, startupCommand, cdParams.isIncludeAllBucksEnvVariables()),
+        cdParams.getWorkerToolPoolSize(),
+        cdParams.getWorkerToolMaxInstancesSize());
   }
 
   /** Returns {@link WorkerToolExecutor} created for the passed {@code command} */

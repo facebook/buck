@@ -40,6 +40,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.params.CDParams;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.CompilerOutputPathsValueSerializer;
@@ -52,8 +54,6 @@ import com.facebook.buck.jvm.java.CalculateSourceAbi.SourceAbiBuildable;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
-import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
@@ -90,12 +90,12 @@ public class CalculateSourceAbi
       ProjectFilesystem projectFilesystem,
       JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
-      RulesJavaCDParams javaCDParams) {
+      RulesCDParams cdParams) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new SourceAbiBuildable(buildTarget, projectFilesystem, jarBuildStepsFactory, javaCDParams));
+        new SourceAbiBuildable(buildTarget, projectFilesystem, jarBuildStepsFactory, cdParams));
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
     this.sourcePathToOutput =
@@ -103,7 +103,7 @@ public class CalculateSourceAbi
             jarBuildStepsFactory.getSourcePathToOutput(
                 getBuildTarget(), getProjectFilesystem().getBuckPaths()));
     this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
-    this.usePipelining = !javaCDParams.pipeliningDisabled();
+    this.usePipelining = !cdParams.pipeliningDisabled();
   }
 
   /** Buildable implementation. */
@@ -118,16 +118,16 @@ public class CalculateSourceAbi
     @AddToRuleKey private final PublicOutputPath rootOutputPath;
     @AddToRuleKey private final PublicOutputPath annotationsOutputPath;
 
-    @AddToRuleKey private final RulesJavaCDParams javaCDParams;
+    @AddToRuleKey private final RulesCDParams cdParams;
 
     public SourceAbiBuildable(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
         JarBuildStepsFactory<?> jarBuildStepsFactory,
-        RulesJavaCDParams javaCDParams) {
+        RulesCDParams cdParams) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
-      this.javaCDParams = javaCDParams;
+      this.cdParams = cdParams;
       CompilerOutputPaths outputPaths =
           CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
       this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
@@ -250,15 +250,15 @@ public class CalculateSourceAbi
     private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
         ProjectFilesystem filesystem) {
       return JavaCompileStepsBuilderFactoryCreator.createFactory(
-          jarBuildStepsFactory.getConfiguredCompiler(), createJavaCDParams(filesystem));
+          jarBuildStepsFactory.getConfiguredCompiler(), createCDParams(filesystem));
     }
 
-    private JavaCDParams createJavaCDParams(ProjectFilesystem filesystem) {
-      return JavaCDParams.of(javaCDParams, filesystem);
+    private CDParams createCDParams(ProjectFilesystem filesystem) {
+      return CDParams.of(cdParams, filesystem);
     }
 
     public boolean supportsCompilationDaemon() {
-      return javaCDParams.hasJavaCDEnabled();
+      return cdParams.isEnabled();
     }
   }
 

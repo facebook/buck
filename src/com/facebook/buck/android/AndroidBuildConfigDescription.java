@@ -34,6 +34,8 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.params.CDParamsUtils;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -41,8 +43,6 @@ import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParamsUtils;
-import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -113,7 +113,7 @@ public class AndroidBuildConfigDescription
         graphBuilder,
         downwardApiConfig.isEnabledForAndroid(),
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
-        JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
+        CDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
   /**
@@ -136,7 +136,7 @@ public class AndroidBuildConfigDescription
       ActionGraphBuilder graphBuilder,
       boolean withDownwardApi,
       boolean shouldExecuteInSeparateProcess,
-      RulesJavaCDParams javaCDParams) {
+      RulesCDParams javaCDParams) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this

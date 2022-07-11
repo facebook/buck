@@ -23,7 +23,7 @@ buck_java_library(
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/stepsbuilder:stepsbuilder",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/impl:impl",
-        "//src/com/facebook/buck/jvm/java/stepsbuilder/params:params",
+        "//src/com/facebook/buck/jvm/cd/params:params",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/java:java",
         "//src/com/facebook/buck/util/env:env",

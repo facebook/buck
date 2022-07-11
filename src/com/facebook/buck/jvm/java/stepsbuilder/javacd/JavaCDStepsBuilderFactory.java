@@ -17,12 +17,12 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
+import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.java.DaemonJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 
 /**
  * Factory that creates {@link JavaCompileStepsBuilder } builders instances applicable to JavaCD.
@@ -32,27 +32,26 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
   private final boolean hasAnnotationProcessing;
   private final SpoolMode spoolMode;
   private final boolean withDownwardApi;
-  private final JavaCDParams javaCDParams;
+  private final CDParams cdParams;
 
   public JavaCDStepsBuilderFactory(
-      DaemonJavacToJarStepFactory configuredCompiler, JavaCDParams javaCDParams) {
+      DaemonJavacToJarStepFactory configuredCompiler, CDParams cdParams) {
     this.hasAnnotationProcessing = configuredCompiler.hasAnnotationProcessing();
     this.spoolMode = configuredCompiler.getSpoolMode();
     this.withDownwardApi = configuredCompiler.isWithDownwardApi();
-    this.javaCDParams = javaCDParams;
+    this.cdParams = cdParams;
   }
 
   /** Creates an appropriate {@link LibraryStepsBuilder} instance. */
   @Override
   public LibraryStepsBuilder getLibraryBuilder() {
     return new JavaCDLibraryStepsBuilder(
-        hasAnnotationProcessing, spoolMode, withDownwardApi, javaCDParams);
+        hasAnnotationProcessing, spoolMode, withDownwardApi, cdParams);
   }
 
   /** Creates an appropriate {@link AbiStepsBuilder} instance. */
   @Override
   public AbiStepsBuilder getAbiBuilder() {
-    return new JavaCDAbiStepsBuilder(
-        hasAnnotationProcessing, spoolMode, withDownwardApi, javaCDParams);
+    return new JavaCDAbiStepsBuilder(hasAnnotationProcessing, spoolMode, withDownwardApi, cdParams);
   }
 }

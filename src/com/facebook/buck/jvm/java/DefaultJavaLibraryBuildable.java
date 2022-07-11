@@ -46,6 +46,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.params.CDParams;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.CompilerOutputPathsValueSerializer;
@@ -54,8 +56,6 @@ import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
-import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -98,7 +98,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   @AddToRuleKey
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
-  @AddToRuleKey private final RulesJavaCDParams javaCDParams;
+  @AddToRuleKey private final RulesCDParams cdParams;
 
   DefaultJavaLibraryBuildable(
       BuildTarget buildTarget,
@@ -107,7 +107,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
-      RulesJavaCDParams javaCDParams) {
+      RulesCDParams cdParams) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.buildTarget = buildTarget;
@@ -118,7 +118,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                 rule ->
                     new NonHashableSourcePathContainer(
                         requireNonNull(rule.getSourcePathToOutput())));
-    this.javaCDParams = javaCDParams;
+    this.cdParams = cdParams;
 
     CompilerOutputPaths outputPaths =
         CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
@@ -133,7 +133,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   DefaultJavaLibraryBuildable(
       DefaultJavaLibraryBuildable libraryBuildable,
       ProjectFilesystem filesystem,
-      RulesJavaCDParams javaCDParams) {
+      RulesCDParams cdParams) {
     this(
         libraryBuildable.buildTarget,
         filesystem,
@@ -141,7 +141,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         libraryBuildable.unusedDependenciesAction,
         libraryBuildable.unusedDependenciesFinderFactory,
         null,
-        javaCDParams);
+        cdParams);
   }
 
   RelPath getPathToClassHashes(ProjectFilesystem filesystem) {
@@ -192,7 +192,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
       ProjectFilesystem projectFilesystem) {
     return JavaCompileStepsBuilderFactoryCreator.createFactory(
-        jarBuildStepsFactory.getConfiguredCompiler(), createJavaCDParams(projectFilesystem));
+        jarBuildStepsFactory.getConfiguredCompiler(), createCDParams(projectFilesystem));
   }
 
   @Override
@@ -382,8 +382,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
   }
 
-  private JavaCDParams createJavaCDParams(ProjectFilesystem filesystem) {
-    return JavaCDParams.of(javaCDParams, filesystem);
+  private CDParams createCDParams(ProjectFilesystem filesystem) {
+    return CDParams.of(cdParams, filesystem);
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
@@ -495,7 +495,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   public boolean useRulePipelining() {
-    return !javaCDParams.pipeliningDisabled() && jarBuildStepsFactory.useRulePipelining();
+    return !cdParams.pipeliningDisabled() && jarBuildStepsFactory.useRulePipelining();
   }
 
   public RulePipelineStateFactory<JavacPipelineState, PipelineState> getPipelineStateFactory() {
@@ -507,7 +507,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   public boolean supportsCompilationDaemon() {
-    return javaCDParams.hasJavaCDEnabled();
+    return cdParams.isEnabled();
   }
 
   @Override
@@ -528,7 +528,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         && Objects.equal(pathToClassHashesOutputPath, that.pathToClassHashesOutputPath)
         && Objects.equal(annotationsOutputPath, that.annotationsOutputPath)
         && Objects.equal(unusedDependenciesFinderFactory, that.unusedDependenciesFinderFactory)
-        && Objects.equal(javaCDParams, that.javaCDParams);
+        && Objects.equal(cdParams, that.cdParams);
   }
 
   @Override
@@ -543,7 +543,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         annotationsOutputPath,
         buildTarget,
         unusedDependenciesFinderFactory,
-        javaCDParams);
+        cdParams);
   }
 
   @Override
@@ -558,7 +558,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         .add("annotationsOutputPath", annotationsOutputPath)
         .add("buildTarget", buildTarget)
         .add("unusedDependenciesFinderFactory", unusedDependenciesFinderFactory)
-        .add("javaCDParams", javaCDParams)
+        .add("cdParams", cdParams)
         .toString();
   }
 }

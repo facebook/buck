@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.params;
+package com.facebook.buck.jvm.cd.params;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Params related to javacd. Implements {@link AddsToRuleKey} interface and supposes to be used in
- * java related rules as a field.
+ * Compiler daemon related params. Implements {@link AddsToRuleKey} interface and is supposed to be
+ * used in related rules as a field.
  */
-public interface RulesJavaCDParams extends AddsToRuleKey {
+public interface RulesCDParams extends AddsToRuleKey {
 
-  boolean hasJavaCDEnabled();
+  boolean isEnabled();
 
   ImmutableList<String> getStartCommandOptions();
 

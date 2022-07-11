@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.cd.serialization.java.JarParametersSerializer;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
@@ -33,7 +34,6 @@ import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,8 +49,8 @@ class JavaCDAbiStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
       boolean hasAnnotationProcessing,
       SpoolMode spoolMode,
       boolean withDownwardApi,
-      JavaCDParams javaCDParams) {
-    super(hasAnnotationProcessing, spoolMode, withDownwardApi, Type.ABI_JAR, javaCDParams);
+      CDParams cdParams) {
+    super(hasAnnotationProcessing, spoolMode, withDownwardApi, Type.ABI_JAR, cdParams);
   }
 
   @Override

@@ -42,13 +42,13 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.EmptyJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
-import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.rules.modern.PipelinedModernBuildRule;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
@@ -183,7 +183,7 @@ public class DefaultJavaLibrary
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
-      RulesJavaCDParams javaCDParams) {
+      RulesCDParams cdParams) {
     super(
         buildTarget,
         projectFilesystem,
@@ -195,7 +195,7 @@ public class DefaultJavaLibrary
             unusedDependenciesAction,
             unusedDependenciesFinderFactory,
             sourceAbi,
-            javaCDParams));
+            cdParams));
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(

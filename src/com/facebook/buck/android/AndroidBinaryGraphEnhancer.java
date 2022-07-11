@@ -45,6 +45,8 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.params.CDParamsUtils;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
@@ -58,8 +60,6 @@ import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParamsUtils;
-import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.util.MoreMaps;
@@ -414,7 +414,7 @@ public class AndroidBinaryGraphEnhancer {
                   .getDelegate()
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
-              JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
+              CDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
@@ -658,7 +658,7 @@ public class AndroidBinaryGraphEnhancer {
       AndroidPackageableCollection packageableCollection,
       boolean withDownwardApi,
       boolean shouldExecuteInSeparateProcess,
-      RulesJavaCDParams javaCDParams) {
+      RulesCDParams javaCDParams) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(

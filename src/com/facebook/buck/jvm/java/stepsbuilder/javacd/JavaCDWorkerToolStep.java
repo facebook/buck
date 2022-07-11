@@ -21,8 +21,8 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ResultEvent;
+import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.java.JavaCDWorkerStepUtils;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
 import com.facebook.buck.worker.WorkerProcessPool;
@@ -41,32 +41,32 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   private static final Logger LOG = Logger.get(JavaCDWorkerToolStep.class);
 
   private final BuildJavaCommand buildJavaCommand;
-  private final JavaCDParams javaCDParams;
+  private final CDParams cdParams;
   private final boolean runWithoutPool;
 
-  public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, JavaCDParams javaCDParams) {
+  public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, CDParams cdParams) {
     super("javacd");
     this.buildJavaCommand = buildJavaCommand;
-    this.javaCDParams = javaCDParams;
-    this.runWithoutPool = javaCDParams.getWorkerToolPoolSize() == 0;
+    this.cdParams = cdParams;
+    this.runWithoutPool = cdParams.getWorkerToolPoolSize() == 0;
   }
 
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
     ImmutableList<String> launchJavaCDCommand =
-        JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams, context.getRuleCellRoot());
+        JavaCDWorkerStepUtils.getLaunchJavaCDCommand(cdParams, context.getRuleCellRoot());
 
     if (runWithoutPool) {
       try (WorkerToolExecutor workerToolExecutor =
           JavaCDWorkerStepUtils.getLaunchedWorker(
-              context, launchJavaCDCommand, javaCDParams.isIncludeAllBucksEnvVariables())) {
+              context, launchJavaCDCommand, cdParams.isIncludeAllBucksEnvVariables())) {
         return executeBuildJavaCommand(context, workerToolExecutor, launchJavaCDCommand);
       }
     }
 
     WorkerProcessPool<WorkerToolExecutor> workerToolPool =
-        JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
+        JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, cdParams);
     return executeOnWorkerToolPool(context, launchJavaCDCommand, workerToolPool);
   }
 
@@ -78,7 +78,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
     try (BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool =
         JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
-            workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds())) {
+            workerToolPool, cdParams.getBorrowFromPoolTimeoutInSeconds())) {
       return executeBuildJavaCommand(context, borrowedWorkerTool.get(), launchJavaCDCommand);
     }
   }
@@ -94,8 +94,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
       SettableFuture<ResultEvent> resultEventFuture =
           workerToolExecutor.executeCommand(actionId, buildJavaCommand);
       ResultEvent resultEvent =
-          resultEventFuture.get(
-              javaCDParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
+          resultEventFuture.get(cdParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
       return JavaCDWorkerStepUtils.createStepExecutionResult(
           launchJavaCDCommand, resultEvent, actionId);
     } catch (ExecutionException e) {

@@ -1791,7 +1791,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     DefaultJavaLibrary javaLibrary = scenario.createJavaLibraryRule(projectFilesystem);
     DefaultJavaLibraryBuildable javaLibraryBuildable =
         new DefaultJavaLibraryBuildable(
-            javaLibrary.getBuildable(), projectFilesystem, BrokenJavaCDParams.of());
+            javaLibrary.getBuildable(), projectFilesystem, BrokenCDParams.of());
 
     ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
@@ -1811,15 +1811,13 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertThat(
         exception.getMessage(),
         containsString(
-            "When visiting "
-                + DefaultJavaLibraryBuildable.class.getCanonicalName()
-                + ".javaCDParams"));
+            "When visiting " + DefaultJavaLibraryBuildable.class.getCanonicalName() + ".cdParams"));
     assertThat(exception.getCause(), instanceOf(BuckUncheckedExecutionException.class));
     BuckUncheckedExecutionException cause = (BuckUncheckedExecutionException) exception.getCause();
     assertThat(
         cause.getMessage(),
         containsString(
-            "When visiting com.facebook.buck.jvm.java.ImmutableBrokenJavaCDParams.paramWithNoAnnotation"));
+            "When visiting com.facebook.buck.jvm.java.ImmutableBrokenCDParams.paramWithNoAnnotation"));
     assertThat(cause.getCause(), instanceOf(VerifyException.class));
     VerifyException verifyException = (VerifyException) cause.getCause();
     assertThat(
