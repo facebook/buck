@@ -4,7 +4,7 @@ load(
 )
 
 java_immutables_library(
-    name = "stepsbuilder",
+    name = "cd",
     srcs = glob(["*.java"]),
     visibility = [
         "//src/com/facebook/buck/...",

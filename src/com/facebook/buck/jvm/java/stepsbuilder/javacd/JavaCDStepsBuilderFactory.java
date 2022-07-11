@@ -17,17 +17,15 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
+import com.facebook.buck.jvm.cd.AbiStepsBuilder;
+import com.facebook.buck.jvm.cd.CompileStepsBuilder;
+import com.facebook.buck.jvm.cd.CompileStepsBuilderFactory;
+import com.facebook.buck.jvm.cd.LibraryStepsBuilder;
 import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.java.DaemonJavacToJarStepFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
 
-/**
- * Factory that creates {@link JavaCompileStepsBuilder } builders instances applicable to JavaCD.
- */
-public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory {
+/** Factory that creates {@link CompileStepsBuilder } builders instances applicable to JavaCD. */
+public class JavaCDStepsBuilderFactory implements CompileStepsBuilderFactory {
 
   private final boolean hasAnnotationProcessing;
   private final SpoolMode spoolMode;

@@ -46,15 +46,15 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.CompileStepsBuilderFactory;
+import com.facebook.buck.jvm.cd.JavaLibraryRules;
+import com.facebook.buck.jvm.cd.LibraryStepsBuilder;
 import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.CompilerOutputPathsValueSerializer;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -188,9 +188,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
 
-    JavaCompileStepsBuilderFactory javaCompileStepsBuilderFactory =
+    CompileStepsBuilderFactory compileStepsBuilderFactory =
         getJavaCompileStepsBuilderFactory(filesystem);
-    LibraryStepsBuilder stepsBuilder = javaCompileStepsBuilderFactory.getLibraryBuilder();
+    LibraryStepsBuilder stepsBuilder = compileStepsBuilderFactory.getLibraryBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
         buildContext,
@@ -206,7 +206,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return stepsBuilder.build(buildContext.getEventBus());
   }
 
-  private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
+  private CompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
       ProjectFilesystem projectFilesystem) {
     return JavaCompileStepsBuilderFactoryCreator.createFactory(
         jarBuildStepsFactory.getConfiguredCompiler(), createCDParams(projectFilesystem));

@@ -32,6 +32,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.jvm.cd.CompileStepsBuilder;
 import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.cd.serialization.AbsPathSerializer;
 import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
@@ -49,7 +50,6 @@ import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.ResolvedJavac;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -60,7 +60,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Creates a worker tool step that would communicate with JavaCD process. */
-abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileStepsBuilder {
+abstract class JavaCDStepsBuilderBase<T extends Message> implements CompileStepsBuilder {
 
   /** Type of the command that javacd should execute. */
   protected enum Type {

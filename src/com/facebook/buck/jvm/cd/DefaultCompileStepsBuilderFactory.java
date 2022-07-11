@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.impl;
+package com.facebook.buck.jvm.cd;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
 
 /**
- * Factory that creates {@link JavaCompileStepsBuilder } builders instances that returns steps that
- * is ready to be executed in the current process.
+ * Factory that creates {@link CompileStepsBuilder } builders instances that returns steps that is
+ * ready to be executed in the current process.
  */
-public class DefaultJavaCompileStepsBuilderFactory<T extends CompileToJarStepFactory.ExtraParams>
-    implements JavaCompileStepsBuilderFactory {
+public class DefaultCompileStepsBuilderFactory<T extends CompileToJarStepFactory.ExtraParams>
+    implements CompileStepsBuilderFactory {
 
   private final CompileToJarStepFactory<T> configuredCompiler;
 
-  public DefaultJavaCompileStepsBuilderFactory(CompileToJarStepFactory<T> configuredCompiler) {
+  public DefaultCompileStepsBuilderFactory(CompileToJarStepFactory<T> configuredCompiler) {
     this.configuredCompiler = configuredCompiler;
   }
 

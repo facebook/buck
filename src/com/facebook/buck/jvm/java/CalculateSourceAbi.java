@@ -40,6 +40,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.AbiStepsBuilder;
+import com.facebook.buck.jvm.cd.CompileStepsBuilderFactory;
 import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
@@ -51,8 +53,6 @@ import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateSourceAbi.SourceAbiBuildable;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPathResolver;
@@ -138,7 +138,7 @@ public class CalculateSourceAbi
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      AbiStepsBuilder stepsBuilder = getJavaCompileStepsBuilderFactory(filesystem).getAbiBuilder();
+      AbiStepsBuilder stepsBuilder = getCompileStepsBuilderFactory(filesystem).getAbiBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
           filesystem,
@@ -245,8 +245,7 @@ public class CalculateSourceAbi
       return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
     }
 
-    private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
-        ProjectFilesystem filesystem) {
+    private CompileStepsBuilderFactory getCompileStepsBuilderFactory(ProjectFilesystem filesystem) {
       return JavaCompileStepsBuilderFactoryCreator.createFactory(
           jarBuildStepsFactory.getConfiguredCompiler(), createCDParams(filesystem));
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder;
+package com.facebook.buck.jvm.cd;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.cd.model.java.PipelineState;

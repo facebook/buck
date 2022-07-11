@@ -3,7 +3,7 @@ buck_java_library(
     name = "java",
     srcs = glob(["*.java"]),
     visibility = [
-        "//src/com/facebook/buck/jvm/java/...",
+        "//src/com/facebook/buck/jvm/...",
     ],
     deps = [
         "//src-gen:javacd-model",

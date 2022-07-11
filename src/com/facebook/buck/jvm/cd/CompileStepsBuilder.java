@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder;
+package com.facebook.buck.jvm.cd;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.step.Step;
@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /** Builder for java compilation steps. */
-public interface JavaCompileStepsBuilder {
+public interface CompileStepsBuilder {
 
   ImmutableList<IsolatedStep> buildIsolatedSteps(Optional<BuckEventBus> buckEventBusOptional);
 

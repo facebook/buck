@@ -28,6 +28,10 @@ import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.jvm.cd.AbiStepsBuilder;
+import com.facebook.buck.jvm.cd.CompileStepsBuilder;
+import com.facebook.buck.jvm.cd.DefaultCompileStepsBuilderFactory;
+import com.facebook.buck.jvm.cd.LibraryStepsBuilder;
 import com.facebook.buck.jvm.cd.serialization.AbsPathSerializer;
 import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.BuildTargetValueSerializer;
@@ -39,10 +43,6 @@ import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacSerializer;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.DaemonJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.JavaExtraParams;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -72,21 +72,21 @@ public class JavaStepsBuilder {
   }
 
   private Pair<AbsPath, ImmutableList<IsolatedStep>> buildSteps(BuildJavaCommand buildJavaCommand) {
-    DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> factory =
-        creteDefaultStepsFactory(buildJavaCommand);
+    DefaultCompileStepsBuilderFactory<JavaExtraParams> factory =
+        createDefaultStepsFactory(buildJavaCommand);
     boolean withDownwardApi = buildJavaCommand.getBaseCommandParams().getWithDownwardApi();
 
     BuildJavaCommand.CommandCase commandCase = buildJavaCommand.getCommandCase();
     AbsPath ruleCellRoot;
 
-    JavaCompileStepsBuilder javaCompileStepsBuilder;
+    CompileStepsBuilder compileStepsBuilder;
     switch (commandCase) {
       case LIBRARYJARCOMMAND:
         LibraryJarCommand libraryJarCommand = buildJavaCommand.getLibraryJarCommand();
         LibraryStepsBuilder libraryJarBuilder = factory.getLibraryBuilder();
         ruleCellRoot =
             handleLibraryJarCommand(libraryJarBuilder, libraryJarCommand, withDownwardApi);
-        javaCompileStepsBuilder = libraryJarBuilder;
+        compileStepsBuilder = libraryJarBuilder;
         break;
 
       case ABIJARCOMMAND:
@@ -94,7 +94,7 @@ public class JavaStepsBuilder {
         AbiStepsBuilder abiJarBuilder = factory.getAbiBuilder();
         ruleCellRoot = handleAbiJarCommand(abiJarBuilder, abiJarCommand, withDownwardApi);
 
-        javaCompileStepsBuilder = abiJarBuilder;
+        compileStepsBuilder = abiJarBuilder;
         break;
 
       case COMMAND_NOT_SET:
@@ -102,7 +102,7 @@ public class JavaStepsBuilder {
         throw new IllegalStateException(commandCase + " is not supported!");
     }
 
-    return new Pair<>(ruleCellRoot, javaCompileStepsBuilder.buildIsolatedSteps());
+    return new Pair<>(ruleCellRoot, compileStepsBuilder.buildIsolatedSteps());
   }
 
   private AbsPath handleLibraryJarCommand(
@@ -201,11 +201,11 @@ public class JavaStepsBuilder {
     return AbsPathSerializer.deserialize(filesystemParams.getRootPath());
   }
 
-  private static DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> creteDefaultStepsFactory(
+  private static DefaultCompileStepsBuilderFactory<JavaExtraParams> createDefaultStepsFactory(
       BuildJavaCommand buildJavaCommand) {
     DaemonJavacToJarStepFactory daemonJavacToJarStepFactory =
         getDaemonJavacToJarStepFactory(buildJavaCommand.getBaseCommandParams());
-    return new DefaultJavaCompileStepsBuilderFactory<>(daemonJavacToJarStepFactory);
+    return new DefaultCompileStepsBuilderFactory<>(daemonJavacToJarStepFactory);
   }
 
   /** Returns {@link DaemonJavacToJarStepFactory} */

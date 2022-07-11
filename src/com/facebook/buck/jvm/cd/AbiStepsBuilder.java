@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder;
+package com.facebook.buck.jvm.cd;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.cd.model.java.FilesystemParams;
-import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -32,21 +31,12 @@ import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
-/** Builder that creates library jar steps. */
-public interface LibraryStepsBuilder extends JavaCompileStepsBuilder {
+/** Builder that creates abi jar steps. */
+public interface AbiStepsBuilder extends CompileStepsBuilder {
 
-  void addUnusedDependencyStep(
-      UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
-      String buildTargetFullyQualifiedName);
-
-  void addMakeMissingOutputsStep(
-      RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath);
-
-  void addBuildStepsForLibrary(
+  void addBuildStepsForAbi(
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
@@ -57,16 +47,15 @@ public interface LibraryStepsBuilder extends JavaCompileStepsBuilder {
       BuildableContext buildableContext,
       BuildTargetValue buildTargetValue,
       CompilerOutputPathsValue compilerOutputPathsValue,
-      RelPath pathToClassHashes,
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<RelPath> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbsPath buildCellRootPath,
-      Optional<RelPath> pathToClasses,
       ResolvedJavac resolvedJavac,
       CompileToJarStepFactory.ExtraParams extraParams);
 }

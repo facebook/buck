@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder;
+package com.facebook.buck.jvm.cd;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.cd.model.java.FilesystemParams;
@@ -26,17 +26,25 @@ import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
+import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
+import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import javax.annotation.Nullable;
 
-/** Builder that creates abi jar steps. */
-public interface AbiStepsBuilder extends JavaCompileStepsBuilder {
+/** Default implementation of {@link AbiStepsBuilder} */
+class DefaultAbiStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
+    extends DefaultCompileStepsBuilderBase<T> implements AbiStepsBuilder {
 
-  void addBuildStepsForAbi(
+  DefaultAbiStepsBuilder(CompileToJarStepFactory<T> configuredCompiler) {
+    super(configuredCompiler);
+  }
+
+  @Override
+  public void addBuildStepsForAbi(
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
@@ -57,5 +65,39 @@ public interface AbiStepsBuilder extends JavaCompileStepsBuilder {
       @Nullable JarParameters libraryJarParameters,
       AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
-      CompileToJarStepFactory.ExtraParams extraParams);
+      CompileToJarStepFactory.ExtraParams extraParams) {
+
+    stepsBuilder.addAll(
+        MakeCleanDirectoryIsolatedStep.of(
+            compilerOutputPathsValue.getByType(buildTargetValue.getType()).getWorkingDirectory()));
+
+    CompilerParameters compilerParameters =
+        JavaLibraryRules.getCompilerParameters(
+            compileTimeClasspathPaths,
+            javaSrcs,
+            fullJarInfos,
+            abiJarInfos,
+            buildTargetValue.getFullyQualifiedName(),
+            trackClassUsage,
+            trackJavacPhaseEvents,
+            abiGenerationMode,
+            abiCompatibilityMode,
+            isRequiredForSourceOnlyAbi,
+            compilerOutputPathsValue.getByType(buildTargetValue.getType()));
+
+    Class<T> extraParamsType = configuredCompiler.getExtraParamsType();
+    configuredCompiler.createCompileToJarStep(
+        filesystemParams,
+        buildTargetValue,
+        compilerOutputPathsValue,
+        compilerParameters,
+        abiJarParameters,
+        libraryJarParameters,
+        stepsBuilder,
+        buildableContext,
+        cellToPathMappings,
+        resourcesMap,
+        resolvedJavac,
+        extraParamsType.cast(extraParams));
+  }
 }

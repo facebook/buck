@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.impl;
+package com.facebook.buck.jvm.cd;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /** Creates a list of {@link IsolatedStep} that is ready for in process execute. */
-abstract class DefaultJavaStepsBuilderBase<T extends CompileToJarStepFactory.ExtraParams>
-    implements JavaCompileStepsBuilder {
+abstract class DefaultCompileStepsBuilderBase<T extends CompileToJarStepFactory.ExtraParams>
+    implements CompileStepsBuilder {
 
   protected final ImmutableList.Builder<IsolatedStep> stepsBuilder = ImmutableList.builder();
   protected final CompileToJarStepFactory<T> configuredCompiler;
 
-  DefaultJavaStepsBuilderBase(CompileToJarStepFactory<T> configuredCompiler) {
+  DefaultCompileStepsBuilderBase(CompileToJarStepFactory<T> configuredCompiler) {
     this.configuredCompiler = configuredCompiler;
   }
 

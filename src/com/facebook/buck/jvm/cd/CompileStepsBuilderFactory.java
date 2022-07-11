@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder;
+package com.facebook.buck.jvm.cd;
 
-/** Factory that creates {@link JavaCompileStepsBuilder} instances */
-public interface JavaCompileStepsBuilderFactory {
+/** Factory that creates {@link CompileStepsBuilder} instances */
+public interface CompileStepsBuilderFactory {
 
   /** Creates an appropriate {@link LibraryStepsBuilder} instance */
   LibraryStepsBuilder getLibraryBuilder();
