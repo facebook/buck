@@ -500,32 +500,32 @@ public class RemoteExecutionEventListener
 
   @Override
   public long getCasUploadSizeBytes() {
-    return uploadBytes.intValue();
+    return uploadBytes.sum();
   }
 
   @Override
   public long getCasSmallUploadSizeBytes() {
-    return uploadSmallBytes.intValue();
+    return uploadSmallBytes.sum();
   }
 
   @Override
   public long getCasLargeUploadSizeBytes() {
-    return uploadLargeBytes.intValue();
+    return uploadLargeBytes.sum();
   }
 
   @Override
   public long getCasFindMissingCount() {
-    return findMissingCount.intValue();
+    return findMissingCount.sum();
   }
 
   @Override
   public long getCasFindMissingSmallCount() {
-    return findMissingSmallCount.intValue();
+    return findMissingSmallCount.sum();
   }
 
   @Override
   public long getCasFindMissingLargeCount() {
-    return findMissingLargeCount.intValue();
+    return findMissingLargeCount.sum();
   }
 
   @Override
