@@ -132,7 +132,6 @@ public class KosabiTest {
     AndroidLibraryDescription androidLibraryDescription =
         new AndroidLibraryDescription(
             JavaBuckConfig.of(buckConfig),
-            JavaCDBuckConfig.of(buckConfig),
             DownwardApiConfig.of(buckConfig),
             DEFAULT_ANDROID_COMPILER_FACTORY,
             toolchainProvider);

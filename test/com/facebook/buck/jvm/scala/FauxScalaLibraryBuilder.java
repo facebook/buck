@@ -29,7 +29,6 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavacSpec;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
@@ -54,7 +53,6 @@ public class FauxScalaLibraryBuilder
   private static ScalaLibraryDescription getDescription(BuckConfig buckConfig) {
     ScalaBuckConfig scalaBuckConfig = new ScalaBuckConfig(buckConfig);
     DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
-    JavaCDBuckConfig javaCDBuckConfig = JavaCDBuckConfig.of(buckConfig);
 
     return new ScalaLibraryDescription(
         new ToolchainProviderBuilder()

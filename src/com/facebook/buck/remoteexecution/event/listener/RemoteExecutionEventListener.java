@@ -260,15 +260,15 @@ public class RemoteExecutionEventListener
     uploadSmallBytes.add(event.getStartedEvent().getSmallSizeBytes());
 
     switch (event.getStartedEvent().getBlobFetcherType()) {
-      case ArtifactsCache:
+      case ARTIFACTS_CACHE:
         uploadsArtifactsCache.add(event.getStartedEvent().getBlobCount());
         uploadArtifactsCacheBytes.add(event.getStartedEvent().getSizeBytes());
         break;
-      case RemoteExecution:
+      case REMOTE_EXECUTION:
         uploadsRemoteExecutionCache.add(event.getStartedEvent().getBlobCount());
         uploadRemoteExecutionCacheBytes.add(event.getStartedEvent().getSizeBytes());
         break;
-      case InProcess:
+      case IN_PROCESS:
         // We shouldn't see any uploads/downloads for in-process blob fetcher
         break;
       default:
@@ -289,15 +289,15 @@ public class RemoteExecutionEventListener
     downloadSmallBytes.add(event.getStartedEvent().getSmallSizeBytes());
 
     switch (event.getStartedEvent().getBlobFetcherType()) {
-      case ArtifactsCache:
+      case ARTIFACTS_CACHE:
         downloadsArtifactsCache.add(event.getStartedEvent().getBlobCount());
         downloadArtifactsCacheBytes.add(event.getStartedEvent().getSizeBytes());
         break;
-      case RemoteExecution:
+      case REMOTE_EXECUTION:
         downloadsRemoteExecutionCache.add(event.getStartedEvent().getBlobCount());
         downloadRemoteExecutionCacheBytes.add(event.getStartedEvent().getSizeBytes());
         break;
-      case InProcess:
+      case IN_PROCESS:
         // We shouldn't see any uploads/downloads for in-process blob fetcher
         break;
       default:

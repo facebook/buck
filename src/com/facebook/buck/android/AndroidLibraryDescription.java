@@ -43,7 +43,6 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -79,7 +78,6 @@ public class AndroidLibraryDescription
   }
 
   private final JavaBuckConfig javaBuckConfig;
-  private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
   private final JavacFactory javacFactory;
@@ -88,12 +86,10 @@ public class AndroidLibraryDescription
 
   public AndroidLibraryDescription(
       JavaBuckConfig javaBuckConfig,
-      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig,
       AndroidLibraryCompilerFactory compilerFactory,
       ToolchainProvider toolchainProvider) {
     this.javaBuckConfig = javaBuckConfig;
-    this.javaCDBuckConfig = javaCDBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.compilerFactory = compilerFactory;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);

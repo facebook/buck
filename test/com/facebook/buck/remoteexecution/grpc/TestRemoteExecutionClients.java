@@ -25,6 +25,7 @@ import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.remoteexecution.event.GrpcAsyncBlobFetcherType;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.util.timing.DefaultClock;
 import io.grpc.BindableService;
@@ -58,7 +59,7 @@ public class TestRemoteExecutionClients implements RemoteExecutionClients {
 
     clients =
         new GrpcRemoteExecutionClients(
-            "buck",
+            GrpcAsyncBlobFetcherType.REMOTE_EXECUTION,
             channel,
             channel,
             100,

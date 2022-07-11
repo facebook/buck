@@ -18,18 +18,18 @@ package com.facebook.buck.remoteexecution.event;
 
 /** Indicates whether a given blob fetcher used to fetch buckcache artifacts or RE cas. */
 public enum GrpcAsyncBlobFetcherType {
-  ArtifactsCache,
-  RemoteExecution,
-  InProcess;
+  ARTIFACTS_CACHE("buckcache"),
+  REMOTE_EXECUTION("buck"),
+  IN_PROCESS("in-process");
+
+  private final String stringRepresentation;
+
+  GrpcAsyncBlobFetcherType(String stringRepresentation) {
+    this.stringRepresentation = stringRepresentation;
+  }
 
   @Override
   public String toString() {
-    if (this == GrpcAsyncBlobFetcherType.ArtifactsCache) {
-      return "buckcache";
-    } else if (this == GrpcAsyncBlobFetcherType.RemoteExecution) {
-      return "buck";
-    } else {
-      return "in-process";
-    }
+    return stringRepresentation;
   }
 }

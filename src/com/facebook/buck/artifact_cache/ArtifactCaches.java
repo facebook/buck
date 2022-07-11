@@ -738,7 +738,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                     buckEventBus,
                     metadata,
                     strategyConfig.getOutputMaterializationThreads(),
-                    GrpcAsyncBlobFetcherType.ArtifactsCache));
+                    GrpcAsyncBlobFetcherType.ARTIFACTS_CACHE));
       } catch (SSLException e) {
         LOG.error(e, "Exception creating GRPC channel, not enabling CAS client.");
       }

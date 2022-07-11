@@ -58,7 +58,6 @@ public class AndroidLibraryBuilder
     super(
         new AndroidLibraryDescription(
             javaBuckConfig,
-            DEFAULT_JAVACD_CONFIG,
             DEFAULT_DOWNWARD_API_CONFIG,
             JAVA_ONLY_COMPILER_FACTORY,
             createToolchainProviderForAndroidLibrary()),

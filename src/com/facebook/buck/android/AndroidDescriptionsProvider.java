@@ -120,20 +120,12 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new AndroidInstrumentationTestDescription(
             testBuckConfig, downwardApiConfig, toolchainProvider),
         new AndroidLibraryDescription(
-            javaConfig,
-            javaCDBuckConfig,
-            downwardApiConfig,
-            defaultAndroidCompilerFactory,
-            toolchainProvider),
+            javaConfig, downwardApiConfig, defaultAndroidCompilerFactory, toolchainProvider),
         new AndroidPrebuiltAarDescription(
             toolchainProvider, downwardApiConfig, javaConfig, javaCDBuckConfig),
         new AndroidResourceDescription(toolchainProvider, downwardApiConfig, buildBuckConfig),
         new RobolectricTestDescription(
-            toolchainProvider,
-            javaConfig,
-            javaCDBuckConfig,
-            downwardApiConfig,
-            defaultAndroidCompilerFactory),
+            toolchainProvider, javaConfig, downwardApiConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
         new NdkLibraryDescription(
             toolchainProvider, resourcesConfig.getConcurrencyLimit(), downwardApiConfig),

@@ -60,7 +60,6 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             javaBuckConfig,
-            DEFAULT_JAVACD_CONFIG,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target);
@@ -71,7 +70,6 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             DEFAULT_JAVA_CONFIG,
-            DEFAULT_JAVACD_CONFIG,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
@@ -84,7 +82,6 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             javaBuckConfig,
-            DEFAULT_JAVACD_CONFIG,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,

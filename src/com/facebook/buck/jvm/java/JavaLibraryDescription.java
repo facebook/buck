@@ -79,7 +79,6 @@ public class JavaLibraryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final JavacFactory javacFactory;
   private final JavaConfiguredCompilerFactory defaultJavaCompilerFactory;
@@ -91,7 +90,6 @@ public class JavaLibraryDescription
       DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
-    this.javaCDBuckConfig = javaCDBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
     this.defaultJavaCompilerFactory =

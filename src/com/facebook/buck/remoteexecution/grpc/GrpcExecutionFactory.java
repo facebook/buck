@@ -60,7 +60,7 @@ public class GrpcExecutionFactory {
     ManagedChannel channel = InProcessChannelBuilder.forName("unique").build();
 
     return new GrpcRemoteExecutionClients(
-        GrpcAsyncBlobFetcherType.InProcess,
+        GrpcAsyncBlobFetcherType.IN_PROCESS,
         channel,
         channel,
         CAS_DEADLINE_S,
@@ -123,7 +123,7 @@ public class GrpcExecutionFactory {
     casChannelBuilder.flowControlWindow(100 * 1024 * 1024);
 
     return new GrpcRemoteExecutionClients(
-        GrpcAsyncBlobFetcherType.RemoteExecution,
+        GrpcAsyncBlobFetcherType.REMOTE_EXECUTION,
         executionEngineChannel,
         strategyConfig.getNumEngineConnections(),
         casChannelBuilder.build(),

@@ -15,6 +15,7 @@ java_test(
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/remoteexecution/config:config",
         "//src/com/facebook/buck/remoteexecution/factory:factory",
+        "//src/com/facebook/buck/remoteexecution/event:event",
         "//src/com/facebook/buck/remoteexecution/grpc:grpc",
         "//src/com/facebook/buck/remoteexecution/grpc/retry:retry",
         "//src/com/facebook/buck/remoteexecution/util:util",
