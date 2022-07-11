@@ -224,8 +224,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
     ImmutableSet<PathMatcher> ignoredPaths =
         FilesystemParamsUtils.getIgnoredPaths(filesystemParams);
 
-    BuildContext buildContext = extraParams.getBuildContext();
-
     ImmutableSortedSet<RelPath> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<RelPath> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
@@ -315,7 +313,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
           steps,
           buckPaths,
           ignoredPaths,
-          buildContext,
           extraParams.getResolvedStandardLibraryClassPath(),
           extraParams.getResolvedAnnotationProcessingClassPath(),
           outputDirectory,
@@ -441,7 +438,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       Builder<IsolatedStep> steps,
       BuckPaths buckPaths,
       ImmutableSet<PathMatcher> ignoredPaths,
-      BuildContext buildContext,
       AbsPath resolvedKotlinStandardLibraryClassPath,
       AbsPath resolvedAnnotationProcessingClassPath,
       RelPath outputDirectory,
@@ -563,8 +559,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
 
     if (shouldGenerateAnnotationProcessingStats) {
       postKotlinCompilationSteps.add(
-          new KaptStatsReportParseStep(
-              annotationProcessorsStatsFilePath, invokingRule, buildContext.getEventBus()));
+          new KaptStatsReportParseStep(annotationProcessorsStatsFilePath, invokingRule));
     }
 
     postKotlinCompilationSteps.add(

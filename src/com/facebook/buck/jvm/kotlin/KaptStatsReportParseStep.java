@@ -17,11 +17,12 @@
 package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.AnnotationProcessorGenerationStats;
 import com.facebook.buck.event.AnnotationProcessorPerfStats;
 import com.facebook.buck.event.AnnotationProcessorStatsEvent;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -70,13 +71,10 @@ public class KaptStatsReportParseStep extends IsolatedStep {
 
   final Path pathToReportFile;
   final BuildTargetValue invokingRule;
-  final BuckEventBus eventBus;
 
-  public KaptStatsReportParseStep(
-      Path pathToReportFile, BuildTargetValue invokingRule, BuckEventBus eventBus) {
+  public KaptStatsReportParseStep(Path pathToReportFile, BuildTargetValue invokingRule) {
     this.pathToReportFile = pathToReportFile;
     this.invokingRule = invokingRule;
-    this.eventBus = eventBus;
   }
 
   @Override
@@ -88,13 +86,13 @@ public class KaptStatsReportParseStep extends IsolatedStep {
         "Parsing Kapt stats report for rule[%s] reportPath[%s]",
         invokingRule.getFullyQualifiedName(), pathToReportFile);
 
-    parseReport(lines);
+    parseReport(context.getIsolatedEventBus(), context.getActionId(), lines);
 
     return StepExecutionResults.SUCCESS;
   }
 
   @VisibleForTesting
-  void parseReport(List<String> lines) {
+  void parseReport(IsolatedEventBus eventBus, ActionId actionId, List<String> lines) {
     HashMap<String, AnnotationProcessorPerfStats> processorStats = new HashMap<>();
 
     // Starting from the second line, the first line is the report's title.
@@ -117,11 +115,16 @@ public class KaptStatsReportParseStep extends IsolatedStep {
       }
     }
 
-    for (String processorName : processorStats.keySet()) {
-      AnnotationProcessorStatsEvent statsEvent =
-          new AnnotationProcessorStatsEvent(
-              invokingRule.getFullyQualifiedName(), processorStats.get(processorName));
-      eventBus.post(statsEvent);
+    for (AnnotationProcessorPerfStats stats : processorStats.values()) {
+      AnnotationProcessorStatsEvent.Started startEvent =
+          new AnnotationProcessorStatsEvent.Started(invokingRule.getFullyQualifiedName(), stats);
+
+      // These are perf events, so there needs to be a matching start and end.
+      AnnotationProcessorStatsEvent.Finished finishedEvent =
+          new AnnotationProcessorStatsEvent.Finished(startEvent);
+
+      eventBus.post(startEvent, actionId);
+      eventBus.post(finishedEvent, actionId);
     }
   }
 

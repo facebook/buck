@@ -16,24 +16,52 @@
 
 package com.facebook.buck.event;
 
-/** Event for sending Annotation Processing perf stats from the compilation step to be logged. */
-public class AnnotationProcessorStatsEvent extends AbstractBuckEvent {
+import com.google.common.collect.ImmutableMap;
 
-  private final String invokingRule;
-  private final AnnotationProcessorPerfStats data;
+/** Events for sending Annotation Processing perf stats from the compilation step to be logged. */
+public abstract class AnnotationProcessorStatsEvent extends SimplePerfEvent {
+  public static class Started extends AnnotationProcessorStatsEvent {
+    public Started(String invokingRule, AnnotationProcessorPerfStats data) {
+      super(invokingRule, data);
+    }
+
+    public AnnotationProcessorPerfStats getData() {
+      return data;
+    }
+
+    public String getInvokingRule() {
+      return invokingRule;
+    }
+
+    @Override
+    public Type getEventType() {
+      return Type.STARTED;
+    }
+  }
+
+  public static class Finished extends AnnotationProcessorStatsEvent {
+    public Finished(AnnotationProcessorStatsEvent.Started startedEvent) {
+      super(startedEvent.invokingRule, startedEvent.data);
+    }
+
+    @Override
+    protected String getValueString() {
+      return "apStats";
+    }
+
+    @Override
+    public Type getEventType() {
+      return Type.FINISHED;
+    }
+  }
+
+  protected final String invokingRule;
+  protected final AnnotationProcessorPerfStats data;
 
   public AnnotationProcessorStatsEvent(String invokingRule, AnnotationProcessorPerfStats data) {
     super(EventKey.unique());
     this.invokingRule = invokingRule;
     this.data = data;
-  }
-
-  public AnnotationProcessorPerfStats getData() {
-    return data;
-  }
-
-  public String getInvokingRule() {
-    return invokingRule;
   }
 
   @Override
@@ -43,16 +71,31 @@ public class AnnotationProcessorStatsEvent extends AbstractBuckEvent {
 
   @Override
   public String getEventName() {
-    return "AnnotationProcessorStatsEvent";
+    return "AnnotationProcessorStatsEvents." + getCategory() + "." + getEventType().getValue();
   }
 
   @Override
   public String toString() {
-    return "AnnotationProcessorStatsEvent{"
-        + "invokingRule="
-        + invokingRule
-        + ", data="
-        + data
-        + '}';
+    return getEventName() + "{invokingRule=" + invokingRule + ", data=" + data + "}";
+  }
+
+  @Override
+  public PerfEventTitle getTitle() {
+    return PerfEventTitle.of(getEventName());
+  }
+
+  @Override
+  public ImmutableMap<String, Object> getEventInfo() {
+    return ImmutableMap.of();
+  }
+
+  @Override
+  public String getCategory() {
+    return data.getProcessorName();
+  }
+
+  @Override
+  public boolean isLogToChromeTrace() {
+    return false;
   }
 }

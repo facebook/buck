@@ -19,20 +19,23 @@ package com.facebook.buck.jvm.kotlin;
 import static com.facebook.buck.cd.model.java.BuildTargetValue.Type.LIBRARY;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.easymock.EasyMock.capture;
+import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verifyUnexpectedCalls;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.event.AnnotationProcessorGenerationStats;
 import com.facebook.buck.event.AnnotationProcessorPerfStats;
 import com.facebook.buck.event.AnnotationProcessorStatsEvent;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 import org.easymock.Capture;
 import org.easymock.CaptureType;
 import org.easymock.EasyMock;
@@ -43,19 +46,20 @@ import org.junit.Test;
 public class KaptStatsReportParseStepTest {
 
   private KaptStatsReportParseStep step;
-  private Capture<AnnotationProcessorStatsEvent> captureProcessorStatsEvent;
-  private BuckEventBus mockEventBus;
+  private Capture<AnnotationProcessorStatsEvent> captureEvent;
+  private IsolatedEventBus mockEventBus;
+  private ActionId actionId = ActionId.of("test-action-id");
 
   @Before
   public void setUp() {
     Path dummyPath = TestDataHelper.getTestDataDirectory(this);
 
-    BuildTargetValue dummyBuildTarget = BuildTargetValue.of(LIBRARY, "//udinic/test:test");
+    BuildTargetValue dummyBuildTarget = BuildTargetValue.of(LIBRARY, "//example/test:test");
 
-    mockEventBus = EasyMock.createMock(BuckEventBus.class);
-    captureProcessorStatsEvent = EasyMock.newCapture(CaptureType.ALL);
+    mockEventBus = EasyMock.createMock(IsolatedEventBus.class);
+    captureEvent = EasyMock.newCapture(CaptureType.ALL);
 
-    step = new KaptStatsReportParseStep(dummyPath, dummyBuildTarget, mockEventBus);
+    step = new KaptStatsReportParseStep(dummyPath, dummyBuildTarget);
   }
 
   @Test
@@ -63,18 +67,21 @@ public class KaptStatsReportParseStepTest {
     List<String> reportLines =
         newArrayList(
             "Kapt Annotation Processing performance report:",
-            "com.udinic.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms");
+            "com.example.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms");
 
-    mockEventBus.post(capture(captureProcessorStatsEvent));
-    EasyMock.expectLastCall().once();
+    mockEventBus.post(capture(captureEvent), eq(actionId));
+    EasyMock.expectLastCall().times(2);
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
-
-    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
+    step.parseReport(mockEventBus, actionId, reportLines);
 
     assertProcessorStats(
-        processorStats, "com.udinic.BlaProcessor", 15, 999, 4, newArrayList(570L, 200L, 30L, 184L));
+        getCapturedStats().get("com.example.BlaProcessor"),
+        "com.example.BlaProcessor",
+        15,
+        999,
+        4,
+        newArrayList(570L, 200L, 30L, 184L));
   }
 
   @Test
@@ -82,40 +89,37 @@ public class KaptStatsReportParseStepTest {
     List<String> reportLines =
         newArrayList(
             "Kapt Annotation Processing performance report:",
-            "com.udinic.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms",
-            "com.udinic.CoolProcessor: total: 314 ms, init: 1 ms, 4 round(s): 313 ms, 0 ms, 0 ms, 0 ms",
-            "com.udinic.UdinicProcessor: total: 38 ms, init: 19 ms, 4 round(s): 16 ms, 2 ms, 1 ms, 0 ms");
+            "com.example.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms",
+            "com.example.CoolProcessor: total: 314 ms, init: 1 ms, 4 round(s): 313 ms, 0 ms, 0 ms, 0 ms",
+            "com.example.MyProcessor: total: 38 ms, init: 19 ms, 4 round(s): 16 ms, 2 ms, 1 ms, 0 ms");
 
-    mockEventBus.post(capture(captureProcessorStatsEvent));
-    EasyMock.expectLastCall().times(3);
+    mockEventBus.post(capture(captureEvent), eq(actionId));
+    EasyMock.expectLastCall().times(6);
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
+    step.parseReport(mockEventBus, actionId, reportLines);
 
-    List<AnnotationProcessorPerfStats> processorStatsList =
-        captureProcessorStatsEvent.getValues().stream()
-            .map(AnnotationProcessorStatsEvent::getData)
-            .collect(Collectors.toList());
+    Map<String, AnnotationProcessorPerfStats> capturedStats = getCapturedStats();
 
-    assertEquals(3, processorStatsList.size());
+    assertEquals(3, capturedStats.size());
 
     assertProcessorStats(
-        processorStatsList.get(0),
-        "com.udinic.BlaProcessor",
+        capturedStats.get("com.example.BlaProcessor"),
+        "com.example.BlaProcessor",
         15,
         999,
         4,
         newArrayList(570L, 200L, 30L, 184L));
     assertProcessorStats(
-        processorStatsList.get(1),
-        "com.udinic.CoolProcessor",
+        capturedStats.get("com.example.CoolProcessor"),
+        "com.example.CoolProcessor",
         1,
         314,
         4,
         newArrayList(313L, 0L, 0L, 0L));
     assertProcessorStats(
-        processorStatsList.get(2),
-        "com.udinic.UdinicProcessor",
+        capturedStats.get("com.example.MyProcessor"),
+        "com.example.MyProcessor",
         19,
         38,
         4,
@@ -127,17 +131,21 @@ public class KaptStatsReportParseStepTest {
     List<String> reportLines =
         newArrayList(
             "Kapt Annotation Processing performance report:",
-            "com.udinic.SadProcessor: total: 0 ms, init: 0 ms, 0 round(s): ");
+            "com.example.SadProcessor: total: 0 ms, init: 0 ms, 0 round(s): ");
 
-    mockEventBus.post(capture(captureProcessorStatsEvent));
-    EasyMock.expectLastCall().once();
+    mockEventBus.post(capture(captureEvent), eq(actionId));
+    EasyMock.expectLastCall().times(2);
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
+    step.parseReport(mockEventBus, actionId, reportLines);
 
-    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
-
-    assertProcessorStats(processorStats, "com.udinic.SadProcessor", 0, 0, 0, newArrayList());
+    assertProcessorStats(
+        getCapturedStats().get("com.example.SadProcessor"),
+        "com.example.SadProcessor",
+        0,
+        0,
+        0,
+        newArrayList());
   }
 
   @Test
@@ -145,21 +153,21 @@ public class KaptStatsReportParseStepTest {
     List<String> reportLines =
         newArrayList(
             "Kapt Annotation Processing performance report:",
-            "com.udinic.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms",
+            "com.example.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms",
             "Generated files report:",
-            "com.udinic.BlaProcessor: total sources: 3, sources per round: 3, 0, 0, 0");
+            "com.example.BlaProcessor: total sources: 3, sources per round: 3, 0, 0, 0");
 
-    mockEventBus.post(capture(captureProcessorStatsEvent));
-    EasyMock.expectLastCall().once();
+    mockEventBus.post(capture(captureEvent), eq(actionId));
+    EasyMock.expectLastCall().times(2);
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
+    step.parseReport(mockEventBus, actionId, reportLines);
 
-    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
+    AnnotationProcessorPerfStats blaStats = getCapturedStats().get("com.example.BlaProcessor");
 
     assertProcessorStats(
-        processorStats, "com.udinic.BlaProcessor", 15, 999, 4, newArrayList(570L, 200L, 30L, 184L));
-    assertProcessorGenerationStats(processorStats, 3, newArrayList(3L, 0L, 0L, 0L));
+        blaStats, "com.example.BlaProcessor", 15, 999, 4, newArrayList(570L, 200L, 30L, 184L));
+    assertProcessorGenerationStats(blaStats, 3, newArrayList(3L, 0L, 0L, 0L));
   }
 
   @Test
@@ -167,53 +175,53 @@ public class KaptStatsReportParseStepTest {
     List<String> reportLines =
         newArrayList(
             "Kapt Annotation Processing performance report:",
-            "com.udinic.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms",
-            "com.udinic.CoolProcessor: total: 314 ms, init: 1 ms, 4 round(s): 313 ms, 0 ms, 0 ms, 0 ms",
-            "com.udinic.UdinicProcessor: total: 38 ms, init: 19 ms, 4 round(s): 16 ms, 2 ms, 1 ms, 0 ms",
+            "com.example.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms",
+            "com.example.CoolProcessor: total: 314 ms, init: 1 ms, 4 round(s): 313 ms, 0 ms, 0 ms, 0 ms",
+            "com.example.MyProcessor: total: 38 ms, init: 19 ms, 4 round(s): 16 ms, 2 ms, 1 ms, 0 ms",
             "Generated files report:",
-            "com.udinic.BlaProcessor: total sources: 2, sources per round: 2, 0, 0, 0",
-            "com.udinic.CoolProcessor: total sources: 0, sources per round: 0, 0, 0, 0",
-            "com.udinic.UdinicProcessor: total sources: 4, sources per round: 2, 1, 1, 0");
+            "com.example.BlaProcessor: total sources: 2, sources per round: 2, 0, 0, 0",
+            "com.example.CoolProcessor: total sources: 0, sources per round: 0, 0, 0, 0",
+            "com.example.MyProcessor: total sources: 4, sources per round: 2, 1, 1, 0");
 
-    mockEventBus.post(capture(captureProcessorStatsEvent));
-    EasyMock.expectLastCall().times(3);
+    mockEventBus.post(capture(captureEvent), eq(actionId));
+    EasyMock.expectLastCall().times(6);
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
+    step.parseReport(mockEventBus, actionId, reportLines);
 
-    List<AnnotationProcessorPerfStats> processorStatsList =
-        captureProcessorStatsEvent.getValues().stream()
-            .map(AnnotationProcessorStatsEvent::getData)
-            .collect(Collectors.toList());
+    Map<String, AnnotationProcessorPerfStats> capturedStats = getCapturedStats();
 
-    assertEquals(3, processorStatsList.size());
+    assertEquals(3, capturedStats.size());
 
     assertProcessorStats(
-        processorStatsList.get(0),
-        "com.udinic.BlaProcessor",
+        capturedStats.get("com.example.BlaProcessor"),
+        "com.example.BlaProcessor",
         15,
         999,
         4,
         newArrayList(570L, 200L, 30L, 184L));
-    assertProcessorGenerationStats(processorStatsList.get(0), 2, newArrayList(2L, 0L, 0L, 0L));
+    assertProcessorGenerationStats(
+        capturedStats.get("com.example.BlaProcessor"), 2, newArrayList(2L, 0L, 0L, 0L));
 
     assertProcessorStats(
-        processorStatsList.get(1),
-        "com.udinic.CoolProcessor",
+        capturedStats.get("com.example.CoolProcessor"),
+        "com.example.CoolProcessor",
         1,
         314,
         4,
         newArrayList(313L, 0L, 0L, 0L));
-    assertProcessorGenerationStats(processorStatsList.get(1), 0, newArrayList(0L, 0L, 0L, 0L));
+    assertProcessorGenerationStats(
+        capturedStats.get("com.example.CoolProcessor"), 0, newArrayList(0L, 0L, 0L, 0L));
 
     assertProcessorStats(
-        processorStatsList.get(2),
-        "com.udinic.UdinicProcessor",
+        capturedStats.get("com.example.MyProcessor"),
+        "com.example.MyProcessor",
         19,
         38,
         4,
         newArrayList(16L, 2L, 1L, 0L));
-    assertProcessorGenerationStats(processorStatsList.get(2), 4, newArrayList(2L, 1L, 1L, 0L));
+    assertProcessorGenerationStats(
+        capturedStats.get("com.example.MyProcessor"), 4, newArrayList(2L, 1L, 1L, 0L));
   }
 
   @Test
@@ -221,20 +229,19 @@ public class KaptStatsReportParseStepTest {
     List<String> reportLines =
         newArrayList(
             "Kapt Annotation Processing performance report:",
-            "com.udinic.SadProcessor: total: 0 ms, init: 0 ms, 0 round(s): ",
+            "com.example.SadProcessor: total: 0 ms, init: 0 ms, 0 round(s): ",
             "Generated files report:",
-            "com.udinic.SadProcessor: total sources: 0, sources per round: ");
+            "com.example.SadProcessor: total sources: 0, sources per round: ");
 
-    mockEventBus.post(capture(captureProcessorStatsEvent));
-    EasyMock.expectLastCall().once();
+    mockEventBus.post(capture(captureEvent), eq(actionId));
+    EasyMock.expectLastCall().times(2);
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
+    step.parseReport(mockEventBus, actionId, reportLines);
 
-    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
-
-    assertProcessorStats(processorStats, "com.udinic.SadProcessor", 0, 0, 0, newArrayList());
-    assertProcessorGenerationStats(processorStats, 0, newArrayList());
+    AnnotationProcessorPerfStats sadStats = getCapturedStats().get("com.example.SadProcessor");
+    assertProcessorStats(sadStats, "com.example.SadProcessor", 0, 0, 0, newArrayList());
+    assertProcessorGenerationStats(sadStats, 0, newArrayList());
   }
 
   @Test
@@ -242,21 +249,20 @@ public class KaptStatsReportParseStepTest {
     List<String> reportLines =
         newArrayList(
             "Kapt Annotation Processing performance report:",
-            "com.udinic.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms",
+            "com.example.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms",
             "Generated files report:",
-            "com.udinic.BlaProcessor: total sources: -1, sources per round: -1, -1, -1, -1");
+            "com.example.BlaProcessor: total sources: -1, sources per round: -1, -1, -1, -1");
 
-    mockEventBus.post(capture(captureProcessorStatsEvent));
-    EasyMock.expectLastCall().once();
+    mockEventBus.post(capture(captureEvent), eq(actionId));
+    EasyMock.expectLastCall().times(2);
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
+    step.parseReport(mockEventBus, actionId, reportLines);
 
-    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
-
+    AnnotationProcessorPerfStats blaStats = getCapturedStats().get("com.example.BlaProcessor");
     assertProcessorStats(
-        processorStats, "com.udinic.BlaProcessor", 15, 999, 4, newArrayList(570L, 200L, 30L, 184L));
-    assertProcessorGenerationStats(processorStats, -1, newArrayList(-1L, -1L, -1L, -1L));
+        blaStats, "com.example.BlaProcessor", 15, 999, 4, newArrayList(570L, 200L, 30L, 184L));
+    assertProcessorGenerationStats(blaStats, -1, newArrayList(-1L, -1L, -1L, -1L));
   }
 
   @Test
@@ -265,7 +271,7 @@ public class KaptStatsReportParseStepTest {
 
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
+    step.parseReport(mockEventBus, actionId, reportLines);
 
     // There should be no calls to the event bus
     verifyUnexpectedCalls(mockEventBus);
@@ -277,7 +283,7 @@ public class KaptStatsReportParseStepTest {
 
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
+    step.parseReport(mockEventBus, actionId, reportLines);
 
     // There should be no calls to the event bus
     verifyUnexpectedCalls(mockEventBus);
@@ -288,20 +294,18 @@ public class KaptStatsReportParseStepTest {
     List<String> reportLines =
         newArrayList(
             "Kapt Annotation Processing performance report:",
-            "com.udinic.MasterClass$SubProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms");
+            "com.example.MasterClass$SubProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms");
 
-    mockEventBus.post(capture(captureProcessorStatsEvent));
-    EasyMock.expectLastCall().once();
+    mockEventBus.post(capture(captureEvent), eq(actionId));
+    EasyMock.expectLastCall().times(2);
     replay(mockEventBus);
 
-    step.parseReport(reportLines);
-
-    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
+    step.parseReport(mockEventBus, actionId, reportLines);
 
     // Making sure the parser accounts for the "$" sign in the class name
     assertProcessorStats(
-        processorStats,
-        "com.udinic.MasterClass$SubProcessor",
+        getCapturedStats().get("com.example.MasterClass$SubProcessor"),
+        "com.example.MasterClass$SubProcessor",
         15,
         999,
         4,
@@ -331,5 +335,19 @@ public class KaptStatsReportParseStepTest {
     assertEquals(processorStats.getProcessorName(), generationStats.getProcessorName());
     assertEquals(sourcesGenerated, generationStats.getTotalSources());
     assertEquals(roundGeneratedSources, generationStats.getSourcesGenerated());
+  }
+
+  private Map<String, AnnotationProcessorPerfStats> getCapturedStats() {
+    HashMap<String, AnnotationProcessorPerfStats> stats = new HashMap<>();
+
+    for (AnnotationProcessorStatsEvent event : captureEvent.getValues()) {
+      if (event instanceof AnnotationProcessorStatsEvent.Started) {
+        AnnotationProcessorStatsEvent.Started startEvent =
+            (AnnotationProcessorStatsEvent.Started) event;
+        stats.put(startEvent.getCategory(), startEvent.getData());
+      }
+    }
+
+    return stats;
   }
 }
