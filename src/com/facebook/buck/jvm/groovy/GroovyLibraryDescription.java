@@ -29,6 +29,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.params.DefaultRulesCDParams;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.AbstractGroovyLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
@@ -102,7 +103,7 @@ public class GroovyLibraryDescription
                 graphBuilder,
                 compilerFactory,
                 javaBuckConfig,
-                javaCDBuckConfig,
+                DefaultRulesCDParams.DISABLED,
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())

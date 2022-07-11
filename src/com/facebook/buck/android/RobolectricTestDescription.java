@@ -41,12 +41,16 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.jvm.cd.params.DefaultRulesCDParams;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
+import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDParams;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -361,7 +365,7 @@ public class RobolectricTestDescription
                       javacFactory,
                       buildTarget.getTargetConfiguration()),
                   javaBuckConfig,
-                  javaCDBuckConfig,
+                  JavaCDParams.get(javaBuckConfig, javaCDBuckConfig),
                   downwardApiConfig,
                   null,
                   cellPathResolver)
@@ -399,6 +403,17 @@ public class RobolectricTestDescription
     BuildTarget testLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
+    AndroidLibraryDescription.JvmLanguage language =
+        args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA);
+
+    ConfiguredCompilerFactory configuredCompilerFactory =
+        compilerFactory.getCompiler(language, javacFactory, buildTarget.getTargetConfiguration());
+
+    RulesCDParams cdParams =
+        language == AndroidLibraryDescription.JvmLanguage.JAVA
+            ? JavaCDParams.get(javaBuckConfig, javaCDBuckConfig)
+            : DefaultRulesCDParams.DISABLED;
+
     JavaLibrary testsLibrary =
         graphBuilder.addToIndex(
             DefaultJavaLibrary.rulesBuilder(
@@ -407,12 +422,9 @@ public class RobolectricTestDescription
                     context.getToolchainProvider(),
                     params,
                     graphBuilder,
-                    compilerFactory.getCompiler(
-                        args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA),
-                        javacFactory,
-                        buildTarget.getTargetConfiguration()),
+                    configuredCompilerFactory,
                     javaBuckConfig,
-                    javaCDBuckConfig,
+                    cdParams,
                     downwardApiConfig,
                     testLibraryArgs,
                     cellPathResolver)

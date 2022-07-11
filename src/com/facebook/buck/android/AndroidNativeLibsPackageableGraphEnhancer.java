@@ -46,6 +46,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDParams;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -487,7 +488,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                   new JavaConfiguredCompilerFactory(
                       javaBuckConfig, downwardApiConfig, javacFactory),
                   javaBuckConfig,
-                  javaCDBuckConfig,
+                  JavaCDParams.get(javaBuckConfig, javaCDBuckConfig),
                   downwardApiConfig,
                   null,
                   cellPathResolver)

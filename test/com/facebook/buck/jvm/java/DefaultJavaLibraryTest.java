@@ -1417,7 +1417,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                     DEFAULT_DOWNWARD_API_CONFIG,
                     JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                 testJavaBuckConfig,
-                DEFAULT_JAVACD_CONFIG,
+                JavaCDParams.get(testJavaBuckConfig, DEFAULT_JAVACD_CONFIG),
                 DEFAULT_DOWNWARD_API_CONFIG,
                 null,
                 cellPathResolver)
@@ -1723,7 +1723,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                       DEFAULT_DOWNWARD_API_CONFIG,
                       JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                   testJavaBuckConfig,
-                  DEFAULT_JAVACD_CONFIG,
+                  JavaCDParams.get(testJavaBuckConfig, DEFAULT_JAVACD_CONFIG),
                   DEFAULT_DOWNWARD_API_CONFIG,
                   null,
                   cellPathResolver)

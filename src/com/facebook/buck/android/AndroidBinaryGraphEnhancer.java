@@ -535,7 +535,7 @@ public class AndroidBinaryGraphEnhancer {
                 graphBuilder,
                 new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
-                javaCDBuckConfig,
+                JavaCDParams.get(javaBuckConfig, javaCDBuckConfig),
                 downwardApiConfig,
                 null,
                 cellPathResolver)

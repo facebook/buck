@@ -138,7 +138,7 @@ public class DefaultJavaLibrary
       ActionGraphBuilder graphBuilder,
       ConfiguredCompilerFactory compilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig,
-      JavaCDBuckConfig javaCDBuckConfig,
+      RulesCDParams cdParams,
       DownwardApiConfig downwardApiConfig,
       @Nullable JavaLibraryDescription.CoreArg args,
       CellPathResolver cellPathResolver) {
@@ -150,7 +150,7 @@ public class DefaultJavaLibrary
         graphBuilder,
         compilerFactory,
         javaBuckConfig,
-        javaCDBuckConfig,
+        cdParams,
         downwardApiConfig,
         args,
         cellPathResolver);

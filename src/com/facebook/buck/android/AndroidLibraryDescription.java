@@ -39,11 +39,14 @@ import com.facebook.buck.infer.InferJava;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
 import com.facebook.buck.infer.toolchain.InferToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.params.DefaultRulesCDParams;
+import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDParams;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -139,11 +142,17 @@ public class AndroidLibraryDescription
             context.getActionGraphBuilder(),
             projectFilesystem.getRootPath(),
             args);
+
+    JvmLanguage language = args.getLanguage().orElse(JvmLanguage.JAVA);
+
     ConfiguredCompilerFactory compilerFactory =
         this.compilerFactory.getCompiler(
-            args.getLanguage().orElse(JvmLanguage.JAVA),
-            javacFactory,
-            buildTarget.getTargetConfiguration());
+            language, javacFactory, buildTarget.getTargetConfiguration());
+
+    RulesCDParams cdParams =
+        language == JvmLanguage.JAVA
+            ? JavaCDParams.get(javaBuckConfig, javaCDBuckConfig)
+            : DefaultRulesCDParams.DISABLED;
 
     FlavorSet flavors = buildTarget.getFlavors();
 
@@ -188,7 +197,7 @@ public class AndroidLibraryDescription
             params,
             context.getActionGraphBuilder(),
             javaBuckConfig,
-            javaCDBuckConfig,
+            cdParams,
             downwardApiConfig,
             javacFactory,
             javacOptions,

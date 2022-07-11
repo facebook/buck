@@ -178,7 +178,7 @@ public class JavaTestDescription
                 graphBuilder,
                 new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
-                javaCDBuckConfig,
+                JavaCDParams.get(javaBuckConfig, javaCDBuckConfig),
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())

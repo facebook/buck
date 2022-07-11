@@ -21,6 +21,7 @@ import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
+import java.util.Collections;
 
 /** Default implementation of {@link RulesCDParams} interface. */
 @BuckStyleValue
@@ -102,4 +103,8 @@ public abstract class DefaultRulesCDParams implements RulesCDParams {
         pipeliningDisabled,
         includeAllBucksEnvVariables);
   }
+
+  /** {@link RulesCDParams} null object to use with languages that support Compiler Daemons. */
+  public static final DefaultRulesCDParams DISABLED =
+      DefaultRulesCDParams.of(false, Collections.emptyList(), 0, 0, 0, 0, true, false);
 }

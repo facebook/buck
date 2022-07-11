@@ -249,7 +249,7 @@ public class JavaLibraryDescription
                 graphBuilder,
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
-                javaCDBuckConfig,
+                JavaCDParams.get(javaBuckConfig, javaCDBuckConfig),
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())

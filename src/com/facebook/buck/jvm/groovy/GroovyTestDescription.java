@@ -30,6 +30,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.params.DefaultRulesCDParams;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
@@ -128,7 +129,7 @@ public class GroovyTestDescription
                 new GroovyConfiguredCompilerFactory(
                     groovyBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
-                javaCDBuckConfig,
+                DefaultRulesCDParams.DISABLED,
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())
