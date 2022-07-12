@@ -73,7 +73,7 @@ public class CxxResourceUtils {
                           SourcePath prev = builder.put(name, path);
                           if (prev != null && !prev.equals(path)) {
                             throw new HumanReadableException(
-                                "Conflicting reosurces for name \"%s\": %s and %s",
+                                "Conflicting resources for name \"%s\": %s and %s",
                                 name, prev, path);
                           }
                         }));
