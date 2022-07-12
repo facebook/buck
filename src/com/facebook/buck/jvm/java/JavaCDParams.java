@@ -38,7 +38,7 @@ public class JavaCDParams {
               javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds(),
               javaCDBuckConfig.getMaxWaitForResultTimeoutInSeconds(),
               javaBuckConfig.isPipeliningDisabled(),
-              javaCDBuckConfig.isPathAllEnvVariablesToJavacd());
+              javaCDBuckConfig.isPassAllEnvVariablesToJavacd());
     }
     return cdParams;
   }

@@ -98,7 +98,10 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public boolean isPathAllEnvVariablesToJavacd() {
+  public boolean isPassAllEnvVariablesToJavacd() {
+    if (getDelegate().getBooleanValue(SECTION, "pass_env_variables_to_javacd", false)) {
+      return true;
+    }
     return getDelegate().getBooleanValue(SECTION, "path_env_variables_to_javacd", false);
   }
 
