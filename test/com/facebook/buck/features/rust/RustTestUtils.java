@@ -16,21 +16,30 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider.Type;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
+import com.facebook.buck.io.ExecutableFinder;
 import com.google.common.collect.ImmutableList;
 
 public class RustTestUtils {
+  public static CxxPlatformsProvider getCxxPlatformsProvider() {
+    return CxxPlatformsProvider.of(
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
 
   static ImmutableRustPlatform.Builder makeRustPlatform() {
     return ImmutableRustPlatform.builder()
@@ -83,4 +92,21 @@ public class RustTestUtils {
             }
           },
           DEFAULT_PLATFORMS);
+
+  public static String getRustc() {
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
+
+    RustPlatform rustPlatform =
+        ImmutableRustPlatformFactory.ofImpl(FakeBuckConfig.empty(), new ExecutableFinder())
+            .getPlatform("default", getCxxPlatformsProvider(), null)
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
+
+    ImmutableList<String> rustc =
+        rustPlatform
+            .getRustCompiler()
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
+            .getCommandPrefix(resolver.getSourcePathResolver());
+
+    return rustc.get(0);
+  }
 }

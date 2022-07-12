@@ -20,41 +20,20 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import org.junit.Assume;
 
 abstract class RustAssumptions {
-  public static CxxPlatformsProvider getCxxPlatformsProvider() {
-    return CxxPlatformsProvider.of(
-        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS);
-  }
 
   public static void assumeRustIsConfigured() {
     Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
-
-    BuildRuleResolver resolver = new TestActionGraphBuilder();
-    RustPlatform rustPlatform =
-        ImmutableRustPlatformFactory.ofImpl(FakeBuckConfig.empty(), new ExecutableFinder())
-            .getPlatform("default", getCxxPlatformsProvider(), null)
-            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     Throwable exception = null;
     try {
-      rustPlatform
-          .getRustCompiler()
-          .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
-          .getCommandPrefix(resolver.getSourcePathResolver());
+      RustTestUtils.getRustc();
     } catch (HumanReadableException e) {
       exception = e;
     }
@@ -63,37 +42,15 @@ abstract class RustAssumptions {
 
   public static void assumeNightly(ProjectWorkspace workspace)
       throws IOException, InterruptedException {
-    BuildRuleResolver resolver = new TestActionGraphBuilder();
-    RustPlatform rustPlatform =
-        ImmutableRustPlatformFactory.ofImpl(FakeBuckConfig.empty(), new ExecutableFinder())
-            .getPlatform("default", getCxxPlatformsProvider(), null)
-            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
-    ImmutableList<String> rustc =
-        rustPlatform
-            .getRustCompiler()
-            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(resolver.getSourcePathResolver());
-
-    Result res = workspace.runCommand(rustc.get(0), "-Zhelp");
+    Result res = workspace.runCommand(RustTestUtils.getRustc(), "-Zhelp");
     assumeTrue("Requires nightly Rust", res.getExitCode() == 0);
   }
 
   public static void assumeVersion(ProjectWorkspace workspace, String version)
       throws IOException, InterruptedException {
-    BuildRuleResolver resolver = new TestActionGraphBuilder();
-    RustPlatform rustPlatform =
-        ImmutableRustPlatformFactory.ofImpl(FakeBuckConfig.empty(), new ExecutableFinder())
-            .getPlatform("default", getCxxPlatformsProvider(), null)
-            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
-    ImmutableList<String> rustc =
-        rustPlatform
-            .getRustCompiler()
-            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(resolver.getSourcePathResolver());
-
     String[] versionParts = version.split("\\.");
 
-    Result res = workspace.runCommand(rustc.get(0), "--version");
+    Result res = workspace.runCommand(RustTestUtils.getRustc(), "--version");
     String stdout = res.getStdout().get();
 
     // rustc 1.32.0 (9fda7c223 2019-01-16)

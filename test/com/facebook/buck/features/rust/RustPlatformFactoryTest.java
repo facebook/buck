@@ -52,7 +52,7 @@ public class RustPlatformFactoryTest {
             new AlwaysFoundExecutableFinder());
     RustPlatform platform =
         factory
-            .getPlatform("default", RustAssumptions.getCxxPlatformsProvider(), null)
+            .getPlatform("default", RustTestUtils.getCxxPlatformsProvider(), null)
             .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         platform
