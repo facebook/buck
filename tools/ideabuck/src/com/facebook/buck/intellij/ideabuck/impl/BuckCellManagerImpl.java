@@ -44,7 +44,7 @@ public class BuckCellManagerImpl implements BuckCellManager {
   private PathMacroManager mPathMacroManager;
 
   public static BuckCellManagerImpl getInstance(Project project) {
-    return project.getComponent(BuckCellManagerImpl.class);
+    return project.getService(BuckCellManagerImpl.class);
   }
 
   public BuckCellManagerImpl(

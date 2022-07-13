@@ -28,7 +28,7 @@ import java.util.Optional;
 public interface BuckCellManager {
 
   static BuckCellManager getInstance(Project project) {
-    return project.getComponent(BuckCellManager.class);
+    return project.getService(BuckCellManager.class);
   }
 
   /** Information about a single buck cell. */

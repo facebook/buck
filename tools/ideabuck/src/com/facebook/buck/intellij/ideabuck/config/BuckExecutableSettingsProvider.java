@@ -19,7 +19,6 @@ package com.facebook.buck.intellij.ideabuck.config;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.diagnostic.Logger;
@@ -32,14 +31,14 @@ import org.jetbrains.annotations.Nullable;
     name = "BuckExecutableSettingsProvider",
     storages = {@Storage("ideabuck/executables.xml")})
 public class BuckExecutableSettingsProvider
-    implements ProjectComponent, PersistentStateComponent<BuckExecutableSettingsProvider.State> {
+    implements PersistentStateComponent<BuckExecutableSettingsProvider.State> {
 
   private BuckExecutableDetector executableDetector;
   private State state = new State();
   private static final Logger LOG = Logger.getInstance(BuckExecutableSettingsProvider.class);
 
   public static BuckExecutableSettingsProvider getInstance(Project project) {
-    return project.getComponent(BuckExecutableSettingsProvider.class);
+    return project.getService(BuckExecutableSettingsProvider.class);
   }
 
   public BuckExecutableSettingsProvider() {
@@ -212,11 +211,6 @@ public class BuckExecutableSettingsProvider
       }
     }
     return executable;
-  }
-
-  @Override
-  public String getComponentName() {
-    return "BuckExecutableSettingsProvider";
   }
 
   /** All settings are stored in this inner class. */

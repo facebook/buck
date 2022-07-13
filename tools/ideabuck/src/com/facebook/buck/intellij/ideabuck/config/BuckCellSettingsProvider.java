@@ -20,7 +20,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.diagnostic.Logger;
@@ -38,13 +37,13 @@ import java.util.stream.Collectors;
     name = "BuckCellSettingsProvider",
     storages = {@Storage("ideabuck/cells.xml")})
 public class BuckCellSettingsProvider
-    implements ProjectComponent, PersistentStateComponent<BuckCellSettingsProvider.State> {
+    implements PersistentStateComponent<BuckCellSettingsProvider.State> {
 
   private BuckCellSettingsProvider.State state = new BuckCellSettingsProvider.State();
   private static final Logger LOG = Logger.getInstance(BuckCellSettingsProvider.class);
 
   public static BuckCellSettingsProvider getInstance(Project project) {
-    return project.getComponent(BuckCellSettingsProvider.class);
+    return project.getService(BuckCellSettingsProvider.class);
   }
 
   @Override

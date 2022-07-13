@@ -19,7 +19,6 @@ package com.facebook.buck.intellij.ideabuck.config;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.diagnostic.Logger;
@@ -35,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
     name = "BuckProjectSettingsProvider",
     storages = {@Storage("ideabuck.xml")})
 public class BuckProjectSettingsProvider
-    implements ProjectComponent, PersistentStateComponent<BuckProjectSettingsProvider.State> {
+    implements PersistentStateComponent<BuckProjectSettingsProvider.State> {
 
   private Project project;
   private BuckExecutableSettingsProvider buckExecutableSettingsProvider;
@@ -44,7 +43,7 @@ public class BuckProjectSettingsProvider
   private static final Logger LOG = Logger.getInstance(BuckProjectSettingsProvider.class);
 
   public static BuckProjectSettingsProvider getInstance(Project project) {
-    return project.getComponent(BuckProjectSettingsProvider.class);
+    return project.getService(BuckProjectSettingsProvider.class);
   }
 
   public BuckProjectSettingsProvider(Project project) {
@@ -242,17 +241,6 @@ public class BuckProjectSettingsProvider
 
   public void setBuckExtraArgs(String buckExtraArgs) {
     state.buckExtraArgs = buckExtraArgs;
-  }
-
-  @Override
-  public void initComponent() {}
-
-  @Override
-  public void disposeComponent() {}
-
-  @Override
-  public String getComponentName() {
-    return "BuckProjectSettingsProvider";
   }
 
   public String getConvertedTargetType(String targetType) {

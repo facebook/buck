@@ -22,7 +22,6 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
-import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import java.io.File;
@@ -36,10 +35,10 @@ import java.util.Optional;
  * @deprecated Use either the {@link BuckCellManager} or the {@link BuckTargetLocator} for a stable
  *     API.
  */
-public class BuckCellFinder implements ProjectComponent {
+public class BuckCellFinder {
 
   public static BuckCellFinder getInstance(Project project) {
-    return project.getComponent(BuckCellFinder.class);
+    return project.getService(BuckCellFinder.class);
   }
 
   private BuckCellManager buckCellManager;

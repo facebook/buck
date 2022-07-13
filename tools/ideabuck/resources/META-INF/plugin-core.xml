@@ -75,7 +75,17 @@
       serviceImplementation="com.facebook.buck.intellij.ideabuck.ui.BuckUIManager"/>
     <projectService
       serviceImplementation="com.facebook.buck.intellij.ideabuck.notification.BuckNotification"/>
+    <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.util.BuckCellFinder"/>
     <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.completion.BuckAliasesCache"/>
+    <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider" />
+    <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider" />
+    <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider" />
+    <projectService
+      serviceInterface="com.facebook.buck.intellij.ideabuck.api.BuckCellManager"
+      serviceImplementation="com.facebook.buck.intellij.ideabuck.impl.BuckCellManagerImpl"/>
+    <projectService
+      serviceInterface="com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator"
+      serviceImplementation="com.facebook.buck.intellij.ideabuck.impl.BuckTargetLocatorImpl"/>
     <configurationType
       implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckTestConfigurationType"/>
     <configurationType
@@ -192,38 +202,10 @@
       </implementation-class>
       <loadForDefaultProject/>
     </component>
-    <component>
-      <implementation-class>
-        com.facebook.buck.intellij.ideabuck.util.BuckCellFinder
-      </implementation-class>
-    </component>
-    <component>
-      <implementation-class>
-        com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider
-      </implementation-class>
-    </component>
-    <component>
-      <implementation-class>
-        com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider
-      </implementation-class>
-    </component>
-    <component>
-      <implementation-class>
-        com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
-      </implementation-class>
-    </component>
     <!--
       Components in the package com.facebook.buck.intellij.ideabuck.api have
       stable APIs that are intended for use by other plugins.
      -->
-    <component>
-      <interface-class>com.facebook.buck.intellij.ideabuck.api.BuckCellManager</interface-class>
-      <implementation-class>com.facebook.buck.intellij.ideabuck.impl.BuckCellManagerImpl</implementation-class>
-    </component>
-    <component>
-      <interface-class>com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator</interface-class>
-      <implementation-class>com.facebook.buck.intellij.ideabuck.impl.BuckTargetLocatorImpl</implementation-class>
-    </component>
   </project-components>
 
   <extensionPoints>
