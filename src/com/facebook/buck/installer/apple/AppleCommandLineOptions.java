@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.installer;
+package com.facebook.buck.installer.apple;
 
 import com.facebook.buck.android.device.TargetDeviceOptions;
+import com.facebook.buck.installer.common.ConsumeAllOptionsHandler;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;

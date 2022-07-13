@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.installer;
+package com.facebook.buck.installer.apple;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

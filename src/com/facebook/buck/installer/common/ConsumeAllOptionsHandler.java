@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.installer;
+package com.facebook.buck.installer.common;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -23,6 +23,7 @@ import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
+/** Consume all options handler for args4j library */
 public class ConsumeAllOptionsHandler extends OptionHandler<String> {
 
   public ConsumeAllOptionsHandler(

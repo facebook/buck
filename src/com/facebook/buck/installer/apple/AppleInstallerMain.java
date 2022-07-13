@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.installer;
+package com.facebook.buck.installer.apple;
 
+import com.facebook.buck.installer.InstallerServer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,11 +29,11 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 /**
- * Main entry point for executing {@link Installs for buck2 apple}.
+ * Main entry point for executing {@code Installs for buck2 apple}.
  *
  * <p>Expected usage: {@code this_binary options}.
  */
-public class AppleMain {
+public class AppleInstallerMain {
 
   public static void main(String[] args) throws IOException, InterruptedException {
     /** Main Entry Point */
@@ -44,14 +45,14 @@ public class AppleMain {
       builder.append(line);
     }
     builder.append(new String("/buck-out/v2/log/installer.log"));
-    Logger logger = Logger.getLogger(AppleMain.class.getName());
+    Logger logger = Logger.getLogger(AppleInstallerMain.class.getName());
     FileHandler fh = new FileHandler(builder.toString());
     fh.setFormatter(new SimpleFormatter());
     fh.setLevel(Level.INFO);
     logger.addHandler(new ConsoleHandler());
     logger.addHandler(fh);
 
-    AppleMain installer = new AppleMain();
+    AppleInstallerMain installer = new AppleInstallerMain();
     AppleCommandLineOptions options = new AppleCommandLineOptions();
     CmdLineParser parser = new CmdLineParser(options);
     try {

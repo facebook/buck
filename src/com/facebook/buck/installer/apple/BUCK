@@ -1,0 +1,32 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library")
+
+buck_java_library(
+    name = "installer_apple_lib",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/apple/simulator:simulator",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:environment",
+        "//src/com/facebook/buck/util/stream:stream",
+        "//src/com/facebook/buck/apple:apple",
+        "//src/com/facebook/buck/apple/simulator:simulator",
+        "//src/com/facebook/buck/apple/platform_type:type",
+        "//src/com/facebook/buck/apple/device:device",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/infer-annotations:infer-annotations",
+        "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/installer:installer_server",
+        "//src/com/facebook/buck/installer/common:options_handler",
+])
+
+buck_java_binary(
+    name = "apple_installer",
+    main_class = "com.facebook.buck.installer.apple.AppleInstallerMain",
+    deps = [
+        ":installer_apple_lib"
+    ],
+    visibility = [
+        "PUBLIC",
+    ]
+)

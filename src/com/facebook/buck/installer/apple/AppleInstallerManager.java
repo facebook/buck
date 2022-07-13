@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.installer;
+package com.facebook.buck.installer.apple;
 
 import com.facebook.buck.apple.simulator.AppleDeviceController;
+import com.facebook.buck.installer.InstallResult;
+import com.facebook.buck.installer.InstallType;
 import com.facebook.buck.util.*;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.util.concurrent.SettableFuture;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -32,6 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
 class AppleInstallerManager extends InstallType {
+
   private static volatile AppleInstallerManager instance;
   public final ConcurrentHashMap<String, SettableFuture<AppleInstallAppOptions>> chm =
       new ConcurrentHashMap<>();
@@ -39,7 +41,7 @@ class AppleInstallerManager extends InstallType {
   private AppleCommandLineOptions cliOpts;
 
   @Override
-  public InstallResult install(String name, Path path) throws IOException, InterruptedException {
+  public InstallResult install(String name, Path path) {
     SettableFuture<AppleInstallAppOptions> appInstallOptions;
     if (path.endsWith(Paths.get("install_apple_data.json"))) {
       name = name.replaceAll("options_", "");

@@ -26,11 +26,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
 public class InstallerService extends InstallerGrpc.InstallerImplBase {
-  /** Installer Service that implemts Installer.proto */
-  public final InstallType installer;
+  /** Installer Service that implements Installer.proto */
+  private final InstallType installer;
 
-  public SettableFuture<Boolean> installFinished = SettableFuture.create();;
-  public Logger log;
+  private final Logger log;
+  final SettableFuture<Boolean> installFinished = SettableFuture.create();
 
   public InstallerService(InstallType installer, Logger log) {
     this.installer = installer;
@@ -46,7 +46,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
       log.log(
           Level.INFO,
           String.format(
-              "\nRecieved artifact %s located at %s\n", request.getName(), request.getPath()));
+              "%nReceived artifact %s located at %s%n", request.getName(), request.getPath()));
       Path path = Paths.get(request.getPath());
       InstallResult res = installer.install(request.getName(), path);
       err = res.isErr;

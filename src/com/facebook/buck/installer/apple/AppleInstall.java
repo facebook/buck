@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.installer;
+package com.facebook.buck.installer.apple;
 
 import static com.facebook.buck.apple.simulator.AppleDeviceController.AppleDeviceKindEnum.IPHONE;
 
@@ -26,6 +26,7 @@ import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
+import com.facebook.buck.installer.InstallResult;
 import com.facebook.buck.util.*;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.collect.ImmutableList;
