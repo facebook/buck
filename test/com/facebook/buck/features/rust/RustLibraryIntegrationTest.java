@@ -403,6 +403,26 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
+  public void rustLibraryCompilerTargetTriple() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "--config",
+                // T125799685: Temporary while we migrate from implicit to explicit target triples.
+                "rust.use_rustc_target_triple=true",
+                "--config",
+                "rust#default.rustc_target_triple=fake-target-triple",
+                "//messenger:messenger#rlib")
+            .getStderr(),
+        containsString("Could not find specification for target \"fake-target-triple\"."));
+  }
+
+  @Test
   public void libraryCrateRoot() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);

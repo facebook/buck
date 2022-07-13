@@ -112,7 +112,7 @@ public class RustTestDescription
 
     Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> flagsAndEnv =
         RustCompileUtils.getRustcFlagsAndEnv(
-            context, buildTarget, rustPlatform, testFlags.build(), args);
+            context, buildTarget, rustBuckConfig, rustPlatform, testFlags.build(), args);
 
     ImmutableList<Arg> linkerFlags =
         RustCompileUtils.getLinkerFlags(context, buildTarget, rustPlatform, args);

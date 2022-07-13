@@ -30,6 +30,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import java.io.File;
 import java.io.IOException;
@@ -605,6 +606,26 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void rustBinaryCompilerTargetTriple() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "--config",
+                // T125799685: Temporary while we migrate from implicit to explicit target triples.
+                "rust.use_rustc_target_triple=true",
+                "--config",
+                "rust#default.rustc_target_triple=fake-target-triple",
+                "//:xyzzy")
+            .getStderr(),
+        containsString("Could not find specification for target \"fake-target-triple\"."));
+  }
+
+  @Test
   public void buildAfterChangeWorks() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
@@ -1132,5 +1153,30 @@ public class RustBinaryIntegrationTest {
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), containsString("My FOO something else"));
     assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void simpleBinaryWithRustcTargetTriple() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
+    workspace.setUp();
+
+    String rustcTargetTriple = RustTestUtils.rustcDefaultTargetTriple(workspace);
+    if (rustcTargetTriple == null) {
+      throw new IllegalStateException("No default rustc target triple found.");
+    }
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "run",
+            "--config",
+            // T125799685: Temporary while we migrate from implicit to explicit target triples.
+            "rust.use_rustc_target_triple=true",
+            "--config",
+            "rust#default.rustc_target_triple=" + rustcTargetTriple,
+            "//:xyzzy");
+
+    assertThat(result.getStdout(), containsString("Hello, world!"));
+    assertThat(result.getExitCode(), Matchers.equalTo(ExitCode.SUCCESS));
   }
 }

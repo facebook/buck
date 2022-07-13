@@ -172,6 +172,7 @@ public class RustCompileUtils {
   public static Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> getRustcFlagsAndEnv(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
+      RustBuckConfig rustBuckConfig,
       RustPlatform rustPlatform,
       ImmutableList<StringArg> ruleFlags,
       RustCommonArgs args) {
@@ -182,7 +183,14 @@ public class RustCompileUtils {
     ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
 
     RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
-    RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
+    // T125799685: Temporary while we migrate from implicit to explicit target triples.
+    if (rustBuckConfig.getUseRustcTargetTriple()) {
+      rustPlatform
+          .getRustcTargetTriple()
+          .map(triple -> rustcArgs.add(StringArg.of("--target"), StringArg.of(triple)));
+    } else {
+      RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
+    }
     rustcArgs.addAll(ruleFlags);
     args.getRustcFlags().forEach(arg -> rustcArgs.add(converter.convert(arg)));
 

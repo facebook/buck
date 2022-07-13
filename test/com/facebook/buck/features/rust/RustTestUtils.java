@@ -33,7 +33,13 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider.Type;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 public class RustTestUtils {
   public static CxxPlatformsProvider getCxxPlatformsProvider() {
@@ -108,5 +114,19 @@ public class RustTestUtils {
             .getCommandPrefix(resolver.getSourcePathResolver());
 
     return rustc.get(0);
+  }
+
+  public static @Nullable String rustcDefaultTargetTriple(ProjectWorkspace workspace) {
+    ProcessExecutor.Result res;
+    try {
+      res = workspace.runCommand(getRustc(), "-vV");
+    } catch (IOException | InterruptedException e) {
+      return null;
+    }
+
+    String stdout = res.getStdout().get();
+    Matcher matcher = Pattern.compile("^host: (\\S+)$", Pattern.MULTILINE).matcher(stdout);
+
+    return matcher.find() ? matcher.group(1) : null;
   }
 }

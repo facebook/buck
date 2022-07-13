@@ -98,4 +98,11 @@ interface RustPlatform extends FlavorConvertible {
    * defined, then the caller should use this platform instance.
    */
   Optional<RustPlatform> getRustcPluginPlatform();
+
+  /**
+   * Get the rustc target triple for this build.
+   *
+   * @see <a href="https://doc.rust-lang.org/rustc/platform-support.html">rustc Platform Support</a>
+   */
+  Optional<String> getRustcTargetTriple();
 }

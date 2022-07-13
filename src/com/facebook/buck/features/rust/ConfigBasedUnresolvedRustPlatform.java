@@ -172,7 +172,8 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                     .collect(ImmutableList.toImmutableList()))
             .setCxxPlatform(cxxPlatform)
             .setXcrunSdkPath(computeXcrunSdkPath(cxxPlatform.getFlavor()))
-            .setRustcPluginPlatform(pluginPlatform);
+            .setRustcPluginPlatform(pluginPlatform)
+            .setRustcTargetTriple(rustBuckConfig.getRustcTargetTriple(platformName));
 
     if (!linkerOverride.isPresent()) {
       builder.addAllLinkerArgs(cxxPlatform.getLdflags());

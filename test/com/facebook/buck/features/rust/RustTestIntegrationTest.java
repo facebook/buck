@@ -240,4 +240,24 @@ public class RustTestIntegrationTest {
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
+
+  @Test
+  public void testWithCompilerTargetTriple() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_tests", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "test",
+                "--config",
+                // T125799685: Temporary while we migrate from implicit to explicit target triples.
+                "rust.use_rustc_target_triple=true",
+                "--config",
+                "rust#default.rustc_target_triple=fake-target-triple",
+                "//:test_success")
+            .getStderr(),
+        Matchers.containsString("Could not find specification for target \"fake-target-triple\"."));
+  }
 }
