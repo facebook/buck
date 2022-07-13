@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+/** Apple install application options. */
 class AppleInstallAppOptions {
   public String fullyQualifiedName;
   public boolean useIdb = true;

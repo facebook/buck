@@ -33,9 +33,9 @@ import java.util.logging.Logger; // NOPMD
 public class InstallerServer {
   private final Server server;
   private final InstallerService service;
-  static int DEFAULT_PORT = 50055;
+  static final int DEFAULT_PORT = 50055;
   public boolean uds = false;
-  public Logger log;
+  public final Logger log;
 
   public InstallerServer(String unix_domain_socket, InstallType installer, Logger log)
       throws IOException, RuntimeException, InterruptedException {

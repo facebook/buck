@@ -32,6 +32,7 @@ import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
+/** Apple install manager */
 class AppleInstallerManager extends InstallType {
 
   private static volatile AppleInstallerManager instance;
@@ -46,7 +47,7 @@ class AppleInstallerManager extends InstallType {
     if (path.endsWith(Paths.get("install_apple_data.json"))) {
       name = name.replaceAll("options_", "");
       synchronized (chm) {
-        appInstallOptions = getorMakeAppleInstallAppOptions(name);
+        appInstallOptions = getOrMakeAppleInstallAppOptions(name);
       }
       try {
         JsonParser parser = ObjectMappers.createParser(path);
@@ -54,7 +55,7 @@ class AppleInstallerManager extends InstallType {
             parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
         AppleInstallAppOptions app = new AppleInstallAppOptions(json_data);
         appInstallOptions.set(app);
-        return new InstallResult(false, new String(""));
+        return new InstallResult(false, "");
       } catch (Exception err) {
         log.log(Level.SEVERE, "Error creating AppleInstallAppOptions from `install_apple_data`");
         return new InstallResult(true, err.toString());
@@ -62,7 +63,7 @@ class AppleInstallerManager extends InstallType {
     } else {
       try {
         synchronized (chm) {
-          appInstallOptions = getorMakeAppleInstallAppOptions(name);
+          appInstallOptions = getOrMakeAppleInstallAppOptions(name);
         }
         appInstallOptions.get();
         Console con =
@@ -85,7 +86,7 @@ class AppleInstallerManager extends InstallType {
     }
   }
 
-  public SettableFuture<AppleInstallAppOptions> getorMakeAppleInstallAppOptions(String name) {
+  public SettableFuture<AppleInstallAppOptions> getOrMakeAppleInstallAppOptions(String name) {
     if (chm.get(name) != null) {
       return chm.get(name);
     } else {

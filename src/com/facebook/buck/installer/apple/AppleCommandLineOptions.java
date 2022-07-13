@@ -26,8 +26,8 @@ import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
 /**
- * Construsts the Command Line Options to Support Apple Install. The majority of these were copy
- * from TargetDeviceCommandLineOptions.java in the buckv1 code base.
+ * Constructs the Command Line Options to Support Apple Install. The majority of these were copied
+ * from {@code com.facebook.buck.cli.TargetDeviceCommandLineOptions}.
  */
 public class AppleCommandLineOptions {
 
@@ -45,7 +45,7 @@ public class AppleCommandLineOptions {
       usage = "Arguments passed when running with -r. Only valid for Apple targets.",
       handler = ConsumeAllOptionsHandler.class,
       depends = "-r")
-  private List<String> runArgs = new ArrayList<>();
+  private final List<String> runArgs = new ArrayList<>();
 
   @VisibleForTesting static final String WAIT_FOR_DEBUGGER_LONG_ARG = "--wait-for-debugger";
   @VisibleForTesting static final String WAIT_FOR_DEBUGGER_SHORT_ARG = "-w";
@@ -54,7 +54,7 @@ public class AppleCommandLineOptions {
       name = WAIT_FOR_DEBUGGER_LONG_ARG,
       aliases = {WAIT_FOR_DEBUGGER_SHORT_ARG},
       usage = "Have the launched process wait for the debugger")
-  private boolean waitForDebugger = false;
+  private final boolean waitForDebugger = false;
 
   @VisibleForTesting static final String DEVICE_MODE_SHORT_ARG = "-d";
   @VisibleForTesting static final String DEVICE_MODE_LONG_ARG = "--device";

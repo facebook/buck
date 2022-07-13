@@ -19,7 +19,6 @@ package com.facebook.buck.installer;
 import com.facebook.buck.install.model.*;
 import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.stub.StreamObserver;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
@@ -39,22 +38,17 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
 
   @Override
   public void fileReadyRequest(FileReady request, StreamObserver<FileResponse> responseObserver) {
-    Boolean err;
+    boolean err;
     String errMsg;
     FileResponse rep;
-    try {
-      log.log(
-          Level.INFO,
-          String.format(
-              "%nReceived artifact %s located at %s%n", request.getName(), request.getPath()));
-      Path path = Paths.get(request.getPath());
-      InstallResult res = installer.install(request.getName(), path);
-      err = res.isErr;
-      errMsg = res.errMsg;
-    } catch (IOException | InterruptedException ex) {
-      err = true;
-      errMsg = ex.toString();
-    }
+    log.log(
+        Level.INFO,
+        String.format(
+            "%nReceived artifact %s located at %s%n", request.getName(), request.getPath()));
+    Path path = Paths.get(request.getPath());
+    InstallResult res = installer.install(request.getName(), path);
+    err = res.isErr;
+    errMsg = res.errMsg;
     rep =
         FileResponse.newBuilder()
             .setName(request.getName())

@@ -16,14 +16,13 @@
 
 package com.facebook.buck.installer;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * An installType is attempts to an install an aritfact given a path/location and returns an
+ * An {@link InstallType} is attempts to an install an artifact given a path/location and returns an
  * InstallResult
  */
 public abstract class InstallType {
-  public abstract InstallResult install(String name, Path app)
-      throws IOException, InterruptedException;
+
+  public abstract InstallResult install(String name, Path app);
 }

@@ -35,16 +35,16 @@ import org.kohsuke.args4j.CmdLineParser;
  */
 public class AppleInstallerMain {
 
+  /** Main Entry Point */
   public static void main(String[] args) throws IOException, InterruptedException {
-    /** Main Entry Point */
-    Process process = Runtime.getRuntime().exec(new String("hg root"));
+    Process process = Runtime.getRuntime().exec("hg root");
     BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
     StringBuilder builder = new StringBuilder();
-    String line = null;
+    String line;
     while ((line = reader.readLine()) != null) {
       builder.append(line);
     }
-    builder.append(new String("/buck-out/v2/log/installer.log"));
+    builder.append("/buck-out/v2/log/installer.log");
     Logger logger = Logger.getLogger(AppleInstallerMain.class.getName());
     FileHandler fh = new FileHandler(builder.toString());
     fh.setFormatter(new SimpleFormatter());
@@ -66,7 +66,7 @@ public class AppleInstallerMain {
     }
   }
 
-  public void run(AppleCommandLineOptions options, Logger log)
+  private void run(AppleCommandLineOptions options, Logger log)
       throws IOException, InterruptedException {
     AppleInstallerManager am = AppleInstallerManager.getInstance();
     am.setLogger(log);
