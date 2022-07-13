@@ -23,6 +23,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/javacd/resources/proto" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/workertool/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/workertool/resources/proto" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/installer/proto" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/.lsp-buck-out" />
