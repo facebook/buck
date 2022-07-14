@@ -27,7 +27,8 @@ import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
 import com.facebook.buck.installer.InstallResult;
-import com.facebook.buck.util.*;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,19 +42,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
 /** Installs an AppleBundle */
 public class AppleInstall {
+
   private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 6s";
   private static final String DEFAULT_APPLE_TV_SIMULATOR_NAME = "Apple TV";
   private static final ImmutableList<String> APPLE_SIMULATOR_APPS =
       ImmutableList.of("Simulator.app", "iOS Simulator.app");
-  public static final String IPHONESIMULATOR = "iphonesimulator";
-  public static final String APPLETVSIMULATOR = "appletvsimulator";
-  public static final String IPHONEOS = "iphoneos";
-  private static final long APPLE_SIMULATOR_WAIT_MILLIS = 20000;
+  private static final String IPHONE_SIMULATOR = "iphonesimulator";
+  private static final String APPLE_TV_SIMULATOR = "appletvsimulator";
+  private static final String IPHONE_OS = "iphoneos";
+  private static final long APPLE_SIMULATOR_WAIT_MILLIS = 20_000;
 
   public final AppleCommandLineOptions options;
   public final Path idbPath; // Keep in CLI options
@@ -88,19 +89,19 @@ public class AppleInstall {
   }
 
   public boolean isSimulator(String platformName) {
-    return platformName.equals(IPHONESIMULATOR) || platformName.equals(APPLETVSIMULATOR);
+    return platformName.equals(IPHONE_SIMULATOR) || platformName.equals(APPLE_TV_SIMULATOR);
   }
 
   public boolean isDevice(String platformName) {
-    return platformName.equals(IPHONEOS);
+    return platformName.equals(IPHONE_OS);
   }
 
   public boolean isIPhoneSimulator(String platformName) {
-    return platformName.equals(IPHONESIMULATOR);
+    return platformName.equals(IPHONE_SIMULATOR);
   }
 
   public boolean isAppleTVSimulator(String platformName) {
-    return platformName.equals(APPLETVSIMULATOR);
+    return platformName.equals(APPLE_TV_SIMULATOR);
   }
 
   public InstallResult startInstall(Path app) throws IOException, InterruptedException {
@@ -126,7 +127,7 @@ public class AppleInstall {
     }
     String errMsg =
         String.format("Install not yet supported for platform %s.", appInstallOptions.platformName);
-    log.log(Level.SEVERE, errMsg);
+    log.severe(errMsg);
     return new InstallResult(true, errMsg);
   }
 
@@ -145,8 +146,7 @@ public class AppleInstall {
               .get()
               .toLowerCase(Locale.US)
               .equals(simulator.getUdid().toLowerCase(Locale.US))) {
-        log.log(
-            Level.INFO,
+        log.info(
             String.format("Got UDID match (%s): %s", options.getSerialNumber().get(), simulator));
         simulatorByUdid = Optional.of(simulator);
         // We shouldn't need to keep looking.
@@ -157,8 +157,7 @@ public class AppleInstall {
               .get()
               .toLowerCase(Locale.US)
               .equals(simulator.getName().toLowerCase(Locale.US))) {
-        log.log(
-            Level.INFO, String.format("Got name match (%s): %s", simulator.getName(), simulator));
+        log.info(String.format("Got name match (%s): %s", simulator.getName(), simulator));
         simulatorByName = Optional.of(simulator);
         // We assume the simulators are sorted by OS version, so we'll keep
         // looking for a more recent simulator with this name.
@@ -168,8 +167,7 @@ public class AppleInstall {
           case IPAD:
             if (this.isIPhoneSimulator(appInstallOptions.platformName)) {
               if (simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
-                log.log(
-                    Level.INFO,
+                log.info(
                     String.format(
                         "Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator));
                 defaultSimulator = Optional.of(simulator);
@@ -186,8 +184,7 @@ public class AppleInstall {
           case TV:
             if (this.isAppleTVSimulator(appInstallOptions.platformName)) {
               if (simulator.getName().equals(DEFAULT_APPLE_TV_SIMULATOR_NAME)) {
-                log.log(
-                    Level.INFO,
+                log.info(
                     String.format(
                         "Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator));
                 defaultSimulator = Optional.of(simulator);
@@ -210,8 +207,7 @@ public class AppleInstall {
       if (simulatorByUdid.isPresent()) {
         return simulatorByUdid;
       } else {
-        log.log(
-            Level.INFO,
+        log.info(
             String.format(
                 "Asked to find simulator with UDID %s, but couldn't find one.",
                 options.getSerialNumber().get()));
@@ -221,8 +217,7 @@ public class AppleInstall {
       if (simulatorByName.isPresent()) {
         return simulatorByName;
       } else {
-        log.log(
-            Level.INFO,
+        log.info(
             String.format(
                 "Asked to find simulator with name %s, but couldn't find one.",
                 options.getSimulatorName().get()));
@@ -255,7 +250,7 @@ public class AppleInstall {
 
     // Boot the simulator
     if (simulator.get().getState().equalsIgnoreCase("shutdown")) {
-      log.log(Level.INFO, String.format("Starting up simulator %s", simulator.get()));
+      log.info(String.format("Starting up simulator %s", simulator.get()));
       if (!appleDeviceController.bootSimulator(simulator.get().getUdid())) {
         String errMsg =
             String.format(
@@ -264,13 +259,12 @@ public class AppleInstall {
         return new InstallResult(true, errMsg);
       }
 
-      log.log(
-          Level.INFO,
+      log.info(
           String.format(
               "Simulator started. Installing Apple bundle %s in simulator %s",
               appInstallOptions.fullyQualifiedName, simulator.get()));
     } else {
-      log.log(Level.INFO, String.format("Simulator %s already running", simulator.get()));
+      log.info(String.format("Simulator %s already running", simulator.get()));
     }
 
     // Install the bundle
@@ -279,7 +273,7 @@ public class AppleInstall {
           String.format(
               "Cannot install %s (could not install bundle %s in simulator %s)",
               appInstallOptions.fullyQualifiedName, appLoc, simulator.get().getName());
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
 
@@ -294,7 +288,7 @@ public class AppleInstall {
             String.format(
                 "Cannot install %s (could not get bundle ID from %s)",
                 appInstallOptions.fullyQualifiedName, appInstallOptions.infoPlistpath);
-        log.log(Level.SEVERE, errMsg);
+        log.severe(errMsg);
         return new InstallResult(true, errMsg);
       }
       boolean waitForDebugger = options.getWaitForDebugger();
@@ -306,7 +300,7 @@ public class AppleInstall {
             appleDeviceController.startDebugServer(simulator.get().getUdid(), appleBundleId.get());
         if (debugCommand.isEmpty()) {
           String errMsg = "Could not start the debugserver";
-          log.log(Level.SEVERE, errMsg);
+          log.severe(errMsg);
           return new InstallResult(true, errMsg);
         }
       } else {
@@ -316,7 +310,7 @@ public class AppleInstall {
               String.format(
                   "Cannot launch %s (failed to launch bundle ID %s)",
                   appInstallOptions.fullyQualifiedName, appleBundleId.get());
-          log.log(Level.SEVERE, errMsg);
+          log.severe(errMsg);
           return new InstallResult(true, errMsg);
         }
       }
@@ -326,14 +320,12 @@ public class AppleInstall {
                   + debugCommand.get()
                   + " to run the debugger."
               : "";
-      log.log(
-          Level.INFO,
+      log.info(
           String.format(
               "Successfully launched %s. %s",
               appInstallOptions.fullyQualifiedName, debugOptionMessage));
     } else {
-      log.log(
-          Level.INFO,
+      log.info(
           String.format(
               "Successfully installed %s. (Use `buck install -r` to run.)",
               appInstallOptions.fullyQualifiedName));
@@ -348,7 +340,7 @@ public class AppleInstall {
       String errMsg =
           String.format(
               "Cannot install %s (Xcode not found)", appInstallOptions.fullyQualifiedName);
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
 
@@ -361,7 +353,7 @@ public class AppleInstall {
           String.format(
               "Cannot install %s (no appropriate simulator found, try specifying a simulator by name)",
               appInstallOptions.fullyQualifiedName);
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
 
@@ -380,7 +372,7 @@ public class AppleInstall {
           String.format(
               "Cannot install %s (could not find simulator under %s, checked %s)",
               appInstallOptions.fullyQualifiedName, xcodeApplicationsPath, APPLE_SIMULATOR_APPS);
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
 
@@ -389,12 +381,12 @@ public class AppleInstall {
 
     boolean shouldWaitForSimulatorsToShutdown = false;
     if (!appleSimulatorController.canStartSimulator(appleSimulator.get().getUdid())) {
-      log.log(Level.WARNING, "Cannot start simulator, killing simulators and trying again.");
+      log.warning("Cannot start simulator, killing simulators and trying again.");
       AppleCoreSimulatorServiceController appleCoreSimulatorServiceController =
           new AppleCoreSimulatorServiceController(processExecutor);
       if (!appleCoreSimulatorServiceController.killSimulatorProcesses()) {
         String errMsg = "Could not kill running simulator processes.";
-        log.log(Level.SEVERE, errMsg);
+        log.severe(errMsg);
         return new InstallResult(true, errMsg);
       }
       shouldWaitForSimulatorsToShutdown = true;
@@ -406,7 +398,7 @@ public class AppleInstall {
             String.format(
                 "Cannot install %s (no appropriate simulator found, try specifying a simulator by name)",
                 appInstallOptions.fullyQualifiedName);
-        log.log(Level.SEVERE, errMsg);
+        log.severe(errMsg);
         return new InstallResult(true, errMsg);
       }
     }
@@ -419,14 +411,13 @@ public class AppleInstall {
             String.format(
                 "Cannot install %s (simulators did not shut down within %d ms).",
                 appInstallOptions.fullyQualifiedName, APPLE_SIMULATOR_WAIT_MILLIS);
-        log.log(Level.SEVERE, errMsg);
+        log.severe(errMsg);
         return new InstallResult(true, errMsg);
       }
-      log.log(
-          Level.INFO, String.format("Simulators shut down in %d millis.", shutdownMillis.get()));
+      log.info(String.format("Simulators shut down in %d millis.", shutdownMillis.get()));
       remainingMillis -= shutdownMillis.get();
     }
-    log.log(Level.INFO, "Starting up simulator %s", appleSimulator.get());
+    log.info(String.format("Starting up simulator %s", appleSimulator.get()));
     Optional<Long> startMillis =
         appleSimulatorController.startSimulator(appleSimulator.get().getUdid(), remainingMillis);
 
@@ -437,11 +428,10 @@ public class AppleInstall {
               appInstallOptions.fullyQualifiedName,
               appleSimulator.get().getName(),
               APPLE_SIMULATOR_WAIT_MILLIS);
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
-    log.log(
-        Level.INFO,
+    log.info(
         String.format(
             "Simulator started in %d ms. Installing Apple bundle %s in simulator %s",
             startMillis.get(), appInstallOptions.fullyQualifiedName, appleSimulator.get()));
@@ -453,7 +443,7 @@ public class AppleInstall {
               "Cannot install %s (could not install bundle %s in simulator %s)",
               appInstallOptions.fullyQualifiedName, appPath, appleSimulator.get().getName());
 
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
     boolean run = options.getRun();
@@ -462,9 +452,7 @@ public class AppleInstall {
       return launchAppleBundle(appleSimulatorController, appleSimulator.get());
 
     } else {
-      log.log(
-          Level.INFO,
-          String.format("Successfully installed %s", appInstallOptions.fullyQualifiedName));
+      log.info(String.format("Successfully installed %s", appInstallOptions.fullyQualifiedName));
       return new InstallResult(false, "");
     }
   }
@@ -489,8 +477,7 @@ public class AppleInstall {
               .toLowerCase(Locale.US)
               .equals(simulator.getUdid().toLowerCase(Locale.US))) {
 
-        log.log(
-            Level.INFO,
+        log.info(
             String.format("Got UDID match (%s): %s", options.getSerialNumber().get(), simulator));
         simulatorByUdid = Optional.of(simulator);
         // We shouldn't need to keep looking.
@@ -501,15 +488,13 @@ public class AppleInstall {
               .get()
               .toLowerCase(Locale.US)
               .equals(simulator.getName().toLowerCase(Locale.US))) {
-        log.log(
-            Level.INFO, String.format("Got name match (%s): %s", simulator.getName(), simulator));
+        log.info(String.format("Got name match (%s): %s", simulator.getName(), simulator));
         simulatorByName = Optional.of(simulator);
         // We assume the simulators are sorted by OS version, so we'll keep
         // looking for a more recent simulator with this name.
       } else if (this.isIPhoneSimulator(appInstallOptions.platformName)) {
         if (simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
-          log.log(
-              Level.INFO,
+          log.info(
               String.format("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator));
           defaultSimulator = Optional.of(simulator);
         }
@@ -518,8 +503,7 @@ public class AppleInstall {
         }
       } else if (this.isAppleTVSimulator(appInstallOptions.platformName)) {
         if (simulator.getName().equals(DEFAULT_APPLE_TV_SIMULATOR_NAME)) {
-          log.log(
-              Level.INFO,
+          log.info(
               String.format(
                   "Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator));
           defaultSimulator = Optional.of(simulator);
@@ -534,8 +518,7 @@ public class AppleInstall {
       if (simulatorByUdid.isPresent()) {
         return simulatorByUdid;
       } else {
-        log.log(
-            Level.INFO,
+        log.info(
             String.format(
                 "Asked to find simulator with UDID %s, but couldn't find one.",
                 options.getSerialNumber().get()));
@@ -545,8 +528,7 @@ public class AppleInstall {
       if (simulatorByName.isPresent()) {
         return simulatorByName;
       } else {
-        log.log(
-            Level.INFO,
+        log.info(
             String.format(
                 "Asked to find simulator with name %s, but couldn't find one.",
                 options.getSimulatorName().get()));
@@ -563,15 +545,13 @@ public class AppleInstall {
       AppleSimulatorController appleSimulatorController, AppleSimulator appleSimulator)
       throws IOException, InterruptedException {
 
-    log.log(
-        Level.INFO,
+    log.info(
         String.format(
             "Launching Apple bundle %s in simulator %s",
             appInstallOptions.fullyQualifiedName, appleSimulator));
 
     if (appleBundleId.isEmpty()) {
-      log.log(
-          Level.INFO, String.format("Cannot install %s c", appInstallOptions.fullyQualifiedName));
+      log.info(String.format("Cannot install %s c", appInstallOptions.fullyQualifiedName));
     }
     List<String> runArgs = new ArrayList<>();
     boolean waitForDebugger = false;
@@ -589,12 +569,11 @@ public class AppleInstall {
           String.format(
               "Cannot launch %s (failed to launch bundle ID %s)",
               appInstallOptions.fullyQualifiedName, appleBundleId.get());
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
 
-    log.log(
-        Level.INFO,
+    log.info(
         String.format(
             "Successfully launched %s%s. To debug, run: lldb -p %d",
             appleBundleId, waitForDebugger ? " (waiting for debugger)" : "", launchedPid.get()));
@@ -608,7 +587,7 @@ public class AppleInstall {
     ImmutableSet<AppleDevice> physicalDevices = appleDeviceController.getPhysicalDevices();
     if (physicalDevices.isEmpty()) {
       String errMsg = "Could not find any physical devices connected";
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
 
@@ -628,13 +607,12 @@ public class AppleInstall {
             String.format(
                 "Cannot install %s to the device %s (no connected devices with that UDID/prefix)",
                 appInstallOptions.fullyQualifiedName, udidPrefix);
-        log.log(Level.SEVERE, errMsg);
+        log.severe(errMsg);
         return new InstallResult(true, errMsg);
       }
     } else {
       if (physicalDevices.size() > 1) {
-        log.log(
-            Level.INFO,
+        log.info(
             "More than one connected device found, and no device ID specified.  A device will be"
                 + " arbitrarily picked.");
       }
@@ -647,7 +625,7 @@ public class AppleInstall {
           String.format(
               "Cannot install %s (could not install bundle %s in physical device %s)",
               appInstallOptions.fullyQualifiedName, appLoc, chosenDevice.getName());
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
     boolean run = options.getRun();
@@ -662,7 +640,7 @@ public class AppleInstall {
             String.format(
                 "Cannot install %s (could not get bundle ID from %s)",
                 appInstallOptions.fullyQualifiedName, appInstallOptions.infoPlistpath);
-        log.log(Level.SEVERE, errMsg);
+        log.severe(errMsg);
         return new InstallResult(true, errMsg);
       }
 
@@ -673,17 +651,15 @@ public class AppleInstall {
             String.format(
                 "Cannot launch %s (failed to launch bundle ID %s)",
                 appInstallOptions.fullyQualifiedName, appleBundleId.get());
-        log.log(Level.SEVERE, errMsg);
+        log.severe(errMsg);
         return new InstallResult(true, errMsg);
       }
-      log.log(
-          Level.INFO,
+      log.info(
           String.format(
               "Successfully launched %s%s. To debug, run: lldb -p",
               args, waitForDebugger ? " (waiting for debugger)" : ""));
     } else {
-      log.log(
-          Level.INFO,
+      log.info(
           String.format(
               "Successfully installed %s. (Use `buck install -r %s` to run and -w to have the app waiting for debugger.)",
               args, args));
@@ -698,7 +674,7 @@ public class AppleInstall {
           String.format(
               "Cannot install %s (could not find path to device install helper tool)",
               appInstallOptions.fullyQualifiedName);
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
 
@@ -709,7 +685,7 @@ public class AppleInstall {
           String.format(
               "Cannot install %s (no connected devices found)",
               appInstallOptions.fullyQualifiedName);
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
       return new InstallResult(true, errMsg);
     }
 
@@ -729,29 +705,26 @@ public class AppleInstall {
             String.format(
                 "Cannot install %s to the device %s (no connected devices with that UDID/prefix)",
                 appInstallOptions.fullyQualifiedName, udidPrefix);
-        log.log(Level.SEVERE, errMsg);
+        log.severe(errMsg);
         return new InstallResult(true, errMsg);
       }
     } else {
       if (connectedDevices.size() > 1) {
-        log.log(
-            Level.INFO,
+        log.info(
             "More than one connected device found, and no device ID specified.  A device will be"
                 + " arbitrarily picked.");
       }
 
       selectedUdid = connectedDevices.keySet().iterator().next();
     }
-    log.log(
-        Level.INFO,
-        "Installing %s to device %s (%s)",
+    log.info(
         String.format(
+            "Installing %s to device %s (%s)",
             appInstallOptions.fullyQualifiedName,
             selectedUdid,
             connectedDevices.get(selectedUdid)));
     if (helper.installBundleOnDevice(selectedUdid, appLoc)) {
-      log.log(
-          Level.INFO,
+      log.info(
           String.format(
               "Installing %s to device %s (%s)",
               appInstallOptions.fullyQualifiedName,
@@ -764,11 +737,11 @@ public class AppleInstall {
               String.format(
                   "Cannot run %s (could not get bundle ID from %s)",
                   appInstallOptions.fullyQualifiedName, appInstallOptions.infoPlistpath);
-          log.log(Level.SEVERE, errMsg);
+          log.severe(errMsg);
           return new InstallResult(true, errMsg);
         }
         if (helper.runBundleOnDevice(selectedUdid, appleBundleId.get())) {
-          log.log(Level.INFO, "Succesfully runnning");
+          log.info("Successfully running");
           return new InstallResult(false, "");
         } else {
           String errMsg =
@@ -777,11 +750,11 @@ public class AppleInstall {
                   appInstallOptions.fullyQualifiedName,
                   selectedUdid,
                   connectedDevices.get(selectedUdid));
-          log.log(Level.SEVERE, errMsg);
+          log.severe(errMsg);
           return new InstallResult(true, errMsg);
         }
       } else {
-        log.log(Level.INFO, "Succesfully installed");
+        log.info("Successfully installed");
         return new InstallResult(false, "");
       }
     } else {
@@ -791,7 +764,7 @@ public class AppleInstall {
               appInstallOptions.fullyQualifiedName,
               selectedUdid,
               connectedDevices.get(selectedUdid));
-      log.log(Level.SEVERE, errMsg);
+      log.severe(errMsg);
 
       return new InstallResult(true, errMsg);
     }
@@ -801,11 +774,11 @@ public class AppleInstall {
     this.appleBundleId = Optional.empty();
     Path plistPath = parent.resolve(appInstallOptions.infoPlistpath.getFileName());
     try (InputStream bundlePlistStream = Files.newInputStream(plistPath)) {
-      log.log(Level.INFO, String.format("Getting Apple Bundle ID from %s", plistPath));
+      log.info(String.format("Getting Apple Bundle ID from %s", plistPath));
       this.appleBundleId =
           AppleInfoPlistParsing.getBundleIdFromPlistStream(plistPath, bundlePlistStream);
     } catch (IOException e) {
-      log.log(Level.WARNING, String.format("Could not get apple bundle ID from %s", plistPath));
+      log.warning(String.format("Could not get apple bundle ID from %s", plistPath));
     }
   }
 }

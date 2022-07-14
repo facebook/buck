@@ -24,14 +24,13 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
+/** Installer Service that implements {@code install.proto} */
 public class InstallerService extends InstallerGrpc.InstallerImplBase {
-  /** Installer Service that implements Installer.proto */
-  private final InstallType installer;
-
+  private final InstallCommand installer;
   private final Logger log;
   final SettableFuture<Boolean> installFinished = SettableFuture.create();
 
-  public InstallerService(InstallType installer, Logger log) {
+  public InstallerService(InstallCommand installer, Logger log) {
     this.installer = installer;
     this.log = log;
   }

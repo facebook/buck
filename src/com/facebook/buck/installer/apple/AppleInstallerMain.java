@@ -66,12 +66,12 @@ public class AppleInstallerMain {
     }
   }
 
-  private void run(AppleCommandLineOptions options, Logger log)
+  private void run(AppleCommandLineOptions options, Logger logger)
       throws IOException, InterruptedException {
     AppleInstallerManager am = AppleInstallerManager.getInstance();
-    am.setLogger(log);
+    am.setLogger(logger);
     am.setCLIOptions(options);
     /** Starts the GRPC Server */
-    new InstallerServer(options.unix_domain_socket, am, log);
+    new InstallerServer(options.unix_domain_socket, am, logger);
   }
 }

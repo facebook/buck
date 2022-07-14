@@ -37,7 +37,7 @@ public class InstallerServer {
   public boolean uds = false;
   public final Logger log;
 
-  public InstallerServer(String unix_domain_socket, InstallType installer, Logger log)
+  public InstallerServer(String unix_domain_socket, InstallCommand installer, Logger log)
       throws IOException, RuntimeException, InterruptedException {
     this.service = new InstallerService(installer, log);
     this.log = log;

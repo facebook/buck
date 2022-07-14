@@ -22,17 +22,19 @@ import java.util.Map;
 
 /** Apple install application options. */
 class AppleInstallAppOptions {
-  public String fullyQualifiedName;
-  public boolean useIdb = true;
+
+  String fullyQualifiedName;
+  boolean useIdb = true;
   // "Use this option to set the platform an apple install"
-  public String platformName = "iphonesimulator";
-  public String xcodeDeveloperPath;
-  public String deviceHelperPath;
-  public Path infoPlistpath;
+  String platformName = "iphonesimulator";
+  String xcodeDeveloperPath;
+  String deviceHelperPath;
+  Path infoPlistpath;
+
   /*
    *  Constructs options for an Apple Install that are set in apple_install_data.json artifact pass to the Installer
    */
-  public AppleInstallAppOptions(Map<String, String> options) throws RuntimeException {
+  AppleInstallAppOptions(Map<String, String> options) throws RuntimeException {
     if (options.get("label") != null) {
       this.fullyQualifiedName = options.get("label");
     }

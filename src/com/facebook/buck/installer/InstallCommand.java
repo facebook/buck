@@ -19,10 +19,12 @@ package com.facebook.buck.installer;
 import java.nio.file.Path;
 
 /**
- * An {@link InstallType} is attempts to an install an artifact given a path/location and returns an
- * InstallResult
+ * Install Command interface. Support for a specific installer such as iOS or Android is implemented
+ * as subclasses of this interface. *
  */
-public abstract class InstallType {
+@FunctionalInterface
+public interface InstallCommand {
 
-  public abstract InstallResult install(String name, Path app);
+  /** Installs an artifact from a given path/location. */
+  InstallResult install(String name, Path appPath);
 }

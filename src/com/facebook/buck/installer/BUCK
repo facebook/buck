@@ -9,5 +9,6 @@ buck_java_library(
     exported_deps = [
         "//third-party/java/grpc:grpc-netty-shaded",
         "//src-gen:installer-proto",
+        "//src/com/facebook/buck/util/types:types",
     ],
 )
