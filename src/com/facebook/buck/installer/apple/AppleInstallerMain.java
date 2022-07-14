@@ -18,6 +18,7 @@ package com.facebook.buck.installer.apple;
 
 import com.facebook.buck.installer.InstallerServer;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.ConsoleHandler;
@@ -35,35 +36,61 @@ import org.kohsuke.args4j.CmdLineParser;
  */
 public class AppleInstallerMain {
 
+  public static final String INSTALLER_LOG_PATH =
+      String.join(File.separator, "buck-out", "v2", "log", "installer.log");
+
   /** Main Entry Point */
   public static void main(String[] args) throws IOException, InterruptedException {
-    Process process = Runtime.getRuntime().exec("hg root");
-    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-    StringBuilder builder = new StringBuilder();
-    String line;
-    while ((line = reader.readLine()) != null) {
-      builder.append(line);
-    }
-    builder.append("/buck-out/v2/log/installer.log");
-    Logger logger = Logger.getLogger(AppleInstallerMain.class.getName());
-    FileHandler fh = new FileHandler(builder.toString());
-    fh.setFormatter(new SimpleFormatter());
-    fh.setLevel(Level.INFO);
-    logger.addHandler(new ConsoleHandler());
-    logger.addHandler(fh);
-
     AppleInstallerMain installer = new AppleInstallerMain();
     AppleCommandLineOptions options = new AppleCommandLineOptions();
     CmdLineParser parser = new CmdLineParser(options);
     try {
       parser.parseArgument(args);
-      installer.run(options, logger);
+      installer.run(options, getLogger());
       System.exit(0);
     } catch (CmdLineException e) {
       System.err.println(e.getMessage());
       parser.printUsage(System.err);
       System.exit(1);
     }
+  }
+
+  private static Logger getLogger() throws IOException, InterruptedException {
+    Logger logger = Logger.getLogger(AppleInstallerMain.class.getName());
+    logger.addHandler(new ConsoleHandler());
+    logger.addHandler(getFileHandler());
+    return logger;
+  }
+
+  private static FileHandler getFileHandler() throws IOException, InterruptedException {
+    FileHandler fileHandler = new FileHandler(getLogFilePath());
+    fileHandler.setFormatter(new SimpleFormatter());
+    fileHandler.setLevel(Level.INFO);
+    return fileHandler;
+  }
+
+  private static String getLogFilePath() throws IOException, InterruptedException {
+    StringBuilder loggerPathBuilder = new StringBuilder(INSTALLER_LOG_PATH);
+
+    Process process = Runtime.getRuntime().exec("hg root");
+    int exitCode = process.waitFor();
+    if (exitCode != 0) {
+      System.err.printf(
+          "Can't find a root of the repo. The logger will write into a path (%s) that is relative to the current directory %s.",
+          INSTALLER_LOG_PATH, System.getProperty("user.dir"));
+    } else {
+      try (BufferedReader reader =
+          new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          if (!line.endsWith(File.separator)) {
+            loggerPathBuilder.insert(0, File.separator);
+          }
+          loggerPathBuilder.insert(0, line);
+        }
+      }
+    }
+    return loggerPathBuilder.toString();
   }
 
   private void run(AppleCommandLineOptions options, Logger logger)
