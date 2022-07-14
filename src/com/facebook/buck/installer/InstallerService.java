@@ -45,7 +45,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
   public void fileReadyRequest(FileReady request, StreamObserver<FileResponse> responseObserver) {
     String name = request.getName();
     String path = request.getPath();
-    logger.info(String.format("%nReceived artifact %s located at %s%n", name, path));
+    logger.info(String.format("Received artifact %s located at %s", name, path));
     InstallResult installResult = installer.install(name, Paths.get(path));
 
     responseObserver.onNext(

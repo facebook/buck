@@ -36,6 +36,12 @@ import org.kohsuke.args4j.CmdLineParser;
  */
 public class AppleInstallerMain {
 
+  static {
+    // set java.util.logging (JUL) simple formatter to 1 liner.
+    System.setProperty(
+        "java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] [%4$-7s] %5$s %n");
+  }
+
   public static final String INSTALLER_LOG_PATH =
       String.join(File.separator, "buck-out", "v2", "log", "installer.log");
 
