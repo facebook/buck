@@ -75,6 +75,8 @@
       serviceImplementation="com.facebook.buck.intellij.ideabuck.ui.BuckUIManager"/>
     <projectService
       serviceImplementation="com.facebook.buck.intellij.ideabuck.notification.BuckNotification"/>
+    <projectService
+      serviceImplementation="com.facebook.buck.intellij.ideabuck.config.BuckModule"/>
     <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.util.BuckCellFinder"/>
     <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.completion.BuckAliasesCache"/>
     <projectService serviceImplementation="com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider" />
@@ -125,6 +127,7 @@
     <postFormatProcessor implementation="com.facebook.buck.intellij.ideabuck.format.BuildifierPostFormatProcessor"/>
 
     <postStartupActivity implementation="com.facebook.buck.intellij.ideabuck.format.BuildifierAutoFormatter" />
+    <postStartupActivity implementation="com.facebook.buck.intellij.ideabuck.config.BuckModuleStartupActivity" />
     <localInspection
       displayName="Buck dependency visbility inspection"
       groupName="Buck"
@@ -195,18 +198,6 @@
         id="buck.BuildifierExternalFormatAction"/>
 
   </actions>
-
-  <project-components>
-    <component>
-      <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckModule
-      </implementation-class>
-      <loadForDefaultProject/>
-    </component>
-    <!--
-      Components in the package com.facebook.buck.intellij.ideabuck.api have
-      stable APIs that are intended for use by other plugins.
-     -->
-  </project-components>
 
   <extensionPoints>
       <extensionPoint area="IDEA_PROJECT"

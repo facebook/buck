@@ -43,8 +43,7 @@ public class BuckKillAction extends BuckBaseAction {
     if (project != null) {
       BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
       e.getPresentation()
-          .setEnabled(
-              !buildManager.isKilling() && project.getComponent(BuckModule.class).isConnected());
+          .setEnabled(!buildManager.isKilling() && BuckModule.getInstance(project).isConnected());
     }
   }
 

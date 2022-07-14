@@ -22,19 +22,20 @@ import com.facebook.buck.intellij.ideabuck.ws.BuckClientManager;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.BuckEventsHandler;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class BuckModule implements ProjectComponent {
+public final class BuckModule implements Disposable {
 
   private Project mProject;
   private BuckEventsHandler mEventHandler;
   private BuckEventsConsumer mBuckEventsConsumer;
   private AtomicBoolean projectClosed;
 
-  public BuckModule(final Project project) {
+  public BuckModule(Project project) {
     mProject = project;
     mEventHandler =
         new BuckEventsHandler(
@@ -43,18 +44,14 @@ public final class BuckModule implements ProjectComponent {
             new ExecuteOnBuckPluginDisconnect());
   }
 
-  @Override
-  public String getComponentName() {
-    return "ideabuck - " + mProject.getName();
+  public void connect() {
+    BuckClientManager.getOrCreateClient(mProject, mEventHandler).connect();
   }
 
-  @Override
-  public void initComponent() {}
+  public static BuckModule getInstance(Project project) {
+    return project.getService(BuckModule.class);
+  }
 
-  @Override
-  public void disposeComponent() {}
-
-  @Override
   public void projectOpened() {
     projectClosed = new AtomicBoolean(false);
 
@@ -62,19 +59,20 @@ public final class BuckModule implements ProjectComponent {
     connect();
 
     mBuckEventsConsumer = new BuckEventsConsumer(mProject);
+    Disposer.register(DisposableService.getInstance(mProject), this);
   }
 
   @Override
+  public void dispose() {
+    projectClosed();
+  }
+
   public void projectClosed() {
     projectClosed.set(true);
     BuckClientManager.getOrCreateClient(mProject, mEventHandler).disconnectWithoutRetry();
     if (mBuckEventsConsumer != null) {
       mBuckEventsConsumer.detach();
     }
-  }
-
-  public void connect() {
-    BuckClientManager.getOrCreateClient(mProject, mEventHandler).connect();
   }
 
   public boolean isConnected() {

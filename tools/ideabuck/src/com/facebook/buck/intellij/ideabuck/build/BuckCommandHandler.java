@@ -133,7 +133,7 @@ public abstract class BuckCommandHandler {
             : buckExecutable;
     this.doStartNotify = doStartNotify;
     this.project = project;
-    this.buckModule = project.getComponent(BuckModule.class);
+    this.buckModule = BuckModule.getInstance(project);
     this.command = command;
     commandLine = new GeneralCommandLine();
     commandLine.setExePath(buckExecutable);

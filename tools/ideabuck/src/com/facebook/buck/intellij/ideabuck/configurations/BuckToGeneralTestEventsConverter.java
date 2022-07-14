@@ -71,7 +71,7 @@ public class BuckToGeneralTestEventsConverter extends OutputToGeneralTestEventsC
 
   @Override
   public void onStartTesting() {
-    BuckModule buckModule = mProject.getComponent(BuckModule.class);
+    BuckModule buckModule = BuckModule.getInstance(mProject);
     if (!buckModule.isConnected()) {
       buckModule.connect();
     }

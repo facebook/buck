@@ -40,7 +40,7 @@ public class ClearTreeViewPanelAction extends DumbAwareAction {
       e.getPresentation()
           .setEnabled(
               !BuckBuildManager.getInstance(project).isBuilding()
-                  && project.getComponent(BuckModule.class).isConnected());
+                  && BuckModule.getInstance(project).isConnected());
     }
   }
 

@@ -56,7 +56,7 @@ class BuckTestExecutionState extends AbstractExecutionState<BuckTestConfiguratio
   }
 
   private ProcessHandler runBuildCommand(Executor executor) {
-    BuckModule buckModule = mProject.getComponent(BuckModule.class);
+    BuckModule buckModule = BuckModule.getInstance(mProject);
     String targets = mConfiguration.data.targets;
     String additionalParams = mConfiguration.data.additionalParams;
     String testSelectors = mConfiguration.data.testSelectors;

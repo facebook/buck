@@ -97,7 +97,7 @@ public class BuckClient {
                 } catch (RuntimeException e) {
                   LOG.info(e);
                   if (!mProject.isDisposed()) {
-                    BuckModule buckModule = mProject.getComponent(BuckModule.class);
+                    BuckModule buckModule = BuckModule.getInstance(mProject);
                     /* FIXME(shemitz) attachIfDetached() adds a lot of listeners to the IJ message
                        bus. A lot of things don't happen if this is never called!
 

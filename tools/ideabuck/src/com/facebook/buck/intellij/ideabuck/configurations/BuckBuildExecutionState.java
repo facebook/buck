@@ -49,7 +49,7 @@ public class BuckBuildExecutionState extends AbstractExecutionState<BuckBuildCon
   }
 
   private ProcessHandler runBuildCommand() {
-    BuckModule buckModule = mProject.getComponent(BuckModule.class);
+    BuckModule buckModule = BuckModule.getInstance(mProject);
     String targets = mConfiguration.data.targets;
     String additionalParams = mConfiguration.data.additionalParams;
     String buckExecutablePath = mConfiguration.data.buckExecutablePath;
