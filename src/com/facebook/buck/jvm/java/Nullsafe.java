@@ -133,9 +133,10 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
             graphBuilder.getSourcePathResolver(),
             projectFilesystem.getRootPath());
 
+    // Ignore any plugins on the original target as they may have dependencies conflicting with
+    // Nullsafe
     JavacPluginParams augmentedPluginParams =
         JavacPluginParams.builder()
-            .from(javacOptions.getStandardJavacPluginParams())
             .addPluginProperties(resolvedNullsafePluginProperties)
             .build(graphBuilder.getSourcePathResolver(), projectFilesystem.getRootPath());
 
