@@ -16,6 +16,11 @@
 
 package com.facebook.buck.installer;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
+import com.facebook.buck.util.types.Unit;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.Server;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.channel.EventLoopGroup;
@@ -26,87 +31,94 @@ import io.grpc.netty.shaded.io.netty.channel.nio.NioEventLoopGroup;
 import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.grpc.netty.shaded.io.netty.channel.unix.DomainSocketAddress;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
 public class InstallerServer {
-  private final Server server;
-  private final InstallerService service;
-  static final int DEFAULT_PORT = 50055;
-  public boolean uds = false;
-  public final Logger log;
 
-  public InstallerServer(String unix_domain_socket, InstallCommand installer, Logger log)
-      throws IOException, RuntimeException, InterruptedException {
-    this.service = new InstallerService(installer, log);
-    this.log = log;
-    this.server = buildServer(unix_domain_socket);
-    new Thread(
-            () -> {
-              try {
-                if (this.service.installFinished.get()) {
-                  log.log(Level.INFO, "Installer Server shutting down...");
-                }
-              } catch (InterruptedException e) {
-                log.log(Level.WARNING, "Interrupted...", e);
-                Thread.currentThread().interrupt();
-              } catch (ExecutionException e) {
-                log.log(Level.WARNING, "Execution exception...", e);
-              } finally {
-                stopServer();
-              }
-            })
-        .start();
-    this.server.awaitTermination();
+  private static final int DEFAULT_TCP_PORT = 50055;
+
+  public InstallerServer(String unixDomainSocket, InstallCommand installer, Logger logger)
+      throws IOException, InterruptedException {
+    SettableFuture<Unit> isDone = SettableFuture.create();
+    InstallerService installerService = new InstallerService(installer, isDone, logger);
+    Server grpcServer = buildServer(installerService, unixDomainSocket, logger);
+    isDone.addCallback(
+        new FutureCallback<>() {
+          @Override
+          public void onSuccess(Unit unit) {
+            logger.info("Installer Server shutting down...");
+            stopServer(grpcServer);
+          }
+
+          @Override
+          public void onFailure(Throwable t) {
+            logger.log(Level.WARNING, "Execution exception...", t);
+          }
+        },
+        directExecutor());
+
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  // Use stderr here since the logger may have been reset by its JVM shutdown hook.
+                  System.err.println("*** shutting down gRPC server since JVM is shutting down");
+                  stopServer(grpcServer);
+                  System.err.println("*** server shut down");
+                }));
+
+    grpcServer.start();
+    grpcServer.awaitTermination();
   }
 
   /**
-   * Build an installer server at requested unix_domain_socket or fallback to TCP on 50055.
-   *
-   * @param unix_domain_socket unix_domain_socket
+   * Build an installer server at requested {@code unixDomainSocket} or fallback to TCP on 50055.
    */
-  public Server buildServer(String unix_domain_socket) throws IOException, RuntimeException {
+  private Server buildServer(InstallerService service, String unixDomainSocket, Logger logger) {
     /// We can use UDS if Epoll available
-    Server server;
     if (Epoll.isAvailable()) {
-      EventLoopGroup group = new EpollEventLoopGroup();
-      server =
-          NettyServerBuilder.forAddress(new DomainSocketAddress(unix_domain_socket))
-              .channelType(EpollServerDomainSocketChannel.class)
-              .workerEventLoopGroup(group)
-              .bossEventLoopGroup(group)
-              .addService(this.service)
-              .build()
-              .start();
-      log.log(Level.INFO, String.format("Server Listening on uds %s", unix_domain_socket));
-
-    } else {
-      EventLoopGroup group = new NioEventLoopGroup();
-      server =
-          NettyServerBuilder.forPort(DEFAULT_PORT)
-              .channelType(NioServerSocketChannel.class)
-              .workerEventLoopGroup(group)
-              .bossEventLoopGroup(group)
-              .addService(this.service)
-              .build()
-              .start();
-
-      log.log(Level.INFO, String.format("Server Listening on uds %s", DEFAULT_PORT));
+      return getUDSServer(service, unixDomainSocket, logger);
     }
+    return getTCPServer(service, logger);
+  }
+
+  private Server getUDSServer(InstallerService service, String unixDomainSocket, Logger logger) {
+    EventLoopGroup group = new EpollEventLoopGroup();
+    Server server =
+        NettyServerBuilder.forAddress(new DomainSocketAddress(unixDomainSocket))
+            .channelType(EpollServerDomainSocketChannel.class)
+            .workerEventLoopGroup(group)
+            .bossEventLoopGroup(group)
+            .addService(service)
+            .build();
+    logger.info(String.format("Starting server listening on UDS %s", unixDomainSocket));
+    return server;
+  }
+
+  private Server getTCPServer(InstallerService service, Logger logger) {
+    EventLoopGroup group = new NioEventLoopGroup();
+    Server server =
+        NettyServerBuilder.forPort(DEFAULT_TCP_PORT)
+            .channelType(NioServerSocketChannel.class)
+            .workerEventLoopGroup(group)
+            .bossEventLoopGroup(group)
+            .addService(service)
+            .build();
+    logger.info(String.format("Starting server listening on TCP port %s", DEFAULT_TCP_PORT));
     return server;
   }
 
   /** Shuts down installer server. */
-  public void stopServer() {
-    if (server != null && !server.isTerminated()) {
+  private void stopServer(Server grpcServer) {
+    if (grpcServer != null && !grpcServer.isTerminated()) {
       try {
-        server.shutdown().awaitTermination();
-        if (!server.isTerminated()) {
-          server.shutdownNow();
+        grpcServer.shutdown().awaitTermination();
+        if (!grpcServer.isTerminated()) {
+          grpcServer.shutdownNow();
         }
       } catch (InterruptedException e) {
-        server.shutdownNow();
+        grpcServer.shutdownNow();
       }
     }
   }

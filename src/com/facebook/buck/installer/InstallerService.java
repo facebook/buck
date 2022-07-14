@@ -16,47 +16,45 @@
 
 package com.facebook.buck.installer;
 
-import com.facebook.buck.install.model.*;
+import com.facebook.buck.install.model.FileReady;
+import com.facebook.buck.install.model.FileResponse;
+import com.facebook.buck.install.model.InstallerGrpc;
+import com.facebook.buck.install.model.Shutdown;
+import com.facebook.buck.install.model.ShutdownResponse;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.stub.StreamObserver;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
 /** Installer Service that implements {@code install.proto} */
 public class InstallerService extends InstallerGrpc.InstallerImplBase {
-  private final InstallCommand installer;
-  private final Logger log;
-  final SettableFuture<Boolean> installFinished = SettableFuture.create();
 
-  public InstallerService(InstallCommand installer, Logger log) {
+  private final InstallCommand installer;
+  private final SettableFuture<Unit> installFinished;
+  private final Logger logger;
+
+  public InstallerService(
+      InstallCommand installer, SettableFuture<Unit> installFinished, Logger logger) {
     this.installer = installer;
-    this.log = log;
+    this.installFinished = installFinished;
+    this.logger = logger;
   }
 
   @Override
   public void fileReadyRequest(FileReady request, StreamObserver<FileResponse> responseObserver) {
-    boolean err;
-    String errMsg;
-    FileResponse rep;
-    log.log(
-        Level.INFO,
-        String.format(
-            "%nReceived artifact %s located at %s%n", request.getName(), request.getPath()));
-    Path path = Paths.get(request.getPath());
-    InstallResult res = installer.install(request.getName(), path);
-    err = res.isErr;
-    errMsg = res.errMsg;
-    rep =
-        FileResponse.newBuilder()
-            .setName(request.getName())
-            .setPath(request.getPath())
-            .setErr(err)
-            .setErrMsg(errMsg)
-            .build();
+    String name = request.getName();
+    String path = request.getPath();
+    logger.info(String.format("%nReceived artifact %s located at %s%n", name, path));
+    InstallResult installResult = installer.install(name, Paths.get(path));
 
-    responseObserver.onNext(rep);
+    responseObserver.onNext(
+        FileResponse.newBuilder()
+            .setName(name)
+            .setPath(path)
+            .setErr(installResult.isErr)
+            .setErrMsg(installResult.errMsg)
+            .build());
     responseObserver.onCompleted();
   }
 
@@ -64,10 +62,6 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
   public void shutdownServer(Shutdown request, StreamObserver<ShutdownResponse> responseObserver) {
     responseObserver.onNext(ShutdownResponse.newBuilder().build());
     responseObserver.onCompleted();
-    installFinished.set(true);
-  }
-
-  public SettableFuture<Boolean> isInstallFinished() {
-    return installFinished;
+    installFinished.set(Unit.UNIT);
   }
 }
