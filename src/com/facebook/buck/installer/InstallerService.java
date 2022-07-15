@@ -16,6 +16,7 @@
 
 package com.facebook.buck.installer;
 
+import com.facebook.buck.install.model.ErrorDetail;
 import com.facebook.buck.install.model.FileReady;
 import com.facebook.buck.install.model.FileResponse;
 import com.facebook.buck.install.model.InstallerGrpc;
@@ -48,13 +49,13 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
     logger.info(String.format("Received artifact %s located at %s", name, path));
     InstallResult installResult = installer.install(name, Paths.get(path));
 
-    responseObserver.onNext(
-        FileResponse.newBuilder()
-            .setName(name)
-            .setPath(path)
-            .setErr(installResult.isErr)
-            .setErrMsg(installResult.errMsg)
-            .build());
+    FileResponse.Builder fileResponseBuilder =
+        FileResponse.newBuilder().setName(name).setPath(path);
+    if (installResult.isErr) {
+      fileResponseBuilder.setErrorDetail(
+          ErrorDetail.newBuilder().setMessage(installResult.errMsg).build());
+    }
+    responseObserver.onNext(fileResponseBuilder.build());
     responseObserver.onCompleted();
   }
 
