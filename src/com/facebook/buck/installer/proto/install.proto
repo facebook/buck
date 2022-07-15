@@ -45,9 +45,7 @@ message FileReady {
 message FileResponse {
   string name = 1;
   string path = 2;
-  string err_msg = 3;
-  bool err = 4;
-  ErrorDetail error_detail = 5;
+  ErrorDetail error_detail = 3;
 }
 
 message ErrorDetail {

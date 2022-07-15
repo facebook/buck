@@ -30,30 +30,15 @@ public interface FileResponseOrBuilder extends
       getPathBytes();
 
   /**
-   * <code>string err_msg = 3;</code>
-   */
-  java.lang.String getErrMsg();
-  /**
-   * <code>string err_msg = 3;</code>
-   */
-  com.google.protobuf.ByteString
-      getErrMsgBytes();
-
-  /**
-   * <code>bool err = 4;</code>
-   */
-  boolean getErr();
-
-  /**
-   * <code>.install.ErrorDetail error_detail = 5;</code>
+   * <code>.install.ErrorDetail error_detail = 3;</code>
    */
   boolean hasErrorDetail();
   /**
-   * <code>.install.ErrorDetail error_detail = 5;</code>
+   * <code>.install.ErrorDetail error_detail = 3;</code>
    */
   com.facebook.buck.install.model.ErrorDetail getErrorDetail();
   /**
-   * <code>.install.ErrorDetail error_detail = 5;</code>
+   * <code>.install.ErrorDetail error_detail = 3;</code>
    */
   com.facebook.buck.install.model.ErrorDetailOrBuilder getErrorDetailOrBuilder();
 }
