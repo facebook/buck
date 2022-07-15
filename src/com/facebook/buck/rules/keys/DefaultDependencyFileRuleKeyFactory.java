@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -122,6 +123,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
 
     final ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
     final ImmutableSet.Builder<DependencyFileEntry> accountedEntries = ImmutableSet.builder();
+    final ImmutableSet.Builder<DependencyFileEntry> uncoveredEntries = ImmutableSet.builder();
 
     private Builder(
         SupportsDependencyFileRuleKey rule,
@@ -226,6 +228,18 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
         if (!coveredPathPredicate.test(input)) {
           // 1: If this path is not covered by dep-file, then add it to the builder directly.
           this.setSourcePathDirectly(input);
+          // Tools like the preprocessor or compiler can have build targets in their inputs, which
+          // get added to the depfile entries as well. This can be things like filegroups which
+          // contain headers which are passed via -I$(location ...) type flags in args to a
+          // a command_alias. Track them and filter them out later to avoid throwing depfile errors
+          // from untracked inputs which are actually tracked.
+          // We can't just arbitrarily add input because input could also be the abs path to a tool
+          // on the filesystem. Doing this is probably the most conservative approach we can take
+          // to solve the problem without introducing possibility for breakage.
+          if (input instanceof ExplicitBuildTargetSourcePath) {
+            uncoveredEntries.add(
+                DependencyFileEntry.fromSourcePath(input, ruleFinder.getSourcePathResolver()));
+          }
         } else {
           if (depFilePossiblePaths.contains(
               DependencyFileEntry.getPathToFile(ruleFinder.getSourcePathResolver(), input)
@@ -299,10 +313,15 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
         Sets.SetView<DependencyFileEntry> unaccountedEntries =
             Sets.difference(depFileEntriesSet, accountedEntries.build());
         if (!unaccountedEntries.isEmpty()) {
-          throw new NoSuchFileException(
-              String.format(
-                  "%s: could not find any inputs matching the relative paths [%s]",
-                  rule.getBuildTarget(), Joiner.on(',').join(unaccountedEntries)));
+          // Test if any covered paths were considered depfile inputs, and exclude them as well.
+          Sets.SetView<DependencyFileEntry> unaccountedCoveredPaths =
+              Sets.difference(unaccountedEntries, uncoveredEntries.build());
+          if (!unaccountedCoveredPaths.isEmpty()) {
+            throw new NoSuchFileException(
+                String.format(
+                    "%s: could not find any inputs matching the relative paths [%s]",
+                    rule.getBuildTarget(), Joiner.on(',').join(unaccountedCoveredPaths)));
+          }
         }
       }
       return new Result<>(this.build(mapper), sourcePaths.build());
