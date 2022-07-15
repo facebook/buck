@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+//
 //----------------------------------------------
 //  Generate command
 //----------------------------------------------
@@ -46,6 +47,12 @@ message FileResponse {
   string path = 2;
   string err_msg = 3;
   bool err = 4;
+  ErrorDetail error_detail = 5;
+}
+
+message ErrorDetail {
+    //Error message
+    string message = 1;
 }
 
 message Shutdown {}

@@ -43,4 +43,17 @@ public interface FileResponseOrBuilder extends
    * <code>bool err = 4;</code>
    */
   boolean getErr();
+
+  /**
+   * <code>.install.ErrorDetail error_detail = 5;</code>
+   */
+  boolean hasErrorDetail();
+  /**
+   * <code>.install.ErrorDetail error_detail = 5;</code>
+   */
+  com.facebook.buck.install.model.ErrorDetail getErrorDetail();
+  /**
+   * <code>.install.ErrorDetail error_detail = 5;</code>
+   */
+  com.facebook.buck.install.model.ErrorDetailOrBuilder getErrorDetailOrBuilder();
 }

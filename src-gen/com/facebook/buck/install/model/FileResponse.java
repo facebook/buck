@@ -70,6 +70,19 @@ private static final long serialVersionUID = 0L;
             err_ = input.readBool();
             break;
           }
+          case 42: {
+            com.facebook.buck.install.model.ErrorDetail.Builder subBuilder = null;
+            if (errorDetail_ != null) {
+              subBuilder = errorDetail_.toBuilder();
+            }
+            errorDetail_ = input.readMessage(com.facebook.buck.install.model.ErrorDetail.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(errorDetail_);
+              errorDetail_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -213,6 +226,27 @@ private static final long serialVersionUID = 0L;
     return err_;
   }
 
+  public static final int ERROR_DETAIL_FIELD_NUMBER = 5;
+  private com.facebook.buck.install.model.ErrorDetail errorDetail_;
+  /**
+   * <code>.install.ErrorDetail error_detail = 5;</code>
+   */
+  public boolean hasErrorDetail() {
+    return errorDetail_ != null;
+  }
+  /**
+   * <code>.install.ErrorDetail error_detail = 5;</code>
+   */
+  public com.facebook.buck.install.model.ErrorDetail getErrorDetail() {
+    return errorDetail_ == null ? com.facebook.buck.install.model.ErrorDetail.getDefaultInstance() : errorDetail_;
+  }
+  /**
+   * <code>.install.ErrorDetail error_detail = 5;</code>
+   */
+  public com.facebook.buck.install.model.ErrorDetailOrBuilder getErrorDetailOrBuilder() {
+    return getErrorDetail();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -239,6 +273,9 @@ private static final long serialVersionUID = 0L;
     if (err_ != false) {
       output.writeBool(4, err_);
     }
+    if (errorDetail_ != null) {
+      output.writeMessage(5, getErrorDetail());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -260,6 +297,10 @@ private static final long serialVersionUID = 0L;
     if (err_ != false) {
       size += com.google.protobuf.CodedOutputStream
         .computeBoolSize(4, err_);
+    }
+    if (errorDetail_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(5, getErrorDetail());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -284,6 +325,11 @@ private static final long serialVersionUID = 0L;
         .equals(other.getErrMsg())) return false;
     if (getErr()
         != other.getErr()) return false;
+    if (hasErrorDetail() != other.hasErrorDetail()) return false;
+    if (hasErrorDetail()) {
+      if (!getErrorDetail()
+          .equals(other.getErrorDetail())) return false;
+    }
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -304,6 +350,10 @@ private static final long serialVersionUID = 0L;
     hash = (37 * hash) + ERR_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
         getErr());
+    if (hasErrorDetail()) {
+      hash = (37 * hash) + ERROR_DETAIL_FIELD_NUMBER;
+      hash = (53 * hash) + getErrorDetail().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -445,6 +495,12 @@ private static final long serialVersionUID = 0L;
 
       err_ = false;
 
+      if (errorDetailBuilder_ == null) {
+        errorDetail_ = null;
+      } else {
+        errorDetail_ = null;
+        errorDetailBuilder_ = null;
+      }
       return this;
     }
 
@@ -475,6 +531,11 @@ private static final long serialVersionUID = 0L;
       result.path_ = path_;
       result.errMsg_ = errMsg_;
       result.err_ = err_;
+      if (errorDetailBuilder_ == null) {
+        result.errorDetail_ = errorDetail_;
+      } else {
+        result.errorDetail_ = errorDetailBuilder_.build();
+      }
       onBuilt();
       return result;
     }
@@ -537,6 +598,9 @@ private static final long serialVersionUID = 0L;
       }
       if (other.getErr() != false) {
         setErr(other.getErr());
+      }
+      if (other.hasErrorDetail()) {
+        mergeErrorDetail(other.getErrorDetail());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -798,6 +862,123 @@ private static final long serialVersionUID = 0L;
       err_ = false;
       onChanged();
       return this;
+    }
+
+    private com.facebook.buck.install.model.ErrorDetail errorDetail_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.install.model.ErrorDetail, com.facebook.buck.install.model.ErrorDetail.Builder, com.facebook.buck.install.model.ErrorDetailOrBuilder> errorDetailBuilder_;
+    /**
+     * <code>.install.ErrorDetail error_detail = 5;</code>
+     */
+    public boolean hasErrorDetail() {
+      return errorDetailBuilder_ != null || errorDetail_ != null;
+    }
+    /**
+     * <code>.install.ErrorDetail error_detail = 5;</code>
+     */
+    public com.facebook.buck.install.model.ErrorDetail getErrorDetail() {
+      if (errorDetailBuilder_ == null) {
+        return errorDetail_ == null ? com.facebook.buck.install.model.ErrorDetail.getDefaultInstance() : errorDetail_;
+      } else {
+        return errorDetailBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.install.ErrorDetail error_detail = 5;</code>
+     */
+    public Builder setErrorDetail(com.facebook.buck.install.model.ErrorDetail value) {
+      if (errorDetailBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        errorDetail_ = value;
+        onChanged();
+      } else {
+        errorDetailBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.install.ErrorDetail error_detail = 5;</code>
+     */
+    public Builder setErrorDetail(
+        com.facebook.buck.install.model.ErrorDetail.Builder builderForValue) {
+      if (errorDetailBuilder_ == null) {
+        errorDetail_ = builderForValue.build();
+        onChanged();
+      } else {
+        errorDetailBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.install.ErrorDetail error_detail = 5;</code>
+     */
+    public Builder mergeErrorDetail(com.facebook.buck.install.model.ErrorDetail value) {
+      if (errorDetailBuilder_ == null) {
+        if (errorDetail_ != null) {
+          errorDetail_ =
+            com.facebook.buck.install.model.ErrorDetail.newBuilder(errorDetail_).mergeFrom(value).buildPartial();
+        } else {
+          errorDetail_ = value;
+        }
+        onChanged();
+      } else {
+        errorDetailBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.install.ErrorDetail error_detail = 5;</code>
+     */
+    public Builder clearErrorDetail() {
+      if (errorDetailBuilder_ == null) {
+        errorDetail_ = null;
+        onChanged();
+      } else {
+        errorDetail_ = null;
+        errorDetailBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.install.ErrorDetail error_detail = 5;</code>
+     */
+    public com.facebook.buck.install.model.ErrorDetail.Builder getErrorDetailBuilder() {
+      
+      onChanged();
+      return getErrorDetailFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.install.ErrorDetail error_detail = 5;</code>
+     */
+    public com.facebook.buck.install.model.ErrorDetailOrBuilder getErrorDetailOrBuilder() {
+      if (errorDetailBuilder_ != null) {
+        return errorDetailBuilder_.getMessageOrBuilder();
+      } else {
+        return errorDetail_ == null ?
+            com.facebook.buck.install.model.ErrorDetail.getDefaultInstance() : errorDetail_;
+      }
+    }
+    /**
+     * <code>.install.ErrorDetail error_detail = 5;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.install.model.ErrorDetail, com.facebook.buck.install.model.ErrorDetail.Builder, com.facebook.buck.install.model.ErrorDetailOrBuilder> 
+        getErrorDetailFieldBuilder() {
+      if (errorDetailBuilder_ == null) {
+        errorDetailBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.install.model.ErrorDetail, com.facebook.buck.install.model.ErrorDetail.Builder, com.facebook.buck.install.model.ErrorDetailOrBuilder>(
+                getErrorDetail(),
+                getParentForChildren(),
+                isClean());
+        errorDetail_ = null;
+      }
+      return errorDetailBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(
