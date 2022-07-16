@@ -112,6 +112,14 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
     this.unresolvedPluginPlatform =
         rustBuckConfig
             .getRustcPluginPlatform(platformName)
+            .filter(
+                plugPlat ->
+                    // Treat self-references as having no plugin platform.
+                    // Functionally, in the absence of a plugin platform,
+                    // the current platform is used.
+                    // We can end up in this situation when the config expands
+                    // `$(config cxx.host_platform)` and this is the host platform.
+                    !plugPlat.equals(platformName))
             .map(
                 plugPlat ->
                     platformFactory.getPlatform(plugPlat, cxxPlatformsProvider, processExecutor));
