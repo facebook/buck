@@ -15,13 +15,36 @@
  */
 
 package com.facebook.buck.installer;
+
+import java.util.Optional;
+
 /** Represents a result from an install attempt */
 public class InstallResult {
-  public final boolean isErr;
-  public final String errMsg;
 
-  public InstallResult(boolean err, String errMsg) {
-    this.isErr = err;
-    this.errMsg = errMsg;
+  private static final InstallResult SUCCESS = new InstallResult(Optional.empty());
+
+  private final Optional<String> errorMessage;
+
+  private InstallResult(Optional<String> errMsg) {
+    this.errorMessage = errMsg;
+  }
+
+  public static InstallResult success() {
+    return SUCCESS;
+  }
+
+  public static InstallResult error(String errorMessage) {
+    return new InstallResult(Optional.of(errorMessage));
+  }
+
+  public boolean isError() {
+    return errorMessage.isPresent();
+  }
+
+  public String getErrorMessage() {
+    return errorMessage.orElseThrow(
+        () ->
+            new IllegalStateException(
+                "Error message is not present. `isError()` has to be called before invoking `getErrorMessage()`"));
   }
 }

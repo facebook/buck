@@ -57,10 +57,10 @@ class AppleInstallerManager implements InstallCommand {
         Map<String, String> jsonData =
             parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
         appInstallOptions.set(new AppleInstallAppOptions(jsonData));
-        return new InstallResult(false, "");
+        return InstallResult.success();
       } catch (Exception err) {
         log.log(Level.SEVERE, "Error creating AppleInstallAppOptions from `install_apple_data`");
-        return new InstallResult(true, err.toString());
+        return InstallResult.error(err.toString());
       }
     } else {
       try {
@@ -83,7 +83,7 @@ class AppleInstallerManager implements InstallCommand {
                 appPath);
         return appleInstall.installAppleBundle(appPath);
       } catch (Exception err) {
-        return new InstallResult(true, err.toString());
+        return InstallResult.error(err.toString());
       }
     }
   }

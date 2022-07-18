@@ -51,9 +51,9 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
 
     FileResponse.Builder fileResponseBuilder =
         FileResponse.newBuilder().setName(name).setPath(path);
-    if (installResult.isErr) {
+    if (installResult.isError()) {
       fileResponseBuilder.setErrorDetail(
-          ErrorDetail.newBuilder().setMessage(installResult.errMsg).build());
+          ErrorDetail.newBuilder().setMessage(installResult.getErrorMessage()).build());
     }
     responseObserver.onNext(fileResponseBuilder.build());
     responseObserver.onCompleted();
