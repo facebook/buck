@@ -65,7 +65,7 @@ public class ResourceMonitoringProcessExecutor extends DelegateProcessExecutor {
         new NamedTemporaryFile("instruction_count", ".report");
     ImmutableList<String> timeCommand =
         ImmutableList.<String>builderWithExpectedSize(params.getCommand().size() + 8 + 5)
-            .add("/usr/bin/perf.real")
+            .add("/usr/bin/perf")
             .add("stat")
             .addAll(ImmutableList.of("-e", "instructions:uP"))
             .addAll(ImmutableList.of("-x", ";"))
