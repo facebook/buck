@@ -108,7 +108,8 @@ public class IjProject {
         new DefaultIjLibraryFactory(
             targetGraph,
             new DefaultIjLibraryFactoryResolver(
-                projectFilesystem, sourcePathResolver, requiredBuildTargets));
+                projectFilesystem, sourcePathResolver, requiredBuildTargets),
+            projectConfig.isTargetConfigurationInLibrariesEnabled());
     IjModuleFactoryResolver moduleFactoryResolver =
         new DefaultIjModuleFactoryResolver(
             sourcePathResolver, projectFilesystem, requiredBuildTargets, targetGraph);

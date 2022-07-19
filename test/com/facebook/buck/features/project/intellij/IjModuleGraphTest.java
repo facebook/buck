@@ -52,6 +52,7 @@ import com.facebook.buck.features.project.intellij.model.IjModuleFactory;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.IjProjectElement;
+import com.facebook.buck.features.project.intellij.model.LibraryBuildContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -71,6 +72,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import org.hamcrest.Matchers;
@@ -289,7 +291,15 @@ public class IjModuleGraphTest {
     IjLibrary guavaElement = getLibraryForTarget(moduleGraph, guavaTargetNode);
 
     assertEquals(
-        ImmutableMap.of(guavaElement, DependencyType.PROD), moduleGraph.getDepsFor(coreModule));
+        ImmutableMap.of(guavaElement, DependencyType.PROD),
+        moduleGraph.getDepsFor(coreModule).entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    depEntry ->
+                        depEntry.getKey() instanceof LibraryBuildContext
+                            ? ((LibraryBuildContext) depEntry.getKey()).getAggregatedLibrary()
+                            : depEntry.getKey(),
+                    Map.Entry::getValue)));
   }
 
   @Test
@@ -460,7 +470,14 @@ public class IjModuleGraphTest {
         ImmutableMap.of(
             libraryModule, DependencyType.PROD,
             productLibrary, DependencyType.COMPILED_SHADOW),
-        moduleGraph.getDepsFor(productModule));
+        moduleGraph.getDepsFor(productModule).entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    depEntry ->
+                        depEntry.getKey() instanceof LibraryBuildContext
+                            ? ((LibraryBuildContext) depEntry.getKey()).getAggregatedLibrary()
+                            : depEntry.getKey(),
+                    Map.Entry::getValue)));
   }
 
   @Test
@@ -798,7 +815,8 @@ public class IjModuleGraphTest {
     IjModuleFactory moduleFactory =
         new DefaultIjModuleFactory(filesystem, projectConfig, typeRegistry);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(targets);
-    IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(targetGraph, sourceOnlyResolver);
+    IjLibraryFactory libraryFactory =
+        new DefaultIjLibraryFactory(targetGraph, sourceOnlyResolver, true);
     return IjModuleGraphFactory.from(
         filesystem,
         projectConfig,

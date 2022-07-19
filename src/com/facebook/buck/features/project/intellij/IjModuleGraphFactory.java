@@ -32,6 +32,7 @@ import com.facebook.buck.features.project.intellij.model.IjModuleRule;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.IjProjectElement;
+import com.facebook.buck.features.project.intellij.model.LibraryBuildContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
@@ -205,14 +206,12 @@ public final class IjModuleGraphFactory {
         // if a BuildTarget is not built from Java sources, it will also be added as a
         // library
         TargetNode<?> targetNode = targetGraph.get(target);
-        Optional<IjLibrary> lib = libraryFactory.getLibrary(targetNode);
-        if (lib.isPresent()) {
-          result.add(lib.get());
-        }
+        Optional<LibraryBuildContext> lib = libraryFactory.getLibrary(targetNode);
+
+        lib.ifPresent(result::add);
       }
     }
-    ImmutableSet<IjProjectElement> resultx = result.build();
-    return resultx;
+    return result.build();
   }
 
   /**
@@ -252,7 +251,7 @@ public final class IjModuleGraphFactory {
     Map<IjModule, Map<IjProjectElement, DependencyType>> moduleDepGraph = new HashMap<>();
     ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
         depsBuilder = ImmutableMap.builder();
-    Map<IjLibrary, Integer> libraryReferenceCounter = new HashMap<>();
+    Map<String, Integer> libraryReferenceCounter = new HashMap<>();
     Optional<Path> extraCompileOutputRootPath = projectConfig.getExtraCompilerOutputModulesPath();
 
     Set<IjModule> seenModules = new HashSet<>();
@@ -265,7 +264,8 @@ public final class IjModuleGraphFactory {
 
       module
           .getExtraLibraryDependencies()
-          .forEach(library -> moduleDeps.put(library, DependencyType.PROD));
+          .forEach(
+              library -> moduleDeps.put(new LibraryBuildContext(library), DependencyType.PROD));
 
       if (extraCompileOutputRootPath.isPresent()
           && !module.getExtraModuleDependencies().isEmpty()) {
@@ -289,7 +289,7 @@ public final class IjModuleGraphFactory {
         ImmutableSet<IjProjectElement> transitiveDepElements = ImmutableSet.of();
 
         if (depType.equals(DependencyType.COMPILED_SHADOW)) {
-          Optional<IjLibrary> library = libraryFactory.getLibrary(depTargetNode);
+          Optional<LibraryBuildContext> library = libraryFactory.getLibrary(depTargetNode);
           if (library.isPresent()) {
             depElements = ImmutableSet.of(library.get());
           } else {
@@ -332,12 +332,13 @@ public final class IjModuleGraphFactory {
       }
 
       moduleDeps.keySet().stream()
-          .filter(dep -> dep instanceof IjLibrary)
-          .map(library -> (IjLibrary) library)
+          .filter(dep -> dep instanceof LibraryBuildContext)
+          .map(library -> (LibraryBuildContext) library)
           .forEach(
               library ->
                   libraryReferenceCounter.put(
-                      library, libraryReferenceCounter.getOrDefault(library, 0) + 1));
+                      library.getName(),
+                      libraryReferenceCounter.getOrDefault(library.getName(), 0) + 1));
 
       moduleDepGraph.put(module, moduleDeps);
     }
@@ -376,7 +377,7 @@ public final class IjModuleGraphFactory {
 
   private static Set<IjLibrary> addModuleDepsAndGetReferencedLibraries(
       Map<IjModule, Map<IjProjectElement, DependencyType>> moduleDepGraph,
-      Map<IjLibrary, Integer> libraryReferenceCounter,
+      Map<String, Integer> libraryReferenceCounter,
       ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
           depsBuilder,
       IjLibraryFactory libraryFactory,
@@ -395,19 +396,23 @@ public final class IjModuleGraphFactory {
                           moduleDepEntry -> {
                             IjProjectElement depElement;
                             if (canConvertToModuleLibrary
-                                && moduleDepEntry.getKey() instanceof IjLibrary) {
+                                && moduleDepEntry.getKey() instanceof LibraryBuildContext) {
                               depElement =
                                   convertLibraryIfNecessary(
                                       libraryReferenceCounter,
                                       libraryFactory,
                                       targetInfoMapManager,
                                       projectConfig,
-                                      (IjLibrary) moduleDepEntry.getKey());
+                                      (LibraryBuildContext) moduleDepEntry.getKey());
                             } else {
                               depElement = moduleDepEntry.getKey();
                             }
-                            if (depElement instanceof IjLibrary) {
-                              referencedLibraries.add((IjLibrary) depElement);
+                            if (depElement instanceof LibraryBuildContext) {
+                              // Create the aggregated immutable library
+                              IjLibrary library =
+                                  ((LibraryBuildContext) depElement).getAggregatedLibrary();
+                              referencedLibraries.add(library);
+                              return library;
                             }
                             return depElement;
                           },
@@ -416,13 +421,13 @@ public final class IjModuleGraphFactory {
     return referencedLibraries;
   }
 
-  private static IjLibrary convertLibraryIfNecessary(
-      Map<IjLibrary, Integer> libraryReferenceCounter,
+  private static LibraryBuildContext convertLibraryIfNecessary(
+      Map<String, Integer> libraryReferenceCounter,
       IjLibraryFactory libraryFactory,
       TargetInfoMapManager targetInfoMapManager,
       IjProjectConfig projectConfig,
-      IjLibrary library) {
-    Integer referenceCount = libraryReferenceCounter.getOrDefault(library, null);
+      LibraryBuildContext library) {
+    Integer referenceCount = libraryReferenceCounter.getOrDefault(library.getName(), null);
     if (referenceCount != null
         && referenceCount <= projectConfig.getModuleLibraryThreshold()
         && library.getLevel() != IjLibrary.Level.MODULE

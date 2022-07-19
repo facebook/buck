@@ -43,6 +43,7 @@ public class IjTestProjectConfig {
         .setSkipBuildEnabled(true)
         .setKeepModuleFilesInModuleDirsEnabled(true)
         .setProjectRoot(projectRoot)
-        .setProjectPaths(new IjProjectPaths(projectRoot, true));
+        .setProjectPaths(new IjProjectPaths(projectRoot, true))
+        .setTargetConfigurationInLibrariesEnabled(true);
   }
 }

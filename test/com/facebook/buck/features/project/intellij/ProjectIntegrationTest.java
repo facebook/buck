@@ -673,6 +673,13 @@ public class ProjectIntegrationTest {
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
+    // The buck config is overridden here as part of getting rid of target-configuration in
+    // libraries. With this, all the existing integration tests will pass, regardless of the config.
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of(
+            "intellij", ImmutableMap.of("target_configuration_in_libraries_enabled", "true")));
+
     ProcessResult result =
         workspace.runBuckCommand(Lists.asList("project", commandArgs).toArray(new String[0]));
     result.assertSuccess("buck project should exit cleanly");

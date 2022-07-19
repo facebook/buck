@@ -28,6 +28,8 @@ import java.util.Optional;
 /** Interface for building {@link IjLibrary} objects from {@link TargetNode}s. */
 public abstract class IjLibraryFactory {
 
+  protected static boolean isTargetConfigurationInLibrariesEnabled;
+
   /** Rule describing how to create a {@link IjLibrary} from a {@link TargetNode}. */
   protected interface IjLibraryRule {
     void applyRule(TargetNode<?> targetNode, IjLibrary.Builder library);
@@ -52,12 +54,18 @@ public abstract class IjLibraryFactory {
    * @return if the target is of a type that can be mapped to an {@link IjLibrary} (Jar/Aar) or if
    *     the target's output is a .jar an instance is returned.
    */
-  public abstract Optional<IjLibrary> getLibrary(TargetNode<?> target);
+  public abstract Optional<LibraryBuildContext> getLibrary(TargetNode<?> target);
 
-  public abstract Optional<IjLibrary> getOrConvertToModuleLibrary(IjLibrary library);
+  public abstract Optional<LibraryBuildContext> getOrConvertToModuleLibrary(
+      LibraryBuildContext library);
 
-  protected IjLibrary createLibrary(TargetNode<?> targetNode, IjLibraryRule rule) {
-    String libraryName = getLibraryName(targetNode);
+  /**
+   * Builds a mutable version of IjLibrary, which will be converted to immutable towards the end of
+   * building IjModuleGraph.
+   */
+  protected LibraryBuildContext createLibrary(TargetNode<?> targetNode, IjLibraryRule rule) {
+    String libraryName = getLibraryName(targetNode.getBuildTarget());
+
     IjLibrary.Builder libraryBuilder =
         IjLibrary.builder()
             .setName(libraryName)
@@ -65,11 +73,23 @@ public abstract class IjLibraryFactory {
             .setLevel(IjLibrary.Level.PROJECT)
             .setTargets(ImmutableSet.of(targetNode.getBuildTarget()));
     rule.applyRule(targetNode, libraryBuilder);
-    return libraryBuilder.build();
+
+    return new LibraryBuildContext(libraryBuilder.build());
   }
 
-  public static String getLibraryName(TargetNode<?> targetNode) {
-    return Util.intelliJLibraryName(targetNode.getBuildTarget());
+  /**
+   * Creates library name depending on the buck config: `isTargetConfigurationInLibrariesEnabled`
+   *
+   * <p>Eg: For a target `//modules/foo/bar:baz` with target-configuration `config//fake:c1`
+   *
+   * <p>When config is true: returns `//modules/foo/bar:baz (config//fake:c1)`
+   *
+   * <p>When config is false: returns `//modules/foo/bar:baz`
+   */
+  public static String getLibraryName(BuildTarget buildTarget) {
+    return isTargetConfigurationInLibrariesEnabled
+        ? Util.intelliJLibraryName(buildTarget)
+        : buildTarget.getFullyQualifiedName();
   }
 
   public static IjLibrary getKotlinJavaRuntimeLibrary() {
@@ -81,7 +101,7 @@ public abstract class IjLibraryFactory {
     BuildTarget dummyRDotJavaTarget =
         target.withFlavors(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR);
     return IjLibrary.builder()
-        .setName(Util.intelliJLibraryName(dummyRDotJavaTarget))
+        .setName(getLibraryName(dummyRDotJavaTarget))
         .setType(IjLibrary.Type.DEFAULT)
         .setLevel(isModuleLibraryEnabled ? IjLibrary.Level.MODULE : IjLibrary.Level.PROJECT)
         .setBinaryJars(ImmutableSortedSet.of(dummyRDotJavaClassPath))

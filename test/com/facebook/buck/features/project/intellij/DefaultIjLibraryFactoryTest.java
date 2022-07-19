@@ -21,7 +21,9 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -34,6 +36,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
+import com.facebook.buck.features.project.intellij.model.LibraryBuildContext;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
@@ -49,17 +52,16 @@ public class DefaultIjLibraryFactoryTest {
   private SourcePathResolverAdapter sourcePathResolverAdapter;
   private Path guavaJarPath;
   private TargetNode<?> guava;
-  private IjLibrary guavaLibrary;
   private TargetNode<?> androidSupport;
   private PathSourcePath androidSupportBinaryPath;
   private PathSourcePath androidSupportResClassPath;
-  private IjLibrary androidSupportLibrary;
-  private IjLibrary baseLibrary;
   private TargetNode<?> base;
   private PathSourcePath androidSupportBinaryJarPath;
   private PathSourcePath baseOutputPath;
   private IjLibraryFactoryResolver libraryFactoryResolver;
   private IjLibraryFactory factory;
+  private TargetGraph targetGraph;
+  private boolean isTargetConfigurationInLibrariesEnabled = true;
 
   @Before
   public void setUp() {
@@ -119,16 +121,16 @@ public class DefaultIjLibraryFactoryTest {
           }
         };
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(guava, androidSupport, base);
-    factory = new DefaultIjLibraryFactory(targetGraph, libraryFactoryResolver);
-
-    guavaLibrary = factory.getLibrary(guava).get();
-    androidSupportLibrary = factory.getLibrary(androidSupport).get();
-    baseLibrary = factory.getLibrary(base).get();
+    targetGraph = TargetGraphFactory.newInstance(guava, androidSupport, base);
+    factory = getIjLibraryFactory();
   }
 
   @Test
   public void testPrebuiltJar() {
+    LibraryBuildContext guavaLibElement = factory.getLibrary(guava).get();
+
+    IjLibrary guavaLibrary = guavaLibElement.getAggregatedLibrary();
+
     assertEquals("//third_party/java/guava:guava", guavaLibrary.getName());
     assertEquals(ImmutableSet.of(guavaJarPath), guavaLibrary.getBinaryJars());
     assertEquals(ImmutableSet.of(guava.getBuildTarget()), guavaLibrary.getTargets());
@@ -136,6 +138,10 @@ public class DefaultIjLibraryFactoryTest {
 
   @Test
   public void testPrebuiltAar() {
+    LibraryBuildContext androidSupportLibElement = factory.getLibrary(androidSupport).get();
+
+    IjLibrary androidSupportLibrary = androidSupportLibElement.getAggregatedLibrary();
+
     assertEquals("//third_party/java/support:support", androidSupportLibrary.getName());
     assertEquals(
         ImmutableSet.of(androidSupportBinaryJarPath.getRelativePath()),
@@ -149,8 +155,106 @@ public class DefaultIjLibraryFactoryTest {
 
   @Test
   public void testLibraryFromOtherTargets() {
+    LibraryBuildContext baseLibElement = factory.getLibrary(base).get();
+
+    IjLibrary baseLibrary = baseLibElement.getAggregatedLibrary();
+
     assertEquals("//java/com/example/base:base", baseLibrary.getName());
     assertEquals(ImmutableSet.of(baseOutputPath.getRelativePath()), baseLibrary.getBinaryJars());
     assertEquals(ImmutableSet.of(base.getBuildTarget()), baseLibrary.getTargets());
+  }
+
+  @Test
+  public void testLibraryBuildContextWithTargetConfiguration() {
+    RuleBasedTargetConfiguration c1Config =
+        RuleBasedTargetConfiguration.of(
+            BuildTargetFactory.newInstance(
+                "config//fake:c1", ConfigurationForConfigurationTargets.INSTANCE));
+
+    Path bazJarPath = Path.of("modules/foo/bar/baz.jar");
+
+    TargetNode<?> nodeWithC1Config =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//modules/foo/bar:baz", c1Config))
+            .setBinaryJar(bazJarPath)
+            .build();
+
+    LibraryBuildContext nodeWithC1ConfigLibContext = factory.getLibrary(nodeWithC1Config).get();
+    IjLibrary nodeWithC1ConfigLib = nodeWithC1ConfigLibContext.getAggregatedLibrary();
+
+    assertEquals("//modules/foo/bar:baz (config//fake:c1)", nodeWithC1ConfigLib.getName());
+    assertEquals(ImmutableSet.of(bazJarPath), nodeWithC1ConfigLib.getBinaryJars());
+    assertEquals(
+        ImmutableSet.of(nodeWithC1Config.getBuildTarget()), nodeWithC1ConfigLib.getTargets());
+
+    RuleBasedTargetConfiguration c2Config =
+        RuleBasedTargetConfiguration.of(
+            BuildTargetFactory.newInstance(
+                "config//fake:c2", ConfigurationForConfigurationTargets.INSTANCE));
+
+    TargetNode<?> nodeWithC2Config =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//modules/foo/bar:baz", c2Config))
+            .setBinaryJar(bazJarPath)
+            .build();
+
+    LibraryBuildContext nodeWithC2ConfigLibContext = factory.getLibrary(nodeWithC2Config).get();
+    IjLibrary nodeWithC2ConfigLib = nodeWithC2ConfigLibContext.getAggregatedLibrary();
+
+    assertEquals("//modules/foo/bar:baz (config//fake:c2)", nodeWithC2ConfigLib.getName());
+    assertEquals(ImmutableSet.of(bazJarPath), nodeWithC2ConfigLib.getBinaryJars());
+    assertEquals(
+        ImmutableSet.of(nodeWithC2Config.getBuildTarget()), nodeWithC2ConfigLib.getTargets());
+  }
+
+  @Test
+  public void testLibraryBuildContextWithoutTargetConfiguration() {
+    isTargetConfigurationInLibrariesEnabled = false;
+    factory = getIjLibraryFactory();
+
+    RuleBasedTargetConfiguration c1Config =
+        RuleBasedTargetConfiguration.of(
+            BuildTargetFactory.newInstance(
+                "config//fake:c1", ConfigurationForConfigurationTargets.INSTANCE));
+
+    Path bazJarPath = Path.of("modules/foo/bar/baz.jar");
+
+    TargetNode<?> nodeWithC1Config =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//modules/foo/bar:baz", c1Config))
+            .setBinaryJar(bazJarPath)
+            .build();
+
+    RuleBasedTargetConfiguration c2Config =
+        RuleBasedTargetConfiguration.of(
+            BuildTargetFactory.newInstance(
+                "config//fake:c2", ConfigurationForConfigurationTargets.INSTANCE));
+
+    TargetNode<?> nodeWithC2Config =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//modules/foo/bar:baz", c2Config))
+            .setBinaryJar(bazJarPath)
+            .build();
+
+    LibraryBuildContext nodeWithC1ConfigLibContext = factory.getLibrary(nodeWithC1Config).get();
+    LibraryBuildContext nodeWithC2ConfigLibContext = factory.getLibrary(nodeWithC2Config).get();
+    IjLibrary nodeWithC2ConfigLib = nodeWithC2ConfigLibContext.getAggregatedLibrary();
+    IjLibrary nodeWithC1ConfigLib = nodeWithC1ConfigLibContext.getAggregatedLibrary();
+
+    assertEquals("//modules/foo/bar:baz", nodeWithC1ConfigLib.getName());
+    assertEquals(ImmutableSet.of(bazJarPath), nodeWithC1ConfigLib.getBinaryJars());
+    assertEquals(
+        ImmutableSet.of(nodeWithC1Config.getBuildTarget(), nodeWithC2Config.getBuildTarget()),
+        nodeWithC1ConfigLib.getTargets());
+
+    assertEquals("//modules/foo/bar:baz", nodeWithC2ConfigLib.getName());
+    assertEquals(ImmutableSet.of(bazJarPath), nodeWithC2ConfigLib.getBinaryJars());
+    assertEquals(nodeWithC1ConfigLibContext, nodeWithC2ConfigLibContext);
+    assertEquals(nodeWithC1ConfigLib, nodeWithC2ConfigLib);
+  }
+
+  private IjLibraryFactory getIjLibraryFactory() {
+    return new DefaultIjLibraryFactory(
+        targetGraph, libraryFactoryResolver, isTargetConfigurationInLibrariesEnabled);
   }
 }

@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
+import com.facebook.buck.features.project.intellij.model.LibraryBuildContext;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.google.common.base.Preconditions;
@@ -53,6 +54,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
    * @param <T> the type of the TargetNode.
    */
   abstract class TypedIjLibraryRule<T extends BuildRuleArg> implements IjLibraryRule {
+
     abstract Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass();
 
     abstract void apply(TargetNode<T> targetNode, IjLibrary.Builder library);
@@ -68,10 +70,12 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       new HashMap<>();
   private final TargetGraph targetGraph;
   private final IjLibraryFactoryResolver libraryFactoryResolver;
-  private final Map<String, Optional<IjLibrary>> libraryCache;
+  private final Map<String, Optional<LibraryBuildContext>> libraryCache;
 
   public DefaultIjLibraryFactory(
-      TargetGraph targetGraph, IjLibraryFactoryResolver libraryFactoryResolver) {
+      TargetGraph targetGraph,
+      IjLibraryFactoryResolver libraryFactoryResolver,
+      boolean isTargetConfigInLibrariesEnabled) {
     this.targetGraph = targetGraph;
     this.libraryFactoryResolver = libraryFactoryResolver;
 
@@ -79,7 +83,8 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     addToIndex(new PrebuiltJarLibraryRule());
     addToIndex(new AndroidBuildConfigLibraryRule());
 
-    libraryCache = new HashMap<>();
+    this.libraryCache = new HashMap<>();
+    isTargetConfigurationInLibrariesEnabled = isTargetConfigInLibrariesEnabled;
   }
 
   private void addToIndex(TypedIjLibraryRule<?> rule) {
@@ -88,36 +93,47 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   }
 
   @Override
-  public Optional<IjLibrary> getLibrary(TargetNode<?> targetNode) {
+  public Optional<LibraryBuildContext> getLibrary(TargetNode<?> targetNode) {
     TargetNode<?> target =
         IjAliasHelper.isAliasNode(targetNode)
             ? IjAliasHelper.resolveAliasNode(targetGraph, targetNode)
             : targetNode;
-    String libraryName = getLibraryName(target);
-    Optional<IjLibrary> library = libraryCache.get(libraryName);
+    String libraryName = getLibraryName(target.getBuildTarget());
+    Optional<LibraryBuildContext> library = libraryCache.get(libraryName);
     if (library == null) {
       library = getRule(target).map(rule -> createLibrary(target, rule));
       Preconditions.checkState(
           !libraryCache.containsKey(libraryName),
           "Trying to use the same library name for different targets.");
       libraryCache.put(libraryName, library);
+    } else {
+      if (library.isPresent()) {
+        // At this point, it is possible that the library has a different configuration.
+        // These libraries are built and saved into LibraryBuildContext here.
+        Optional<LibraryBuildContext> newLibrary =
+            getRule(target).map(rule -> createLibrary(target, rule));
+        if (newLibrary.isPresent()) {
+          library.get().merge(newLibrary.get());
+        }
+      }
     }
     return library;
   }
 
   @Override
-  public Optional<IjLibrary> getOrConvertToModuleLibrary(IjLibrary projectLibrary) {
+  public Optional<LibraryBuildContext> getOrConvertToModuleLibrary(
+      LibraryBuildContext projectLibrary) {
     String libraryName = projectLibrary.getName();
-    Optional<IjLibrary> library = libraryCache.get(libraryName);
-    if (library == null || !library.isPresent()) {
+    Optional<LibraryBuildContext> libraryContext = libraryCache.get(libraryName);
+    if (libraryContext == null || !libraryContext.isPresent()) {
       return Optional.empty();
     }
 
-    if (library.map(l -> l.getLevel() == IjLibrary.Level.PROJECT).orElse(false)) {
-      library = library.map(l -> l.copyWithLevel(IjLibrary.Level.MODULE));
-      libraryCache.put(libraryName, library);
+    if (libraryContext.map(l -> l.getLevel() == IjLibrary.Level.PROJECT).orElse(false)) {
+      libraryContext = libraryContext.map(l -> l.withLevel(IjLibrary.Level.MODULE));
+      libraryCache.put(libraryName, libraryContext);
     }
-    return library;
+    return libraryContext;
   }
 
   private Optional<IjLibraryRule> getRule(TargetNode<?> targetNode) {
@@ -134,6 +150,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   }
 
   private static class JavaLibraryRule implements IjLibraryRule {
+
     private final Path binaryJarPath;
 
     public JavaLibraryRule(Path binaryJarPath) {

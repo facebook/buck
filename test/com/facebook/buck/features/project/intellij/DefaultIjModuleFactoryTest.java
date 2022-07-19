@@ -53,6 +53,7 @@ import com.facebook.buck.features.project.intellij.model.IjModuleFactory;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.features.project.intellij.model.LibraryBuildContext;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
 import com.facebook.buck.features.project.intellij.model.folders.SourceFolder;
 import com.facebook.buck.features.project.intellij.model.folders.TestFolder;
@@ -662,17 +663,18 @@ public class DefaultIjModuleFactoryTest {
           }
         };
 
-    Optional<IjLibrary> library =
+    Optional<LibraryBuildContext> ijLibraryElement =
         new DefaultIjLibraryFactory(
-                TargetGraphFactory.newInstance(androidPrebuiltAar), ijLibraryFactoryResolver)
+                TargetGraphFactory.newInstance(androidPrebuiltAar), ijLibraryFactoryResolver, true)
             .getLibrary(androidPrebuiltAar);
-    assertTrue(library.isPresent());
+    assertTrue(ijLibraryElement.isPresent());
+    IjLibrary ijLibrary = ijLibraryElement.get().getAggregatedLibrary();
     assertEquals(
-        library.get().getBinaryJars(),
+        ijLibrary.getBinaryJars(),
         ImmutableSet.of(
             sourcePathResolverAdapter.getCellUnsafeRelPath(androidSupportBinaryPath).getPath()));
-    assertEquals(library.get().getSourceJars(), ImmutableSet.of(androidSupportSourcesPath));
-    assertEquals(library.get().getJavadocUrls(), ImmutableSet.of(androidSupportJavadocUrl));
+    assertEquals(ijLibrary.getSourceJars(), ImmutableSet.of(androidSupportSourcesPath));
+    assertEquals(ijLibrary.getJavadocUrls(), ImmutableSet.of(androidSupportJavadocUrl));
   }
 
   private IjModuleFactory createIjModuleFactory() {
