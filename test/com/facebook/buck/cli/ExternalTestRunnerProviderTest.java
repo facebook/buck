@@ -16,7 +16,13 @@
 
 package com.facebook.buck.cli;
 
+import static com.google.common.collect.Iterables.getLast;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.isA;
+import static org.hamcrest.Matchers.nullValue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -32,14 +38,21 @@ import com.facebook.buck.util.config.RawConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ExternalTestRunnerProviderTest {
+
+  private static final String CUSTOM_EXTERNAL_RUNNER_MESSAGE =
+      "You are using a custom External Test Runner";
+  private static final String EXTERNAL_RUNNER_OVERRIDDEN = "Config test.external_runner overridden";
+
+  private TestEventConsole console;
+  private ExternalTestRunnerProvider testRunnerProvider;
+  private BuckEventBusForTests.CapturingEventListener buckEventsListener;
 
   private BuckConfig createConfig(
       String externalRunner, String allowedPaths, String externalRunnerOverride) {
@@ -59,204 +72,300 @@ public class ExternalTestRunnerProviderTest {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setFilesystem(filesystem)
-            .setSections(
-                projectConfigBuilder.build(),
-                filesystem.getRootPath().resolve(".buckconfig").getPath())
-            .setOverrides(overridesBuilder.build())
-            .build();
-
-    return buckConfig;
+    return FakeBuckConfig.builder()
+        .setFilesystem(filesystem)
+        .setSections(
+            projectConfigBuilder.build(), filesystem.getRootPath().resolve(".buckconfig").getPath())
+        .setOverrides(overridesBuilder.build())
+        .build();
   }
 
-  private Iterable<TestRule> createSimpleTestRules(String... targets) {
+  private Iterable<TestRule> createSimpleTestRulesWithTargets(String... targets) {
     return Arrays.stream(targets)
         .map(BuildTargetFactory::newInstance)
         .map(t -> new FakeTestRule(ImmutableSet.of(), t, ImmutableSortedSet.of()))
         .collect(Collectors.toList());
   }
 
-  @Test
-  public void testDefaultBehaviourWithNoPathPrefixesDefined() {
+  @Before
+  public void setUp() {
+    console = new TestEventConsole();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    TestEventConsole console = new TestEventConsole();
-    ExternalTestRunnerProvider runnerDeterminator =
-        new ExternalTestRunnerProvider(eventBus, console);
-    Iterable<TestRule> testRules = createSimpleTestRules("//a:a");
+    buckEventsListener = new BuckEventBusForTests.CapturingEventListener();
+    eventBus.register(buckEventsListener);
+    testRunnerProvider = new ExternalTestRunnerProvider(eventBus, console);
+  }
 
+  @Test
+  public void
+      givenExternalRunnerOverrideAndNoExternalRunnerAndNoAllowedPaths_whenGetExternalRunner_then_overrideRunnerProvidedWithNoWarnings() {
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a");
     BuckConfig config = createConfig(null, null, "runner");
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.of(ImmutableList.of("runner"))));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
 
-    config = createConfig("walker", null, "runner");
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.of(ImmutableList.of("runner"))));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
 
-    config = createConfig("walker", null, null);
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.of(ImmutableList.of("walker"))));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
-
-    config = createConfig("walker", null, "");
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.empty()));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
-
-    config = createConfig(null, null, null);
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.empty()));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
+    Optional<ImmutableList<String>> expectedRunner = Optional.of(ImmutableList.of("runner"));
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
   }
 
   @Test
-  public void testWithTargetsOutOfPathPrefixes() {
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    TestEventConsole console = new TestEventConsole();
-    ExternalTestRunnerProvider runnerDeterminator =
-        new ExternalTestRunnerProvider(eventBus, console);
-    Iterable<TestRule> testRules = createSimpleTestRules("//a:a", "//b:b", "//c:c");
+  public void
+      givenExternalRunnerOverrideAndExternalRunnerAndNoAllowedPaths_whenGetExternalRunner_then_overrideRunnerProvidedWithNoWarnings() {
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a");
+    BuckConfig config = createConfig("walker", null, "runner");
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.of(ImmutableList.of("runner"));
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
+  }
+
+  @Test
+  public void
+      givenNoExternalRunnerOverrideAndExternalRunnerAndNoAllowedPaths_whenGetExternalRunner_then_externalRunnerProvidedWithNoWarnings() {
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a");
+    BuckConfig config = createConfig("walker", null, null);
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.of(ImmutableList.of("walker"));
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
+  }
+
+  @Test
+  public void
+      givenEmptyExternalRunnerOverrideAndExternalRunnerAndNoAllowedPaths_whenGetExternalRunner_then_emptyRunnerProvidedWithNoWarnings() {
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a");
+    BuckConfig config = createConfig("walker", null, "");
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.empty();
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
+  }
+
+  @Test
+  public void
+      givenNoExternalRunnerOverrideAndNoExternalRunnerAndNoAllowedPaths_whenGetExternalRunner_then_emptyRunnerProvidedWithNoWarnings() {
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a");
+    BuckConfig config = createConfig(null, null, null);
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.empty();
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
+  }
+
+  @Test
+  public void
+      givenExternalRunnerOverrideAndNoExternalRunnerAndAllowedPathsDontMatch_whenGetExternalRunner_then_externalRunnerProvidedWithCustomRunnerMessage() {
     String allowedPaths = "//a,//b";
-    String expectedWarning = "You are using a custom External Test Runner";
-
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b", "//c:c");
     BuckConfig config = createConfig(null, allowedPaths, "runner");
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.of(ImmutableList.of("runner"))));
-    assertThat(console.getLastPrintedMessage(), Matchers.containsString(expectedWarning));
 
-    config = createConfig("walker", allowedPaths, "runner");
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.of(ImmutableList.of("runner"))));
-    assertThat(console.getLastPrintedMessage(), Matchers.containsString(expectedWarning));
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
 
-    console.clearMessages();
-    config = createConfig("walker", allowedPaths, null);
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.empty()));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
-
-    config = createConfig("walker", allowedPaths, "");
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.empty()));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
-
-    config = createConfig(null, allowedPaths, null);
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.empty()));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
+    Optional<ImmutableList<String>> expectedRunner = Optional.of(ImmutableList.of("runner"));
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat(console.getLastPrintedMessage(), containsString(CUSTOM_EXTERNAL_RUNNER_MESSAGE));
   }
 
   @Test
-  public void testWithTargetsWithinPathPrefixes() {
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    TestEventConsole console = new TestEventConsole();
-    ExternalTestRunnerProvider runnerDeterminator =
-        new ExternalTestRunnerProvider(eventBus, console);
-    Iterable<TestRule> testRules = createSimpleTestRules("//a:a", "//b:b");
+  public void
+      givenExternalRunnerOverrideAndExternalRunnerAndAllowedPathsDontMatch_whenGetExternalRunner_then_overrideExternalRunnerProvidedWithCustomRunnerMessage() {
     String allowedPaths = "//a,//b";
-    String expectedWarning = "Config test.external_runner overridden";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b", "//c:c");
+    BuckConfig config = createConfig("walker", allowedPaths, "runner");
 
-    BuckConfig config = createConfig(null, allowedPaths, "runner");
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.of(ImmutableList.of("runner"))));
-    assertThat(console.getLastPrintedMessage(), Matchers.containsString(expectedWarning));
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
 
-    config = createConfig("walker", allowedPaths, "runner");
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.of(ImmutableList.of("runner"))));
-    assertThat(console.getLastPrintedMessage(), Matchers.containsString(expectedWarning));
-
-    config = createConfig("walker", allowedPaths, "");
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.empty()));
-    assertThat(console.getLastPrintedMessage(), Matchers.containsString(expectedWarning));
-
-    console.clearMessages();
-
-    config = createConfig("walker", allowedPaths, null);
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.of(ImmutableList.of("walker"))));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
-
-    config = createConfig(null, allowedPaths, null);
-    assertThat(
-        runnerDeterminator.getExternalTestRunner(config, testRules),
-        Matchers.equalTo(Optional.empty()));
-    assertThat("No warnings were printed", console.getLastPrintedMessage(), Matchers.nullValue());
+    Optional<ImmutableList<String>> expectedRunner = Optional.of(ImmutableList.of("runner"));
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat(console.getLastPrintedMessage(), containsString(CUSTOM_EXTERNAL_RUNNER_MESSAGE));
   }
 
   @Test
-  public void testOverrideEventsArePosted() {
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    BuckEventBusForTests.CapturingEventListener listener =
-        new BuckEventBusForTests.CapturingEventListener();
-    eventBus.register(listener);
-    TestEventConsole console = new TestEventConsole();
-    ExternalTestRunnerProvider runnerDeterminator =
-        new ExternalTestRunnerProvider(eventBus, console);
+  public void
+      givenNoExternalRunnerOverrideAndExternalRunnerAndAllowedPathsDontMatch_whenGetExternalRunner_then_noExternalRunnerProvidedWithNoWarnings() {
+    String allowedPaths = "//a,//b";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b", "//c:c");
+    BuckConfig config = createConfig("walker", allowedPaths, null);
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.empty();
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
+  }
+
+  @Test
+  public void
+      givenEmptyExternalRunnerOverrideAndExternalRunnerAndAllowedPathsDontMatch_whenGetExternalRunner_then_noExternalRunnerProvidedWithNoWarnings() {
+    String allowedPaths = "//a,//b";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b", "//c:c");
+    BuckConfig config = createConfig("walker", allowedPaths, "");
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.empty();
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
+  }
+
+  @Test
+  public void
+      givenNoExternalRunnerOverrideAndNoExternalRunnerAndAllowedPathsDontMatch_whenGetExternalRunner_then_noExternalRunnerProvidedWithNoWarnings() {
+    String allowedPaths = "//a,//b";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b", "//c:c");
+    BuckConfig config = createConfig(null, allowedPaths, null);
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.empty();
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
+  }
+
+  @Test
+  public void
+      givenExternalRunnerOverrideAndNoExternalRunnerAndAllowedPathsMatch_whenGetExternalRunner_then_overrideExternalRunnerProvidedWithOverrideRunnerMessage() {
+    String allowedPaths = "//a,//b";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b");
+    BuckConfig config = createConfig(null, allowedPaths, "runner");
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.of(ImmutableList.of("runner"));
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat(console.getLastPrintedMessage(), containsString(EXTERNAL_RUNNER_OVERRIDDEN));
+  }
+
+  @Test
+  public void
+      givenExternalRunnerOverrideAndExternalRunnerAndAllowedPathsMatch_whenGetExternalRunner_then_overrideExternalRunnerProvidedWithOverrideRunnerMessage() {
+    String allowedPaths = "//a,//b";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b");
+    BuckConfig config = createConfig("walker", allowedPaths, "runner");
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.of(ImmutableList.of("runner"));
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat(console.getLastPrintedMessage(), containsString(EXTERNAL_RUNNER_OVERRIDDEN));
+  }
+
+  @Test
+  public void
+      givenEmptyExternalRunnerOverrideAndExternalRunnerAndAllowedPathsMatch_whenGetExternalRunner_then_emptyExternalRunnerProvidedWithOverrideRunnerMessage() {
+    String allowedPaths = "//a,//b";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b");
+    BuckConfig config = createConfig("walker", allowedPaths, "");
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.empty();
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat(console.getLastPrintedMessage(), containsString(EXTERNAL_RUNNER_OVERRIDDEN));
+  }
+
+  @Test
+  public void
+      givenNoExternalRunnerOverrideAndExternalRunnerAndAllowedPathsMatch_whenGetExternalRunner_then_externalRunnerProvidedWithNoWarnings() {
+    String allowedPaths = "//a,//b";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b");
+    BuckConfig config = createConfig("walker", allowedPaths, null);
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.of(ImmutableList.of("walker"));
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
+  }
+
+  @Test
+  public void
+      givenNoExternalRunnerOverrideAndNoExternalRunnerAndAllowedPathsMatch_whenGetExternalRunner_then_noExternalRunnerProvidedWithNoWarnings() {
+    String allowedPaths = "//a,//b";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a", "//b:b");
+    BuckConfig config = createConfig(null, allowedPaths, null);
+
+    Optional<ImmutableList<String>> providedRunner =
+        testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    Optional<ImmutableList<String>> expectedRunner = Optional.empty();
+    assertThat(providedRunner, equalTo(expectedRunner));
+    assertThat("No warnings were printed", console.getLastPrintedMessage(), nullValue());
+  }
+
+  @Test
+  public void
+      givenExternalRunnerOverrideAndExternalRunnerAndAllowedPathsMatch_whenGetExternalRunner_then_externalTestRunnerSelectionEventIsPosted() {
     String allowedPaths = "//a";
-
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a");
     BuckConfig config = createConfig("runner", allowedPaths, "walker");
-    runnerDeterminator.getExternalTestRunner(config, createSimpleTestRules("//a:a"));
-    assertThat(
-        Iterables.getLast(listener.getExternalRunnerSelectionEvents(), null),
-        Matchers.isA(ExternalTestRunnerSelectionEvent.OverrideEvent.class));
 
-    config = createConfig(null, allowedPaths, "custom");
-    runnerDeterminator.getExternalTestRunner(config, createSimpleTestRules("//c:c"));
-    assertThat(listener.getExternalRunnerSelectionEvents(), Matchers.hasSize(2));
+    testRunnerProvider.getExternalTestRunner(config, testRules);
+
     assertThat(
-        Iterables.getLast(listener.getExternalRunnerSelectionEvents(), null),
-        Matchers.isA(ExternalTestRunnerSelectionEvent.OverrideEvent.class));
+        getLast(buckEventsListener.getExternalRunnerSelectionEvents(), null),
+        isA(ExternalTestRunnerSelectionEvent.OverrideEvent.class));
   }
 
   @Test
-  public void testSelectEventsArePostedWhenThereIsNoOverride() {
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    BuckEventBusForTests.CapturingEventListener listener =
-        new BuckEventBusForTests.CapturingEventListener();
-    eventBus.register(listener);
-    TestEventConsole console = new TestEventConsole();
-    ExternalTestRunnerProvider runnerDeterminator =
-        new ExternalTestRunnerProvider(eventBus, console);
+  public void
+      givenExternalRunnerOverrideAndNoExternalRunnerAndAllowedPathsDontMatch_whenGetExternalRunner_then_externalTestRunnerSelectionEventIsPosted() {
+    String allowedPaths = "//a";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//c:c");
+    BuckConfig config = createConfig(null, allowedPaths, "custom");
 
-    BuckConfig config = createConfig("runner", "//a", null);
-    runnerDeterminator.getExternalTestRunner(config, createSimpleTestRules("//a:a"));
+    testRunnerProvider.getExternalTestRunner(config, testRules);
+
     assertThat(
-        Iterables.getLast(listener.getExternalRunnerSelectionEvents(), null),
-        Matchers.isA(ExternalTestRunnerSelectionEvent.SelectEvent.class));
+        getLast(buckEventsListener.getExternalRunnerSelectionEvents(), null),
+        isA(ExternalTestRunnerSelectionEvent.OverrideEvent.class));
   }
 
   @Test
-  public void testNoEventsArePostedWhenNoPathPrefixesDefined() {
+  public void
+      givenNoExternalRunnerOverrideAndExternalRunnerAndAllowedPathsMatch_whenGetExternalRunner_then_selectEventsArePosted() {
+    String allowedPaths = "//a";
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a");
+    BuckConfig config = createConfig("runner", allowedPaths, null);
 
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    BuckEventBusForTests.CapturingEventListener listener =
-        new BuckEventBusForTests.CapturingEventListener();
-    eventBus.register(listener);
-    TestEventConsole console = new TestEventConsole();
-    ExternalTestRunnerProvider runnerDeterminator =
-        new ExternalTestRunnerProvider(eventBus, console);
+    testRunnerProvider.getExternalTestRunner(config, testRules);
 
+    assertThat(
+        getLast(buckEventsListener.getExternalRunnerSelectionEvents(), null),
+        isA(ExternalTestRunnerSelectionEvent.SelectEvent.class));
+  }
+
+  @Test
+  public void
+      givenExternalRunnerOverrideAndExternalRunnerAndNoAllowedPathsMatch_whenGetExternalRunner_then_noSelectEventsArePosted() {
+    Iterable<TestRule> testRules = createSimpleTestRulesWithTargets("//a:a");
     BuckConfig config = createConfig("runner", null, "walker");
-    runnerDeterminator.getExternalTestRunner(config, createSimpleTestRules("//a:a"));
-    assertThat(listener.getExternalRunnerSelectionEvents(), Matchers.empty());
+
+    testRunnerProvider.getExternalTestRunner(config, testRules);
+
+    assertThat(buckEventsListener.getExternalRunnerSelectionEvents(), empty());
   }
 }
