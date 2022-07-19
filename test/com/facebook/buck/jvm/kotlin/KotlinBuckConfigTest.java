@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.kotlin;
 import static java.io.File.pathSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +36,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -450,5 +452,30 @@ public class KotlinBuckConfigTest {
             .getView(KotlinBuckConfig.class);
 
     assertEquals(AbiGenerationMode.SOURCE, config.getAbiGenerationMode());
+  }
+
+  @Test
+  public void kotlinCDDefaults() {
+    KotlinBuckConfig config = FakeBuckConfig.builder().build().getView(KotlinBuckConfig.class);
+
+    assertFalse(config.isKotlinCDEnabled());
+    assertFalse(config.isKotlinCDDisabledForWindows());
+  }
+
+  @Test
+  public void kotlinCDConfigSupplied() {
+    KotlinBuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "kotlin",
+                    ImmutableMap.of(
+                        "kotlincd_enabled", "true",
+                        "kotlincd_disabled_for_windows", "true")))
+            .build()
+            .getView(KotlinBuckConfig.class);
+
+    assertTrue(config.isKotlinCDDisabledForWindows());
+    assertEquals(config.isKotlinCDEnabled(), Platform.detect() != Platform.WINDOWS);
   }
 }

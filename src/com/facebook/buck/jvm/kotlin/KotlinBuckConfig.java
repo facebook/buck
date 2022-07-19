@@ -24,9 +24,11 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -40,11 +42,16 @@ import javax.annotation.Nullable;
 /** A kotlin-specific "view" of BuckConfig. */
 public class KotlinBuckConfig implements ConfigView<BuckConfig> {
 
+  private static final Logger LOGGER = Logger.get(KotlinBuckConfig.class);
+  private static final boolean IS_WINDOWS = Platform.detect() == Platform.WINDOWS;
+
   private static final String SECTION = "kotlin";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
   public static final String PROPERTY_ABI_GENERATION_MODE = "abi_generation_mode";
   public static final String PROPERTY_GENERATE_ANNOTATION_PROCESSING_STATS =
       "generate_annotation_processing_stats";
+  public static final String PROPERTY_KOTLINCD_ENABLED = "kotlincd_enabled";
+  static final String PROPERTY_KOTLINCD_DISABLED_FOR_WINDOWS = "kotlincd_disabled_for_windows";
 
   /**
    * Libraries that are found in KOTLIN_HOME (under their {@link KotlinHomeLibrary#jarName}), but
@@ -127,6 +134,19 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldGenerateAnnotationProcessingStats() {
     return delegate.getBooleanValue(SECTION, PROPERTY_GENERATE_ANNOTATION_PROCESSING_STATS, false);
+  }
+
+  public boolean isKotlinCDEnabled() {
+    if (IS_WINDOWS && isKotlinCDDisabledForWindows()) {
+      LOGGER.info("kotlincd disabled on windows");
+      return false;
+    }
+
+    return delegate.getBooleanValue(SECTION, PROPERTY_KOTLINCD_ENABLED, false);
+  }
+
+  public boolean isKotlinCDDisabledForWindows() {
+    return delegate.getBooleanValue(SECTION, PROPERTY_KOTLINCD_DISABLED_FOR_WINDOWS, false);
   }
 
   Path getPathToCompilerBinary() {
