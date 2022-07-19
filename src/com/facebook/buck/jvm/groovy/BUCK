@@ -39,4 +39,7 @@ java_library_with_plugins(
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/jvm/cd:cd",
+    ],
 )

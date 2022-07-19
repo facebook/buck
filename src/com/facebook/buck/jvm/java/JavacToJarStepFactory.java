@@ -24,6 +24,8 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.cd.CompileStepsBuilderFactory;
+import com.facebook.buck.jvm.cd.params.CDParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -43,7 +45,7 @@ public class JavacToJarStepFactory extends DaemonJavacToJarStepFactory
       boolean withDownwardApi) {
     super(
         javacOptions.getSpoolMode(),
-        CompileToJarStepFactory.hasAnnotationProcessing(javacOptions),
+        BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions),
         withDownwardApi);
     this.javacOptions = javacOptions;
     this.extraClasspathProvider = extraClasspathProvider;
@@ -79,6 +81,11 @@ public class JavacToJarStepFactory extends DaemonJavacToJarStepFactory
     ResolvedJavacOptions resolvedJavacOptions =
         ResolvedJavacOptions.of(buildTimeOptions, resolver, rootPath);
     return JavaExtraParams.of(resolvedJavacOptions);
+  }
+
+  @Override
+  public CompileStepsBuilderFactory createStepsBuilderFactory(CDParams params) {
+    return new JavaCDStepsBuilderFactory(this, params);
   }
 
   @Override

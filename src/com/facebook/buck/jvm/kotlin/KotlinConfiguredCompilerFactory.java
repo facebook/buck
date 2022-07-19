@@ -28,7 +28,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.core.HasJavaAbi;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -79,7 +79,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
-  public CompileToJarStepFactory<KotlinExtraParams> configure(
+  public BaseCompileToJarStepFactory<KotlinExtraParams> configure(
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,

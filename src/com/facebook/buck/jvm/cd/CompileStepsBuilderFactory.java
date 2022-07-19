@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.cd;
 
+import com.facebook.buck.jvm.cd.params.CDParams;
+
 /** Factory that creates {@link CompileStepsBuilder} instances */
 public interface CompileStepsBuilderFactory {
 
@@ -24,4 +26,13 @@ public interface CompileStepsBuilderFactory {
 
   /** Creates an appropriate {@link AbiStepsBuilder} instance */
   AbiStepsBuilder getAbiBuilder();
+
+  /**
+   * Interface for creating builder factories. This abstraction is necessary so that JVM languages
+   * that support compiler daemons can build steps that issue work to the daemon, while languages
+   * that don't can build steps that run in the main buck process.
+   */
+  interface Creator {
+    CompileStepsBuilderFactory createStepsBuilderFactory(CDParams params);
+  }
 }

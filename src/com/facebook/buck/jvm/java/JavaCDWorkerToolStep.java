@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd;
+package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cd.model.java.BuildJavaCommand;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
@@ -22,7 +22,6 @@ import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.jvm.cd.params.CDParams;
-import com.facebook.buck.jvm.java.JavaCDWorkerStepUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
 import com.facebook.buck.worker.WorkerProcessPool;

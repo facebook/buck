@@ -41,7 +41,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.cd.AbiStepsBuilder;
-import com.facebook.buck.jvm.cd.CompileStepsBuilderFactory;
 import com.facebook.buck.jvm.cd.params.CDParams;
 import com.facebook.buck.jvm.cd.params.RulesCDParams;
 import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
@@ -50,10 +49,10 @@ import com.facebook.buck.jvm.cd.serialization.java.CompilerOutputPathsValueSeria
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
+import com.facebook.buck.jvm.core.FilesystemParamsUtils;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateSourceAbi.SourceAbiBuildable;
-import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
@@ -138,7 +137,11 @@ public class CalculateSourceAbi
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      AbiStepsBuilder stepsBuilder = getCompileStepsBuilderFactory(filesystem).getAbiBuilder();
+      AbiStepsBuilder stepsBuilder =
+          jarBuildStepsFactory
+              .getConfiguredCompiler()
+              .createStepsBuilderFactory(CDParams.of(cdParams, filesystem))
+              .getAbiBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
           filesystem,
@@ -243,15 +246,6 @@ public class CalculateSourceAbi
               RelPathSerializer.toResourceMap(basePipeliningCommand.getResourcesMapList()));
 
       return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
-    }
-
-    private CompileStepsBuilderFactory getCompileStepsBuilderFactory(ProjectFilesystem filesystem) {
-      return JavaCompileStepsBuilderFactoryCreator.createFactory(
-          jarBuildStepsFactory.getConfiguredCompiler(), createCDParams(filesystem));
-    }
-
-    private CDParams createCDParams(ProjectFilesystem filesystem) {
-      return CDParams.of(cdParams, filesystem);
     }
 
     public boolean supportsCompilationDaemon() {

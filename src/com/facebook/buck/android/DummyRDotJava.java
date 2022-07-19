@@ -41,13 +41,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
+import com.facebook.buck.jvm.core.FilesystemParamsUtils;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -343,7 +343,7 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   @VisibleForTesting
-  CompileToJarStepFactory<?> getCompileStepFactory() {
+  BaseCompileToJarStepFactory<?> getCompileStepFactory() {
     return compileStepFactory;
   }
 }

@@ -85,7 +85,6 @@ class DefaultAbiStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
             isRequiredForSourceOnlyAbi,
             compilerOutputPathsValue.getByType(buildTargetValue.getType()));
 
-    Class<T> extraParamsType = configuredCompiler.getExtraParamsType();
     configuredCompiler.createCompileToJarStep(
         filesystemParams,
         buildTargetValue,
@@ -98,6 +97,6 @@ class DefaultAbiStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
         cellToPathMappings,
         resourcesMap,
         resolvedJavac,
-        extraParamsType.cast(extraParams));
+        configuredCompiler.castExtraParams(extraParams));
   }
 }

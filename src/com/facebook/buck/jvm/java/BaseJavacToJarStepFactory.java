@@ -30,14 +30,14 @@ import com.google.common.collect.ImmutableMap;
  * Java implementation of compile to jar steps factory that doesn't depend on internal build graph
  * datastructures, and only knows how to create compile steps.
  */
-public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraParams> {
+public class BaseJavacToJarStepFactory extends BaseCompileToJarStepFactory<JavaExtraParams> {
   public BaseJavacToJarStepFactory(boolean hasAnnotationProcessing, boolean withDownwardApi) {
     super(hasAnnotationProcessing, withDownwardApi);
   }
 
   @Override
-  public Class<JavaExtraParams> getExtraParamsType() {
-    return JavaExtraParams.class;
+  public JavaExtraParams castExtraParams(ExtraParams extraParams) {
+    return (JavaExtraParams) extraParams;
   }
 
   @Override

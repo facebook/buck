@@ -31,9 +31,9 @@ import com.facebook.buck.io.file.FileExtensionMatcher;
 import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.BuildContextAwareCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -71,7 +71,7 @@ public class ScalacToJarStepFactory extends BuildContextAwareCompileToJarStepFac
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClassPath,
       boolean withDownwardApi) {
-    super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
+    super(BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
     this.javacOptions = javacOptions;
     this.scalac = scalac;
     this.configCompilerFlags = configCompilerFlags;

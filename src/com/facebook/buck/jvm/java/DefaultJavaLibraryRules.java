@@ -610,7 +610,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  CompileToJarStepFactory<?> getConfiguredCompiler() {
+  BaseCompileToJarStepFactory<?> getConfiguredCompiler() {
     return getConfiguredCompilerFactory()
         .configure(
             getArgs(),
@@ -628,7 +628,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  CompileToJarStepFactory<?> getConfiguredCompilerForSourceOnlyAbi(
+  BaseCompileToJarStepFactory<?> getConfiguredCompilerForSourceOnlyAbi(
       SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     return getConfiguredCompilerFactory()
         .configure(

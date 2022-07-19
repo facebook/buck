@@ -24,8 +24,8 @@ import com.facebook.buck.core.filesystems.AbsPath;
  * access to the BuildContext to produce their steps.
  */
 public abstract class BuildContextAwareCompileToJarStepFactory
-    extends CompileToJarStepFactory<BuildContextAwareExtraParams>
-    implements CompileToJarStepFactory.CreatesExtraParams<BuildContextAwareExtraParams> {
+    extends BaseCompileToJarStepFactory<BuildContextAwareExtraParams>
+    implements BaseCompileToJarStepFactory.CreatesExtraParams<BuildContextAwareExtraParams> {
 
   protected BuildContextAwareCompileToJarStepFactory(
       boolean hasAnnotationProcessing, boolean withDownwardApi) {
@@ -33,8 +33,8 @@ public abstract class BuildContextAwareCompileToJarStepFactory
   }
 
   @Override
-  public Class<BuildContextAwareExtraParams> getExtraParamsType() {
-    return BuildContextAwareExtraParams.class;
+  public BuildContextAwareExtraParams castExtraParams(ExtraParams extraParams) {
+    return (BuildContextAwareExtraParams) extraParams;
   }
 
   @Override

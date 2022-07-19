@@ -64,4 +64,7 @@ java_library_with_plugins(
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jsr:jsr305",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/jvm/cd:cd",
+    ],
 )

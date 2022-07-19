@@ -56,6 +56,7 @@ import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.DefaultBaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
+import com.facebook.buck.jvm.core.FilesystemParamsUtils;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
@@ -91,7 +92,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   @CustomFieldBehavior(DefaultFieldSerialization.class)
   private final BuildTarget libraryTarget;
 
-  @AddToRuleKey private final CompileToJarStepFactory<T> configuredCompiler;
+  @AddToRuleKey private final BaseCompileToJarStepFactory<T> configuredCompiler;
 
   @AddToRuleKey private final Javac javac;
 
@@ -123,7 +124,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   /** Creates {@link JarBuildStepsFactory} */
   public static <T extends CompileToJarStepFactory.ExtraParams> JarBuildStepsFactory<T> of(
       BuildTarget libraryTarget,
-      CompileToJarStepFactory<T> configuredCompiler,
+      BaseCompileToJarStepFactory<T> configuredCompiler,
       Javac javac,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
@@ -279,7 +280,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   private JarBuildStepsFactory(
       BuildTarget libraryTarget,
-      CompileToJarStepFactory<T> configuredCompiler,
+      BaseCompileToJarStepFactory<T> configuredCompiler,
       Javac javac,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
@@ -777,7 +778,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     return configuredCompiler.hasAnnotationProcessing();
   }
 
-  public CompileToJarStepFactory<T> getConfiguredCompiler() {
+  public BaseCompileToJarStepFactory<T> getConfiguredCompiler() {
     return configuredCompiler;
   }
 

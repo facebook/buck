@@ -39,6 +39,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.core.FilesystemParamsUtils;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.args.SourcePathArg;

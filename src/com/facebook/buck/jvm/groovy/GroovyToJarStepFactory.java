@@ -25,9 +25,9 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.BuildContextAwareCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -53,7 +53,7 @@ class GroovyToJarStepFactory extends BuildContextAwareCompileToJarStepFactory {
       Optional<ImmutableList<String>> extraArguments,
       JavacOptions javacOptions,
       boolean withDownwardApi) {
-    super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
+    super(BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
     this.javacOptions = javacOptions;
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;

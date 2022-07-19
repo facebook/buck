@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd;
+package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cd.model.java.AbiJarCommand;
 import com.facebook.buck.cd.model.java.BaseCommandParams;
@@ -41,8 +41,6 @@ import com.facebook.buck.jvm.cd.serialization.java.JavaAbiInfoSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacSerializer;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.java.DaemonJavacToJarStepFactory;
-import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;

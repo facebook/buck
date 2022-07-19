@@ -25,10 +25,10 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.core.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
@@ -119,7 +119,6 @@ class DefaultLibraryStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
         MakeCleanDirectoryIsolatedStep.of(
             compilerOutputPathsValue.getByType(buildTargetValue.getType()).getWorkingDirectory()));
 
-    Class<T> extraParamsType = configuredCompiler.getExtraParamsType();
     configuredCompiler.createCompileToJarStep(
         filesystemParams,
         buildTargetValue,
@@ -132,7 +131,7 @@ class DefaultLibraryStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
         cellToPathMappings,
         resourcesMap,
         resolvedJavac,
-        extraParamsType.cast(extraParams));
+        configuredCompiler.castExtraParams(extraParams));
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         FilesystemParamsUtils.getIgnoredPaths(filesystemParams),

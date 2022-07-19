@@ -40,13 +40,14 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.BuildTargetValueExtraParams;
+import com.facebook.buck.jvm.core.FilesystemParamsUtils;
+import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -93,7 +94,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /** Factory that creates Kotlin related compile build steps. */
-public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtraParams>
+public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory<KotlinExtraParams>
     implements CompileToJarStepFactory.CreatesExtraParams<KotlinExtraParams> {
 
   private static final String PLUGIN = "-P";
@@ -163,7 +164,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       boolean shouldGenerateAnnotationProcessingStats,
       ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings,
       boolean verifySourceOnlyAbiConstraints) {
-    super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
+    super(BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
     this.javacOptions = javacOptions;
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
@@ -181,8 +182,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
   }
 
   @Override
-  public Class<KotlinExtraParams> getExtraParamsType() {
-    return KotlinExtraParams.class;
+  public KotlinExtraParams castExtraParams(ExtraParams extraParams) {
+    return (KotlinExtraParams) extraParams;
   }
 
   @Override

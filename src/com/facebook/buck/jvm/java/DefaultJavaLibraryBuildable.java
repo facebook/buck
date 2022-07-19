@@ -46,7 +46,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.cd.CompileStepsBuilderFactory;
 import com.facebook.buck.jvm.cd.JavaLibraryRules;
 import com.facebook.buck.jvm.cd.LibraryStepsBuilder;
 import com.facebook.buck.jvm.cd.params.CDParams;
@@ -55,7 +54,7 @@ import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.CompilerOutputPathsValueSerializer;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
+import com.facebook.buck.jvm.core.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -188,9 +187,11 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
 
-    CompileStepsBuilderFactory compileStepsBuilderFactory =
-        getJavaCompileStepsBuilderFactory(filesystem);
-    LibraryStepsBuilder stepsBuilder = compileStepsBuilderFactory.getLibraryBuilder();
+    LibraryStepsBuilder stepsBuilder =
+        jarBuildStepsFactory
+            .getConfiguredCompiler()
+            .createStepsBuilderFactory(CDParams.of(cdParams, filesystem))
+            .getLibraryBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
         buildContext,
@@ -204,12 +205,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         buildContext, filesystem, outputPathResolver, stepsBuilder);
 
     return stepsBuilder.build(buildContext.getEventBus());
-  }
-
-  private CompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
-      ProjectFilesystem projectFilesystem) {
-    return JavaCompileStepsBuilderFactoryCreator.createFactory(
-        jarBuildStepsFactory.getConfiguredCompiler(), createCDParams(projectFilesystem));
   }
 
   @Override
@@ -397,10 +392,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     stepsBuilder.add(new MakeMissingOutputsStep(rootOutput, pathToClassHashes, annotationsPath));
 
     return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
-  }
-
-  private CDParams createCDParams(ProjectFilesystem filesystem) {
-    return CDParams.of(cdParams, filesystem);
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(

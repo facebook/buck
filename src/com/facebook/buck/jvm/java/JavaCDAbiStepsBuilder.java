@@ -14,50 +14,43 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd;
+package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.cd.model.java.AbiJarCommand;
 import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
 import com.facebook.buck.cd.model.java.BaseJarCommand;
 import com.facebook.buck.cd.model.java.FilesystemParams;
-import com.facebook.buck.cd.model.java.LibraryJarBaseCommand;
-import com.facebook.buck.cd.model.java.LibraryJarCommand;
-import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.jvm.cd.LibraryStepsBuilder;
+import com.facebook.buck.jvm.cd.AbiStepsBuilder;
 import com.facebook.buck.jvm.cd.params.CDParams;
-import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
+import com.facebook.buck.jvm.cd.serialization.java.JarParametersSerializer;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
-import com.facebook.buck.jvm.java.JarParameters;
-import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
-/** JavaCD implementation of {@link LibraryStepsBuilder} interface. */
-public class JavaCDLibraryStepsBuilder extends JavaCDStepsBuilderBase<LibraryJarCommand>
-    implements LibraryStepsBuilder {
+/** Default implementation of {@link AbiStepsBuilder} */
+class JavaCDAbiStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
+    implements AbiStepsBuilder {
 
-  private final LibraryJarCommand.Builder commandBuilder = LibraryJarCommand.newBuilder();
+  private final AbiJarCommand.Builder builder = AbiJarCommand.newBuilder();
 
-  public JavaCDLibraryStepsBuilder(
+  JavaCDAbiStepsBuilder(
       boolean hasAnnotationProcessing,
       SpoolMode spoolMode,
       boolean withDownwardApi,
       CDParams cdParams) {
-    super(hasAnnotationProcessing, spoolMode, withDownwardApi, Type.LIBRARY_JAR, cdParams);
+    super(hasAnnotationProcessing, spoolMode, withDownwardApi, Type.ABI_JAR, cdParams);
   }
 
   @Override
-  public void addBuildStepsForLibrary(
+  public void addBuildStepsForAbi(
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
@@ -68,16 +61,15 @@ public class JavaCDLibraryStepsBuilder extends JavaCDStepsBuilderBase<LibraryJar
       BuildableContext buildableContext,
       BuildTargetValue buildTargetValue,
       CompilerOutputPathsValue compilerOutputPathsValue,
-      RelPath pathToClassHashes,
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<RelPath> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbsPath buildCellRootPath,
-      Optional<RelPath> pathToClasses,
       ResolvedJavac resolvedJavac,
       CompileToJarStepFactory.ExtraParams extraParams) {
 
@@ -102,13 +94,10 @@ public class JavaCDLibraryStepsBuilder extends JavaCDStepsBuilderBase<LibraryJar
             resolvedJavac,
             extraParams);
 
-    commandBuilder.setBaseJarCommand(baseJarCommand);
-
-    LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
-        commandBuilder.getLibraryJarBaseCommandBuilder();
-    pathToClasses
-        .map(RelPathSerializer::serialize)
-        .ifPresent(libraryJarBaseCommandBuilder::setPathToClasses);
+    builder.setBaseJarCommand(baseJarCommand);
+    if (abiJarParameters != null) {
+      builder.setAbiJarParameters(JarParametersSerializer.serialize(abiJarParameters));
+    }
 
     recordArtifacts(
         buildableContext,
@@ -116,32 +105,11 @@ public class JavaCDLibraryStepsBuilder extends JavaCDStepsBuilderBase<LibraryJar
         buildTargetValue,
         javaSrcs,
         trackClassUsage,
-        libraryJarParameters);
+        abiJarParameters);
   }
 
   @Override
-  public void addUnusedDependencyStep(
-      UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
-      String buildTargetFullyQualifiedName) {
-    LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
-        commandBuilder.getLibraryJarBaseCommandBuilder();
-    libraryJarBaseCommandBuilder.setUnusedDependenciesParams(unusedDependenciesParams);
-  }
-
-  @Override
-  public void addMakeMissingOutputsStep(
-      RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath) {
-    LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
-        commandBuilder.getLibraryJarBaseCommandBuilder();
-    libraryJarBaseCommandBuilder.setRootOutput(RelPathSerializer.serialize(rootOutput));
-    libraryJarBaseCommandBuilder.setPathToClassHashes(
-        RelPathSerializer.serialize(pathToClassHashes));
-    libraryJarBaseCommandBuilder.setAnnotationsPath(RelPathSerializer.serialize(annotationsPath));
-  }
-
-  @Override
-  protected LibraryJarCommand buildCommand() {
-    return commandBuilder.build();
+  protected AbiJarCommand buildCommand() {
+    return builder.build();
   }
 }

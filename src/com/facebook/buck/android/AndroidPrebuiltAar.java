@@ -30,7 +30,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.cd.params.RulesCDParams;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.PrebuiltJar;
@@ -59,7 +59,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       SourcePath nativeLibsDirectory,
       PrebuiltJar prebuiltJar,
       UnzipAar unzipAar,
-      CompileToJarStepFactory<?> configuredCompiler,
+      BaseCompileToJarStepFactory<?> configuredCompiler,
       Javac javac,
       Iterable<BuildRule> exportedDeps,
       boolean requiredForSourceAbi,

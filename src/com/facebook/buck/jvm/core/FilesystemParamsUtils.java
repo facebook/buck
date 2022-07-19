@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.cd.model.java.FilesystemParams;
 import com.facebook.buck.core.filesystems.AbsPath;

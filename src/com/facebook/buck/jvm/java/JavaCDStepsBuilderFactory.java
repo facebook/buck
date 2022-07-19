@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd;
+package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
 import com.facebook.buck.jvm.cd.AbiStepsBuilder;
@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.cd.CompileStepsBuilder;
 import com.facebook.buck.jvm.cd.CompileStepsBuilderFactory;
 import com.facebook.buck.jvm.cd.LibraryStepsBuilder;
 import com.facebook.buck.jvm.cd.params.CDParams;
-import com.facebook.buck.jvm.java.DaemonJavacToJarStepFactory;
 
 /** Factory that creates {@link CompileStepsBuilder } builders instances applicable to JavaCD. */
 public class JavaCDStepsBuilderFactory implements CompileStepsBuilderFactory {

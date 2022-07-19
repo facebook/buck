@@ -32,7 +32,7 @@ public abstract class ConfiguredCompilerFactory {
 
   // TODO(jkeljo): args is not actually Nullable in all subclasses, but it is also not
   // straightforward to create a safe "empty" default value. Find a fix.
-  public abstract CompileToJarStepFactory<?> configure(
+  public abstract BaseCompileToJarStepFactory<?> configure(
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
