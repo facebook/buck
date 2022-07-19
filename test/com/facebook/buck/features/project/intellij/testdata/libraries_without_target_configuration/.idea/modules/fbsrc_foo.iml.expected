@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../fbsrc/foo">
+      <sourceFolder url="file://$MODULE_DIR$/../../fbsrc/foo" isTestSource="false" packagePrefix="foo" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library" scope="COMPILE" >
+      <library name="//fbsrc/lib:foolib">
+        <CLASSES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/lib/foolib.jar!/" />
+        </CLASSES>
+        <JAVADOC>
+                <root url="http://foolib.com/foolib/" />
+        </JAVADOC>
+        <SOURCES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/lib/foolib-src.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="//fbsrc/lib:lib" scope="COMPILE" level="project" />
+  </component>
+</module>

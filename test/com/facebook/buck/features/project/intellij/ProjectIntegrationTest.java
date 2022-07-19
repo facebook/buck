@@ -665,6 +665,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("alias_rules");
   }
 
+  @Test
+  public void testLibrariesWithoutTargetConfiguration() throws IOException {
+    runBuckProjectAndVerify("libraries_without_target_configuration");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws IOException {
 
@@ -672,13 +677,6 @@ public class ProjectIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, folderWithTestData, temporaryFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-
-    // The buck config is overridden here as part of getting rid of target-configuration in
-    // libraries. With this, all the existing integration tests will pass, regardless of the config.
-    TestDataHelper.overrideBuckconfig(
-        workspace,
-        ImmutableMap.of(
-            "intellij", ImmutableMap.of("target_configuration_in_libraries_enabled", "true")));
 
     ProcessResult result =
         workspace.runBuckCommand(Lists.asList("project", commandArgs).toArray(new String[0]));

@@ -1,0 +1,7 @@
+platform(
+    name = "foo-plat",
+)
+
+platform(
+    name = "bar-plat",
+)

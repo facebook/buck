@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="//fbsrc/lib:generated">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/buck-out/<CONFIG_HASH>/gen/fbsrc/lib/lib__generated__output/generated.jar!/" />
+      <root url="jar://$PROJECT_DIR$/buck-out/<CONFIG_HASH>/gen/fbsrc/lib/lib__generated__output/generated.jar!/" />
+      <root url="jar://$PROJECT_DIR$/buck-out/<CONFIG_HASH>/gen/fbsrc/lib/lib__generated__output/generated.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

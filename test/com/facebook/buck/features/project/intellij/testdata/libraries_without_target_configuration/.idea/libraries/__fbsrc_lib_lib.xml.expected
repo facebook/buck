@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="//fbsrc/lib:lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/fbsrc/lib/lib.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="http://lib.com/lib/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/fbsrc/lib/lib-src.jar!/" />
+    </SOURCES>
+  </library>
+</component>

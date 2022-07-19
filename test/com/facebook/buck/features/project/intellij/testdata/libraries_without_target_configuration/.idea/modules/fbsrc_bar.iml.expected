@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../fbsrc/bar">
+      <sourceFolder url="file://$MODULE_DIR$/../../fbsrc/bar" isTestSource="false" packagePrefix="bar" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="//fbsrc/lib:barlib" scope="COMPILE" level="project" />
+    <orderEntry type="module" module-name="fbsrc_lib" scope="COMPILE" />
+    <orderEntry type="library" name="//fbsrc/lib:generated" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="//fbsrc/lib:lib" scope="COMPILE" level="project" />
+  </component>
+</module>

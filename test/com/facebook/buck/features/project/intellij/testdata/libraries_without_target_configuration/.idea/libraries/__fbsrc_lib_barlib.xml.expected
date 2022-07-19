@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="//fbsrc/lib:barlib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/fbsrc/lib/barlib.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="http://barlib.com/barlib/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/fbsrc/lib/barlib-src.jar!/" />
+    </SOURCES>
+  </library>
+</component>

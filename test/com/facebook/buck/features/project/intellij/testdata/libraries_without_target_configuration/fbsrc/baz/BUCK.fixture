@@ -1,0 +1,11 @@
+java_library(
+    name = "baz",
+    srcs = [
+        "Baz.java",
+    ],
+    deps = [
+        "//fbsrc/lib:lib",
+        "//fbsrc/lib:barlib",
+    ],
+    default_target_platform = "//config:bar-plat",
+)

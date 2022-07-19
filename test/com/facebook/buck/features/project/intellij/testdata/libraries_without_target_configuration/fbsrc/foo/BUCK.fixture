@@ -1,0 +1,11 @@
+java_library(
+    name = "foo",
+    srcs = [
+        "Foo.java",
+    ],
+    deps = [
+        "//fbsrc/lib:lib",
+        "//fbsrc/lib:foolib",
+    ],
+    default_target_platform = "//config:foo-plat",
+)

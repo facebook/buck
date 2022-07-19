@@ -1,0 +1,11 @@
+java_library(
+    name = "bax",
+    srcs = [
+        "Bax.java",
+    ],
+    deps = [
+        "//fbsrc/lib:lib",
+        "//fbsrc/lib:generated",
+    ],
+    default_target_platform = "//config:foo-plat",
+)

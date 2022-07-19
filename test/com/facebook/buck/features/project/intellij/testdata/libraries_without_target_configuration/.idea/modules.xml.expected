@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fbsrc_bar.iml" filepath="$PROJECT_DIR$/.idea/modules/fbsrc_bar.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fbsrc_bax.iml" filepath="$PROJECT_DIR$/.idea/modules/fbsrc_bax.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fbsrc_baz.iml" filepath="$PROJECT_DIR$/.idea/modules/fbsrc_baz.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fbsrc_foo.iml" filepath="$PROJECT_DIR$/.idea/modules/fbsrc_foo.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fbsrc_lib.iml" filepath="$PROJECT_DIR$/.idea/modules/fbsrc_lib.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/project_root.iml" filepath="$PROJECT_DIR$/.idea/modules/project_root.iml" />
+    </modules>
+  </component>
+</project>

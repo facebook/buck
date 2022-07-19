@@ -1,0 +1,41 @@
+prebuilt_jar(
+    name = "lib",
+    binary_jar = "lib.jar",
+    javadoc_url = "http://lib.com/lib/",
+    source_jar = "lib-src.jar",
+    visibility = ["PUBLIC"],
+)
+
+
+prebuilt_jar(
+    name = "foolib",
+    binary_jar = "foolib.jar",
+    javadoc_url = "http://foolib.com/foolib/",
+    source_jar = "foolib-src.jar",
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "barlib",
+    binary_jar = "barlib.jar",
+    javadoc_url = "http://barlib.com/barlib/",
+    source_jar = "barlib-src.jar",
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "generated_java",
+    out = "Generated.java",
+    cmd = "echo class Generated {} > $OUT",
+)
+
+java_library(
+    name = "generated",
+    srcs = [":generated_java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":generated_java",
+    ],
+)

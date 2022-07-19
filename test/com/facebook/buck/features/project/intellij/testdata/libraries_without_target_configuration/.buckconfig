@@ -1,0 +1,7 @@
+[project]
+  ignore = buck-out
+  ide = intellij
+[intellij]
+  module_library_threshold = 1
+  use_module_library = true
+  target_configuration_in_libraries_enabled = false
