@@ -87,13 +87,16 @@ public class WatchmanTestDaemon implements Closeable {
     AbsPath watchmanLogFile = watchmanBaseDir.resolve("log");
     AbsPath watchmanPidFile = watchmanBaseDir.resolve("pid");
 
+    Path watchmanUnixListener = watchmanBaseDir.resolve("sock").getPath();
+    Random random = new Random();
+    UUID uuid = new UUID(random.nextLong(), random.nextLong());
+    Path watchmanNamedPipe = Paths.get("\\\\.\\pipe\\watchman-test-" + uuid);
+
     Path watchmanSockFile;
     if (Platform.detect() == Platform.WINDOWS) {
-      Random random = new Random(0);
-      UUID uuid = new UUID(random.nextLong(), random.nextLong());
-      watchmanSockFile = Paths.get("\\\\.\\pipe\\watchman-test-" + uuid);
+      watchmanSockFile = watchmanNamedPipe;
     } else {
-      watchmanSockFile = watchmanBaseDir.resolve("sock").getPath();
+      watchmanSockFile = watchmanUnixListener;
     }
 
     AbsPath watchmanStateFile = watchmanBaseDir.resolve("state");
@@ -110,13 +113,16 @@ public class WatchmanTestDaemon implements Closeable {
       watchmanEnvBuilder.put("USERPROFILE", systemEnv.get("USERPROFILE"));
     }
 
+    // On Unix --named-pipe-path is ignored but on Windows we need to set both
+    // --named-pipe-path and --unix-listener-path.
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .addCommand(
                 watchmanExe.toString(),
                 "--foreground",
                 "--log-level=2",
-                "--sockname=" + watchmanSockFile,
+                "--unix-listener-path=" + watchmanUnixListener,
+                "--named-pipe-path=" + watchmanNamedPipe,
                 "--logfile=" + watchmanLogFile,
                 "--statefile=" + watchmanStateFile,
                 "--pidfile=" + watchmanPidFile)

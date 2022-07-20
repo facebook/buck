@@ -108,7 +108,8 @@ public class WindowsNamedPipe implements Transport {
       IntByReference written = new IntByReference();
       // wait = true, blocked until data is written
       if (!api.GetOverlappedResult(pipeHandle, lpOverlapped, written, true)) {
-        throw new IOException("GetOverlappedResult() failed for write operation");
+        throw new IOException(
+            "GetOverlappedResult() failed for write operation. Error: " + api.GetLastError());
       }
       if (written.getValue() != len) {
         throw new IOException("WriteFile() wrote less bytes than requested");
@@ -137,7 +138,8 @@ public class WindowsNamedPipe implements Transport {
       IntByReference read = new IntByReference();
       // wait = true, blocked until data is read
       if (!api.GetOverlappedResult(pipeHandle, lpOverlapped, read, true)) {
-        throw new IOException("GetOverlappedResult() failed for read operation");
+        throw new IOException(
+            "GetOverlappedResult() failed for read operation. Error: " + api.GetLastError());
       }
       int readValue = read.getValue();
       if (readValue == 0) {
