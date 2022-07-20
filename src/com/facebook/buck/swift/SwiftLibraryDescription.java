@@ -843,6 +843,10 @@ public class SwiftLibraryDescription
         buildTarget.withFlavors(
             cxxPlatform.getFlavor(), AppleFlavors.SWIFT_UNDERLYING_MODULE_FLAVOR);
     String moduleName = getModuleName(buildTarget, args);
+    HeaderSymlinkTreeWithModuleMap headerSymlinkTreeRule =
+        (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(underlyingModuleCompileTarget);
+    ExplicitModuleInput moduleMapInput =
+        ExplicitModuleInput.of(headerSymlinkTreeRule.getSourcePathToOutput());
 
     BuildRule underlyingModuleCompileRule =
         graphBuilder.computeIfAbsent(
@@ -864,18 +868,12 @@ public class SwiftLibraryDescription
                     false,
                     moduleName,
                     false,
-                    ExplicitModuleInput.of(
-                        graphBuilder
-                            .requireRule(underlyingModuleCompileTarget)
-                            .getSourcePathToOutput()),
+                    moduleMapInput,
                     clangModuleDependencies,
-                    ImmutableSet.of()));
+                    ImmutableSet.copyOf(headerSymlinkTreeRule.getLinks().values())));
     return ImmutableList.of(
         ExplicitModuleOutput.ofClangModule(
-            moduleName,
-            ExplicitModuleInput.of(
-                graphBuilder.requireRule(underlyingModuleCompileTarget).getSourcePathToOutput()),
-            underlyingModuleCompileRule.getSourcePathToOutput()));
+            moduleName, moduleMapInput, underlyingModuleCompileRule.getSourcePathToOutput()));
   }
 
   private static Iterable<HeaderSymlinkTreeWithModuleMap> getModuleMapDepRules(
