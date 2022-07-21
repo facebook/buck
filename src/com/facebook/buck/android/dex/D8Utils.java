@@ -23,6 +23,7 @@ import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.utils.InternalOptions;
+import com.facebook.buck.util.zip.ZipScrubber;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
@@ -138,6 +139,8 @@ public class D8Utils {
       ByteStreams.copy(secondaryDexInputStream, jarOutputStream);
       jarOutputStream.closeEntry();
     }
+
+    ZipScrubber.scrubZip(secondaryDexOutputJarPath);
 
     writeSecondaryDexMetadata(secondaryDexOutputJarPath, secondaryDexOutputJarMetadataPath);
   }

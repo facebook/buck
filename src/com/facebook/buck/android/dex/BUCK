@@ -13,6 +13,7 @@ buck_java_library(
     deps = [
         "//third-party/java/d8:d8",
         "//third-party/java/guava:guava",
+        "//src/com/facebook/buck/util/zip:zip",
     ],
 )
 
