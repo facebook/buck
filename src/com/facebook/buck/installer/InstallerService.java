@@ -19,6 +19,8 @@ package com.facebook.buck.installer;
 import com.facebook.buck.install.model.ErrorDetail;
 import com.facebook.buck.install.model.FileReady;
 import com.facebook.buck.install.model.FileResponse;
+import com.facebook.buck.install.model.InstallInfo;
+import com.facebook.buck.install.model.InstallResponse;
 import com.facebook.buck.install.model.InstallerGrpc;
 import com.facebook.buck.install.model.Shutdown;
 import com.facebook.buck.install.model.ShutdownResponse;
@@ -26,6 +28,9 @@ import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.stub.StreamObserver;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger; // NOPMD
 
 /** Installer Service that implements {@code install.proto} */
@@ -34,12 +39,23 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
   private final InstallCommand installer;
   private final SettableFuture<Unit> installFinished;
   private final Logger logger;
+  private final Map<InstallId, Set<String>> installIdToFilesMap = new HashMap<>();
 
   public InstallerService(
       InstallCommand installer, SettableFuture<Unit> installFinished, Logger logger) {
     this.installer = installer;
     this.installFinished = installFinished;
     this.logger = logger;
+  }
+
+  @Override
+  public void install(InstallInfo request, StreamObserver<InstallResponse> responseObserver) {
+    InstallId installId = InstallId.of(request.getInstallId());
+    Map<String, String> filesMap = request.getFilesMap();
+    installIdToFilesMap.put(installId, filesMap.keySet());
+    responseObserver.onNext(
+        InstallResponse.newBuilder().setInstallId(installId.getValue()).build());
+    responseObserver.onCompleted();
   }
 
   @Override
