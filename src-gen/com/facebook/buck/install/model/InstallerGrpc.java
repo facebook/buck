@@ -29,6 +29,43 @@ public final class InstallerGrpc {
 
   // Static method descriptors that strictly reflect the proto.
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  @java.lang.Deprecated // Use {@link #getInstallMethod()} instead. 
+  public static final io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo,
+      com.facebook.buck.install.model.InstallResponse> METHOD_INSTALL = getInstallMethodHelper();
+
+  private static volatile io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo,
+      com.facebook.buck.install.model.InstallResponse> getInstallMethod;
+
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  public static io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo,
+      com.facebook.buck.install.model.InstallResponse> getInstallMethod() {
+    return getInstallMethodHelper();
+  }
+
+  private static io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo,
+      com.facebook.buck.install.model.InstallResponse> getInstallMethodHelper() {
+    io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo, com.facebook.buck.install.model.InstallResponse> getInstallMethod;
+    if ((getInstallMethod = InstallerGrpc.getInstallMethod) == null) {
+      synchronized (InstallerGrpc.class) {
+        if ((getInstallMethod = InstallerGrpc.getInstallMethod) == null) {
+          InstallerGrpc.getInstallMethod = getInstallMethod = 
+              io.grpc.MethodDescriptor.<com.facebook.buck.install.model.InstallInfo, com.facebook.buck.install.model.InstallResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(
+                  "install.Installer", "Install"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.facebook.buck.install.model.InstallInfo.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.facebook.buck.install.model.InstallResponse.getDefaultInstance()))
+                  .setSchemaDescriptor(new InstallerMethodDescriptorSupplier("Install"))
+                  .build();
+          }
+        }
+     }
+     return getInstallMethod;
+  }
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   @java.lang.Deprecated // Use {@link #getFileReadyRequestMethod()} instead. 
   public static final io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReady,
       com.facebook.buck.install.model.FileResponse> METHOD_FILE_READY_REQUEST = getFileReadyRequestMethodHelper();
@@ -132,6 +169,13 @@ public final class InstallerGrpc {
 
     /**
      */
+    public void install(com.facebook.buck.install.model.InstallInfo request,
+        io.grpc.stub.StreamObserver<com.facebook.buck.install.model.InstallResponse> responseObserver) {
+      asyncUnimplementedUnaryCall(getInstallMethodHelper(), responseObserver);
+    }
+
+    /**
+     */
     public void fileReadyRequest(com.facebook.buck.install.model.FileReady request,
         io.grpc.stub.StreamObserver<com.facebook.buck.install.model.FileResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getFileReadyRequestMethodHelper(), responseObserver);
@@ -146,6 +190,13 @@ public final class InstallerGrpc {
 
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
+          .addMethod(
+            getInstallMethodHelper(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                com.facebook.buck.install.model.InstallInfo,
+                com.facebook.buck.install.model.InstallResponse>(
+                  this, METHODID_INSTALL)))
           .addMethod(
             getFileReadyRequestMethodHelper(),
             asyncUnaryCall(
@@ -180,6 +231,14 @@ public final class InstallerGrpc {
     protected InstallerStub build(io.grpc.Channel channel,
         io.grpc.CallOptions callOptions) {
       return new InstallerStub(channel, callOptions);
+    }
+
+    /**
+     */
+    public void install(com.facebook.buck.install.model.InstallInfo request,
+        io.grpc.stub.StreamObserver<com.facebook.buck.install.model.InstallResponse> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(getInstallMethodHelper(), getCallOptions()), request, responseObserver);
     }
 
     /**
@@ -219,6 +278,13 @@ public final class InstallerGrpc {
 
     /**
      */
+    public com.facebook.buck.install.model.InstallResponse install(com.facebook.buck.install.model.InstallInfo request) {
+      return blockingUnaryCall(
+          getChannel(), getInstallMethodHelper(), getCallOptions(), request);
+    }
+
+    /**
+     */
     public com.facebook.buck.install.model.FileResponse fileReadyRequest(com.facebook.buck.install.model.FileReady request) {
       return blockingUnaryCall(
           getChannel(), getFileReadyRequestMethodHelper(), getCallOptions(), request);
@@ -252,6 +318,14 @@ public final class InstallerGrpc {
 
     /**
      */
+    public com.google.common.util.concurrent.ListenableFuture<com.facebook.buck.install.model.InstallResponse> install(
+        com.facebook.buck.install.model.InstallInfo request) {
+      return futureUnaryCall(
+          getChannel().newCall(getInstallMethodHelper(), getCallOptions()), request);
+    }
+
+    /**
+     */
     public com.google.common.util.concurrent.ListenableFuture<com.facebook.buck.install.model.FileResponse> fileReadyRequest(
         com.facebook.buck.install.model.FileReady request) {
       return futureUnaryCall(
@@ -267,8 +341,9 @@ public final class InstallerGrpc {
     }
   }
 
-  private static final int METHODID_FILE_READY_REQUEST = 0;
-  private static final int METHODID_SHUTDOWN_SERVER = 1;
+  private static final int METHODID_INSTALL = 0;
+  private static final int METHODID_FILE_READY_REQUEST = 1;
+  private static final int METHODID_SHUTDOWN_SERVER = 2;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -287,6 +362,10 @@ public final class InstallerGrpc {
     @java.lang.SuppressWarnings("unchecked")
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
+        case METHODID_INSTALL:
+          serviceImpl.install((com.facebook.buck.install.model.InstallInfo) request,
+              (io.grpc.stub.StreamObserver<com.facebook.buck.install.model.InstallResponse>) responseObserver);
+          break;
         case METHODID_FILE_READY_REQUEST:
           serviceImpl.fileReadyRequest((com.facebook.buck.install.model.FileReady) request,
               (io.grpc.stub.StreamObserver<com.facebook.buck.install.model.FileResponse>) responseObserver);
@@ -356,6 +435,7 @@ public final class InstallerGrpc {
         if (result == null) {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
               .setSchemaDescriptor(new InstallerFileDescriptorSupplier())
+              .addMethod(getInstallMethodHelper())
               .addMethod(getFileReadyRequestMethodHelper())
               .addMethod(getShutdownServerMethodHelper())
               .build();

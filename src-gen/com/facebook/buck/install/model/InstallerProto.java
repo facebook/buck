@@ -17,6 +17,21 @@ public final class InstallerProto {
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_install_InstallInfo_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_install_InstallInfo_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_install_InstallInfo_FilesEntry_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_install_InstallInfo_FilesEntry_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_install_InstallResponse_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_install_InstallResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_install_FileReady_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -51,17 +66,23 @@ public final class InstallerProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\035installer/proto/install.proto\022\007install" +
-      "\"5\n\tFileReady\022\014\n\004name\030\001 \001(\t\022\014\n\004sha1\030\002 \001(" +
-      "\t\022\014\n\004path\030\003 \001(\t\"V\n\014FileResponse\022\014\n\004name\030" +
-      "\001 \001(\t\022\014\n\004path\030\002 \001(\t\022*\n\014error_detail\030\003 \001(" +
-      "\0132\024.install.ErrorDetail\"\036\n\013ErrorDetail\022\017" +
-      "\n\007message\030\001 \001(\t\"\n\n\010Shutdown\"\022\n\020ShutdownR" +
-      "esponse2\216\001\n\tInstaller\022?\n\020FileReadyReques" +
-      "t\022\022.install.FileReady\032\025.install.FileResp" +
-      "onse\"\000\022@\n\016ShutdownServer\022\021.install.Shutd" +
-      "own\032\031.install.ShutdownResponse\"\000B3\n\037com." +
-      "facebook.buck.install.modelB\016InstallerPr" +
-      "otoP\001b\006proto3"
+      "\"\177\n\013InstallInfo\022\022\n\ninstall_id\030\001 \001(\t\022.\n\005f" +
+      "iles\030\002 \003(\0132\037.install.InstallInfo.FilesEn" +
+      "try\032,\n\nFilesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030" +
+      "\002 \001(\t:\0028\001\"%\n\017InstallResponse\022\022\n\ninstall_" +
+      "id\030\001 \001(\t\"5\n\tFileReady\022\014\n\004name\030\001 \001(\t\022\014\n\004s" +
+      "ha1\030\002 \001(\t\022\014\n\004path\030\003 \001(\t\"V\n\014FileResponse\022" +
+      "\014\n\004name\030\001 \001(\t\022\014\n\004path\030\002 \001(\t\022*\n\014error_det" +
+      "ail\030\003 \001(\0132\024.install.ErrorDetail\"\036\n\013Error" +
+      "Detail\022\017\n\007message\030\001 \001(\t\"\n\n\010Shutdown\"\022\n\020S" +
+      "hutdownResponse2\313\001\n\tInstaller\022;\n\007Install" +
+      "\022\024.install.InstallInfo\032\030.install.Install" +
+      "Response\"\000\022?\n\020FileReadyRequest\022\022.install" +
+      ".FileReady\032\025.install.FileResponse\"\000\022@\n\016S" +
+      "hutdownServer\022\021.install.Shutdown\032\031.insta" +
+      "ll.ShutdownResponse\"\000B3\n\037com.facebook.bu" +
+      "ck.install.modelB\016InstallerProtoP\001b\006prot" +
+      "o3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -75,32 +96,50 @@ public final class InstallerProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_install_FileReady_descriptor =
+    internal_static_install_InstallInfo_descriptor =
       getDescriptor().getMessageTypes().get(0);
+    internal_static_install_InstallInfo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_install_InstallInfo_descriptor,
+        new java.lang.String[] { "InstallId", "Files", });
+    internal_static_install_InstallInfo_FilesEntry_descriptor =
+      internal_static_install_InstallInfo_descriptor.getNestedTypes().get(0);
+    internal_static_install_InstallInfo_FilesEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_install_InstallInfo_FilesEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
+    internal_static_install_InstallResponse_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_install_InstallResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_install_InstallResponse_descriptor,
+        new java.lang.String[] { "InstallId", });
+    internal_static_install_FileReady_descriptor =
+      getDescriptor().getMessageTypes().get(2);
     internal_static_install_FileReady_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_install_FileReady_descriptor,
         new java.lang.String[] { "Name", "Sha1", "Path", });
     internal_static_install_FileResponse_descriptor =
-      getDescriptor().getMessageTypes().get(1);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_install_FileResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_install_FileResponse_descriptor,
         new java.lang.String[] { "Name", "Path", "ErrorDetail", });
     internal_static_install_ErrorDetail_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_install_ErrorDetail_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_install_ErrorDetail_descriptor,
         new java.lang.String[] { "Message", });
     internal_static_install_Shutdown_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_install_Shutdown_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_install_Shutdown_descriptor,
         new java.lang.String[] { });
     internal_static_install_ShutdownResponse_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_install_ShutdownResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_install_ShutdownResponse_descriptor,

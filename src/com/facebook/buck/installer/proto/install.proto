@@ -32,8 +32,18 @@ option java_outer_classname = "InstallerProto";
 package install;
 
 service Installer {
-  rpc FileReadyRequest(FileReady) returns (FileResponse) {};
-  rpc ShutdownServer(Shutdown) returns (ShutdownResponse) {};
+    rpc Install(InstallInfo) returns (InstallResponse) {};
+    rpc FileReadyRequest(FileReady) returns (FileResponse) {};
+    rpc ShutdownServer(Shutdown) returns (ShutdownResponse) {};
+}
+
+message InstallInfo{
+    string install_id = 1;
+    map<string, string> files = 2;
+}
+
+message InstallResponse{
+    string install_id = 1;
 }
 
 message FileReady {
