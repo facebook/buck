@@ -17,6 +17,7 @@
 package com.facebook.buck.test;
 
 import com.facebook.buck.android.device.TargetDevice;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.collect.ImmutableMap;
@@ -72,6 +73,9 @@ public abstract class TestRunningOptions {
   public boolean isRunWithDownwardApi() {
     return false;
   }
+
+  /** @return the absolute path of the project ie. the root of all cells. */
+  public abstract Optional<AbsPath> getSuperProjectRootPath();
 
   public abstract Optional<String> getPathToXmlTestOutput();
 

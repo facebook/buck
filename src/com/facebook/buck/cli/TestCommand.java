@@ -284,6 +284,7 @@ public class TestCommand extends BuildCommand {
             .setShufflingTests(isShufflingTests)
             .setPathToXmlTestOutput(Optional.ofNullable(pathToXmlTestOutput))
             .setPathToJavaAgent(Optional.ofNullable(pathToJavaAgent))
+            .setSuperProjectRootPath(params.getCells().getSuperRootPath())
             .setCoverageReportFormats(coverageFormats)
             .setCoverageReportTitle(coverageReportTitle)
             .setEnvironmentOverrides(environmentOverrides)
