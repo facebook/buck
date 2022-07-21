@@ -25,12 +25,14 @@ import com.facebook.buck.install.model.InstallerGrpc;
 import com.facebook.buck.install.model.Shutdown;
 import com.facebook.buck.install.model.ShutdownResponse;
 import com.facebook.buck.util.types.Unit;
+import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.stub.StreamObserver;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
 /** Installer Service that implements {@code install.proto} */
@@ -50,16 +52,34 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
 
   @Override
   public void install(InstallInfo request, StreamObserver<InstallResponse> responseObserver) {
+    try {
+      InstallResponse response = handleInstallRequest(request);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      handleException(responseObserver, e);
+    }
+  }
+
+  private InstallResponse handleInstallRequest(InstallInfo request) {
     InstallId installId = InstallId.of(request.getInstallId());
     Map<String, String> filesMap = request.getFilesMap();
     installIdToFilesMap.put(installId, filesMap.keySet());
-    responseObserver.onNext(
-        InstallResponse.newBuilder().setInstallId(installId.getValue()).build());
-    responseObserver.onCompleted();
+    return InstallResponse.newBuilder().setInstallId(installId.getValue()).build();
   }
 
   @Override
   public void fileReadyRequest(FileReady request, StreamObserver<FileResponse> responseObserver) {
+    try {
+      FileResponse fileResponse = handleFileReadyRequest(request);
+      responseObserver.onNext(fileResponse);
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      handleException(responseObserver, e);
+    }
+  }
+
+  private FileResponse handleFileReadyRequest(FileReady request) {
     InstallId installId = InstallId.of(request.getInstallId());
     String name = request.getName();
     String path = request.getPath();
@@ -72,16 +92,32 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
       fileResponseBuilder.setErrorDetail(
           ErrorDetail.newBuilder().setMessage(installResult.getErrorMessage()).build());
     }
-    responseObserver.onNext(fileResponseBuilder.build());
-    responseObserver.onCompleted();
+    return fileResponseBuilder.build();
   }
 
   @Override
   public void shutdownServer(Shutdown request, StreamObserver<ShutdownResponse> responseObserver) {
+    try {
+      handleShutdownServerRequest(request, responseObserver);
+    } catch (Exception e) {
+      handleException(responseObserver, e);
+    }
+  }
+
+  private void handleShutdownServerRequest(
+      Shutdown request, StreamObserver<ShutdownResponse> responseObserver) {
     InstallId installId = InstallId.of(request.getInstallId());
     responseObserver.onNext(
         ShutdownResponse.newBuilder().setInstallId(installId.getValue()).build());
     responseObserver.onCompleted();
     installFinished.set(Unit.UNIT);
+  }
+
+  private void handleException(StreamObserver<?> responseObserver, Exception e) {
+    logger.log(Level.SEVERE, "Unexpected exception", e);
+    responseObserver.onError(
+        io.grpc.Status.INTERNAL
+            .withDescription("Unexpected exception: " + Throwables.getStackTraceAsString(e))
+            .asException());
   }
 }
