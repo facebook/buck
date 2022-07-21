@@ -48,6 +48,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
@@ -281,7 +282,16 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setCwd(getProjectFilesystem().getRootPath().getPath())
             .setTarget(getBuildTarget())
             .setLabels(getLabels())
-            .setContacts(getContacts());
+            .setContacts(getContacts())
+            .setPackageSuperProjectRelativePath(
+                options
+                    .getSuperProjectRootPath()
+                    .map(
+                        projectRootPath ->
+                            TestRunningUtils.getSuperProjectRelativePath(
+                                projectRootPath,
+                                buildContext.getCellPathResolver(),
+                                getBuildTarget().getCellRelativeBasePath())));
 
     AbsPath resolvedTestBundleDirectory =
         buildContext
