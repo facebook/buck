@@ -18,6 +18,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private FileResponse() {
+    installId_ = "";
     name_ = "";
     path_ = "";
   }
@@ -49,16 +50,22 @@ private static final long serialVersionUID = 0L;
           case 10: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            name_ = s;
+            installId_ = s;
             break;
           }
           case 18: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            path_ = s;
+            name_ = s;
             break;
           }
           case 26: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            path_ = s;
+            break;
+          }
+          case 34: {
             com.facebook.buck.install.model.ErrorDetail.Builder subBuilder = null;
             if (errorDetail_ != null) {
               subBuilder = errorDetail_.toBuilder();
@@ -103,10 +110,44 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.install.model.FileResponse.class, com.facebook.buck.install.model.FileResponse.Builder.class);
   }
 
-  public static final int NAME_FIELD_NUMBER = 1;
+  public static final int INSTALL_ID_FIELD_NUMBER = 1;
+  private volatile java.lang.Object installId_;
+  /**
+   * <code>string install_id = 1;</code>
+   */
+  public java.lang.String getInstallId() {
+    java.lang.Object ref = installId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      installId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string install_id = 1;</code>
+   */
+  public com.google.protobuf.ByteString
+      getInstallIdBytes() {
+    java.lang.Object ref = installId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      installId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object name_;
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 2;</code>
    */
   public java.lang.String getName() {
     java.lang.Object ref = name_;
@@ -121,7 +162,7 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 2;</code>
    */
   public com.google.protobuf.ByteString
       getNameBytes() {
@@ -137,10 +178,10 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int PATH_FIELD_NUMBER = 2;
+  public static final int PATH_FIELD_NUMBER = 3;
   private volatile java.lang.Object path_;
   /**
-   * <code>string path = 2;</code>
+   * <code>string path = 3;</code>
    */
   public java.lang.String getPath() {
     java.lang.Object ref = path_;
@@ -155,7 +196,7 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <code>string path = 2;</code>
+   * <code>string path = 3;</code>
    */
   public com.google.protobuf.ByteString
       getPathBytes() {
@@ -171,22 +212,22 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int ERROR_DETAIL_FIELD_NUMBER = 3;
+  public static final int ERROR_DETAIL_FIELD_NUMBER = 4;
   private com.facebook.buck.install.model.ErrorDetail errorDetail_;
   /**
-   * <code>.install.ErrorDetail error_detail = 3;</code>
+   * <code>.install.ErrorDetail error_detail = 4;</code>
    */
   public boolean hasErrorDetail() {
     return errorDetail_ != null;
   }
   /**
-   * <code>.install.ErrorDetail error_detail = 3;</code>
+   * <code>.install.ErrorDetail error_detail = 4;</code>
    */
   public com.facebook.buck.install.model.ErrorDetail getErrorDetail() {
     return errorDetail_ == null ? com.facebook.buck.install.model.ErrorDetail.getDefaultInstance() : errorDetail_;
   }
   /**
-   * <code>.install.ErrorDetail error_detail = 3;</code>
+   * <code>.install.ErrorDetail error_detail = 4;</code>
    */
   public com.facebook.buck.install.model.ErrorDetailOrBuilder getErrorDetailOrBuilder() {
     return getErrorDetail();
@@ -206,14 +247,17 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
+    if (!getInstallIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, installId_);
+    }
     if (!getNameBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, name_);
     }
     if (!getPathBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, path_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, path_);
     }
     if (errorDetail_ != null) {
-      output.writeMessage(3, getErrorDetail());
+      output.writeMessage(4, getErrorDetail());
     }
     unknownFields.writeTo(output);
   }
@@ -224,15 +268,18 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
+    if (!getInstallIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, installId_);
+    }
     if (!getNameBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, name_);
     }
     if (!getPathBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, path_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, path_);
     }
     if (errorDetail_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(3, getErrorDetail());
+        .computeMessageSize(4, getErrorDetail());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -249,6 +296,8 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.install.model.FileResponse other = (com.facebook.buck.install.model.FileResponse) obj;
 
+    if (!getInstallId()
+        .equals(other.getInstallId())) return false;
     if (!getName()
         .equals(other.getName())) return false;
     if (!getPath()
@@ -269,6 +318,8 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    hash = (37 * hash) + INSTALL_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getInstallId().hashCode();
     hash = (37 * hash) + NAME_FIELD_NUMBER;
     hash = (53 * hash) + getName().hashCode();
     hash = (37 * hash) + PATH_FIELD_NUMBER;
@@ -410,6 +461,8 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      installId_ = "";
+
       name_ = "";
 
       path_ = "";
@@ -446,6 +499,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.facebook.buck.install.model.FileResponse buildPartial() {
       com.facebook.buck.install.model.FileResponse result = new com.facebook.buck.install.model.FileResponse(this);
+      result.installId_ = installId_;
       result.name_ = name_;
       result.path_ = path_;
       if (errorDetailBuilder_ == null) {
@@ -501,6 +555,10 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(com.facebook.buck.install.model.FileResponse other) {
       if (other == com.facebook.buck.install.model.FileResponse.getDefaultInstance()) return this;
+      if (!other.getInstallId().isEmpty()) {
+        installId_ = other.installId_;
+        onChanged();
+      }
       if (!other.getName().isEmpty()) {
         name_ = other.name_;
         onChanged();
@@ -541,9 +599,78 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
+    private java.lang.Object installId_ = "";
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public java.lang.String getInstallId() {
+      java.lang.Object ref = installId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        installId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getInstallIdBytes() {
+      java.lang.Object ref = installId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        installId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public Builder setInstallId(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      installId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public Builder clearInstallId() {
+      
+      installId_ = getDefaultInstance().getInstallId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public Builder setInstallIdBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      installId_ = value;
+      onChanged();
+      return this;
+    }
+
     private java.lang.Object name_ = "";
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -558,7 +685,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public com.google.protobuf.ByteString
         getNameBytes() {
@@ -574,7 +701,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public Builder setName(
         java.lang.String value) {
@@ -587,7 +714,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public Builder clearName() {
       
@@ -596,7 +723,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public Builder setNameBytes(
         com.google.protobuf.ByteString value) {
@@ -612,7 +739,7 @@ private static final long serialVersionUID = 0L;
 
     private java.lang.Object path_ = "";
     /**
-     * <code>string path = 2;</code>
+     * <code>string path = 3;</code>
      */
     public java.lang.String getPath() {
       java.lang.Object ref = path_;
@@ -627,7 +754,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string path = 2;</code>
+     * <code>string path = 3;</code>
      */
     public com.google.protobuf.ByteString
         getPathBytes() {
@@ -643,7 +770,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string path = 2;</code>
+     * <code>string path = 3;</code>
      */
     public Builder setPath(
         java.lang.String value) {
@@ -656,7 +783,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string path = 2;</code>
+     * <code>string path = 3;</code>
      */
     public Builder clearPath() {
       
@@ -665,7 +792,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string path = 2;</code>
+     * <code>string path = 3;</code>
      */
     public Builder setPathBytes(
         com.google.protobuf.ByteString value) {
@@ -683,13 +810,13 @@ private static final long serialVersionUID = 0L;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.install.model.ErrorDetail, com.facebook.buck.install.model.ErrorDetail.Builder, com.facebook.buck.install.model.ErrorDetailOrBuilder> errorDetailBuilder_;
     /**
-     * <code>.install.ErrorDetail error_detail = 3;</code>
+     * <code>.install.ErrorDetail error_detail = 4;</code>
      */
     public boolean hasErrorDetail() {
       return errorDetailBuilder_ != null || errorDetail_ != null;
     }
     /**
-     * <code>.install.ErrorDetail error_detail = 3;</code>
+     * <code>.install.ErrorDetail error_detail = 4;</code>
      */
     public com.facebook.buck.install.model.ErrorDetail getErrorDetail() {
       if (errorDetailBuilder_ == null) {
@@ -699,7 +826,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.install.ErrorDetail error_detail = 3;</code>
+     * <code>.install.ErrorDetail error_detail = 4;</code>
      */
     public Builder setErrorDetail(com.facebook.buck.install.model.ErrorDetail value) {
       if (errorDetailBuilder_ == null) {
@@ -715,7 +842,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.install.ErrorDetail error_detail = 3;</code>
+     * <code>.install.ErrorDetail error_detail = 4;</code>
      */
     public Builder setErrorDetail(
         com.facebook.buck.install.model.ErrorDetail.Builder builderForValue) {
@@ -729,7 +856,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.install.ErrorDetail error_detail = 3;</code>
+     * <code>.install.ErrorDetail error_detail = 4;</code>
      */
     public Builder mergeErrorDetail(com.facebook.buck.install.model.ErrorDetail value) {
       if (errorDetailBuilder_ == null) {
@@ -747,7 +874,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.install.ErrorDetail error_detail = 3;</code>
+     * <code>.install.ErrorDetail error_detail = 4;</code>
      */
     public Builder clearErrorDetail() {
       if (errorDetailBuilder_ == null) {
@@ -761,7 +888,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.install.ErrorDetail error_detail = 3;</code>
+     * <code>.install.ErrorDetail error_detail = 4;</code>
      */
     public com.facebook.buck.install.model.ErrorDetail.Builder getErrorDetailBuilder() {
       
@@ -769,7 +896,7 @@ private static final long serialVersionUID = 0L;
       return getErrorDetailFieldBuilder().getBuilder();
     }
     /**
-     * <code>.install.ErrorDetail error_detail = 3;</code>
+     * <code>.install.ErrorDetail error_detail = 4;</code>
      */
     public com.facebook.buck.install.model.ErrorDetailOrBuilder getErrorDetailOrBuilder() {
       if (errorDetailBuilder_ != null) {
@@ -780,7 +907,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.install.ErrorDetail error_detail = 3;</code>
+     * <code>.install.ErrorDetail error_detail = 4;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.install.model.ErrorDetail, com.facebook.buck.install.model.ErrorDetail.Builder, com.facebook.buck.install.model.ErrorDetailOrBuilder> 

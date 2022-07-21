@@ -47,15 +47,17 @@ message InstallResponse{
 }
 
 message FileReady {
-  string name = 1;
-  string sha1 = 2;
-  string path = 3;
+  string install_id = 1;
+  string name = 2;
+  string sha1 = 3;
+  string path = 4;
 }
 
 message FileResponse {
-  string name = 1;
-  string path = 2;
-  ErrorDetail error_detail = 3;
+  string install_id = 1;
+  string name = 2;
+  string path = 3;
+  ErrorDetail error_detail = 4;
 }
 
 message ErrorDetail {
@@ -63,6 +65,10 @@ message ErrorDetail {
     string message = 1;
 }
 
-message Shutdown {}
+message Shutdown {
+    string install_id = 1;
+}
 
-message ShutdownResponse {}
+message ShutdownResponse {
+    string install_id = 1;
+}

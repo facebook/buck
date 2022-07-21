@@ -18,6 +18,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private FileReady() {
+    installId_ = "";
     name_ = "";
     sha1_ = "";
     path_ = "";
@@ -50,16 +51,22 @@ private static final long serialVersionUID = 0L;
           case 10: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            name_ = s;
+            installId_ = s;
             break;
           }
           case 18: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            sha1_ = s;
+            name_ = s;
             break;
           }
           case 26: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            sha1_ = s;
+            break;
+          }
+          case 34: {
             java.lang.String s = input.readStringRequireUtf8();
 
             path_ = s;
@@ -97,10 +104,44 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.install.model.FileReady.class, com.facebook.buck.install.model.FileReady.Builder.class);
   }
 
-  public static final int NAME_FIELD_NUMBER = 1;
+  public static final int INSTALL_ID_FIELD_NUMBER = 1;
+  private volatile java.lang.Object installId_;
+  /**
+   * <code>string install_id = 1;</code>
+   */
+  public java.lang.String getInstallId() {
+    java.lang.Object ref = installId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      installId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string install_id = 1;</code>
+   */
+  public com.google.protobuf.ByteString
+      getInstallIdBytes() {
+    java.lang.Object ref = installId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      installId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int NAME_FIELD_NUMBER = 2;
   private volatile java.lang.Object name_;
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 2;</code>
    */
   public java.lang.String getName() {
     java.lang.Object ref = name_;
@@ -115,7 +156,7 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 2;</code>
    */
   public com.google.protobuf.ByteString
       getNameBytes() {
@@ -131,10 +172,10 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int SHA1_FIELD_NUMBER = 2;
+  public static final int SHA1_FIELD_NUMBER = 3;
   private volatile java.lang.Object sha1_;
   /**
-   * <code>string sha1 = 2;</code>
+   * <code>string sha1 = 3;</code>
    */
   public java.lang.String getSha1() {
     java.lang.Object ref = sha1_;
@@ -149,7 +190,7 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <code>string sha1 = 2;</code>
+   * <code>string sha1 = 3;</code>
    */
   public com.google.protobuf.ByteString
       getSha1Bytes() {
@@ -165,10 +206,10 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int PATH_FIELD_NUMBER = 3;
+  public static final int PATH_FIELD_NUMBER = 4;
   private volatile java.lang.Object path_;
   /**
-   * <code>string path = 3;</code>
+   * <code>string path = 4;</code>
    */
   public java.lang.String getPath() {
     java.lang.Object ref = path_;
@@ -183,7 +224,7 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <code>string path = 3;</code>
+   * <code>string path = 4;</code>
    */
   public com.google.protobuf.ByteString
       getPathBytes() {
@@ -213,14 +254,17 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
+    if (!getInstallIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, installId_);
+    }
     if (!getNameBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, name_);
     }
     if (!getSha1Bytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, sha1_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, sha1_);
     }
     if (!getPathBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, path_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, path_);
     }
     unknownFields.writeTo(output);
   }
@@ -231,14 +275,17 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
+    if (!getInstallIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, installId_);
+    }
     if (!getNameBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, name_);
     }
     if (!getSha1Bytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, sha1_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, sha1_);
     }
     if (!getPathBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, path_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, path_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -255,6 +302,8 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.install.model.FileReady other = (com.facebook.buck.install.model.FileReady) obj;
 
+    if (!getInstallId()
+        .equals(other.getInstallId())) return false;
     if (!getName()
         .equals(other.getName())) return false;
     if (!getSha1()
@@ -272,6 +321,8 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    hash = (37 * hash) + INSTALL_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getInstallId().hashCode();
     hash = (37 * hash) + NAME_FIELD_NUMBER;
     hash = (53 * hash) + getName().hashCode();
     hash = (37 * hash) + SHA1_FIELD_NUMBER;
@@ -411,6 +462,8 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      installId_ = "";
+
       name_ = "";
 
       sha1_ = "";
@@ -443,6 +496,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.facebook.buck.install.model.FileReady buildPartial() {
       com.facebook.buck.install.model.FileReady result = new com.facebook.buck.install.model.FileReady(this);
+      result.installId_ = installId_;
       result.name_ = name_;
       result.sha1_ = sha1_;
       result.path_ = path_;
@@ -494,6 +548,10 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(com.facebook.buck.install.model.FileReady other) {
       if (other == com.facebook.buck.install.model.FileReady.getDefaultInstance()) return this;
+      if (!other.getInstallId().isEmpty()) {
+        installId_ = other.installId_;
+        onChanged();
+      }
       if (!other.getName().isEmpty()) {
         name_ = other.name_;
         onChanged();
@@ -535,9 +593,78 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
+    private java.lang.Object installId_ = "";
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public java.lang.String getInstallId() {
+      java.lang.Object ref = installId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        installId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getInstallIdBytes() {
+      java.lang.Object ref = installId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        installId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public Builder setInstallId(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      installId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public Builder clearInstallId() {
+      
+      installId_ = getDefaultInstance().getInstallId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string install_id = 1;</code>
+     */
+    public Builder setInstallIdBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      installId_ = value;
+      onChanged();
+      return this;
+    }
+
     private java.lang.Object name_ = "";
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public java.lang.String getName() {
       java.lang.Object ref = name_;
@@ -552,7 +679,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public com.google.protobuf.ByteString
         getNameBytes() {
@@ -568,7 +695,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public Builder setName(
         java.lang.String value) {
@@ -581,7 +708,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public Builder clearName() {
       
@@ -590,7 +717,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      */
     public Builder setNameBytes(
         com.google.protobuf.ByteString value) {
@@ -606,7 +733,7 @@ private static final long serialVersionUID = 0L;
 
     private java.lang.Object sha1_ = "";
     /**
-     * <code>string sha1 = 2;</code>
+     * <code>string sha1 = 3;</code>
      */
     public java.lang.String getSha1() {
       java.lang.Object ref = sha1_;
@@ -621,7 +748,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string sha1 = 2;</code>
+     * <code>string sha1 = 3;</code>
      */
     public com.google.protobuf.ByteString
         getSha1Bytes() {
@@ -637,7 +764,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string sha1 = 2;</code>
+     * <code>string sha1 = 3;</code>
      */
     public Builder setSha1(
         java.lang.String value) {
@@ -650,7 +777,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string sha1 = 2;</code>
+     * <code>string sha1 = 3;</code>
      */
     public Builder clearSha1() {
       
@@ -659,7 +786,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string sha1 = 2;</code>
+     * <code>string sha1 = 3;</code>
      */
     public Builder setSha1Bytes(
         com.google.protobuf.ByteString value) {
@@ -675,7 +802,7 @@ private static final long serialVersionUID = 0L;
 
     private java.lang.Object path_ = "";
     /**
-     * <code>string path = 3;</code>
+     * <code>string path = 4;</code>
      */
     public java.lang.String getPath() {
       java.lang.Object ref = path_;
@@ -690,7 +817,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string path = 3;</code>
+     * <code>string path = 4;</code>
      */
     public com.google.protobuf.ByteString
         getPathBytes() {
@@ -706,7 +833,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string path = 3;</code>
+     * <code>string path = 4;</code>
      */
     public Builder setPath(
         java.lang.String value) {
@@ -719,7 +846,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string path = 3;</code>
+     * <code>string path = 4;</code>
      */
     public Builder clearPath() {
       
@@ -728,7 +855,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string path = 3;</code>
+     * <code>string path = 4;</code>
      */
     public Builder setPathBytes(
         com.google.protobuf.ByteString value) {

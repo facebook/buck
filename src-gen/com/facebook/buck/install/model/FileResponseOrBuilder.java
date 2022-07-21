@@ -10,35 +10,45 @@ public interface FileResponseOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>string name = 1;</code>
+   * <code>string install_id = 1;</code>
+   */
+  java.lang.String getInstallId();
+  /**
+   * <code>string install_id = 1;</code>
+   */
+  com.google.protobuf.ByteString
+      getInstallIdBytes();
+
+  /**
+   * <code>string name = 2;</code>
    */
   java.lang.String getName();
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 2;</code>
    */
   com.google.protobuf.ByteString
       getNameBytes();
 
   /**
-   * <code>string path = 2;</code>
+   * <code>string path = 3;</code>
    */
   java.lang.String getPath();
   /**
-   * <code>string path = 2;</code>
+   * <code>string path = 3;</code>
    */
   com.google.protobuf.ByteString
       getPathBytes();
 
   /**
-   * <code>.install.ErrorDetail error_detail = 3;</code>
+   * <code>.install.ErrorDetail error_detail = 4;</code>
    */
   boolean hasErrorDetail();
   /**
-   * <code>.install.ErrorDetail error_detail = 3;</code>
+   * <code>.install.ErrorDetail error_detail = 4;</code>
    */
   com.facebook.buck.install.model.ErrorDetail getErrorDetail();
   /**
-   * <code>.install.ErrorDetail error_detail = 3;</code>
+   * <code>.install.ErrorDetail error_detail = 4;</code>
    */
   com.facebook.buck.install.model.ErrorDetailOrBuilder getErrorDetailOrBuilder();
 }

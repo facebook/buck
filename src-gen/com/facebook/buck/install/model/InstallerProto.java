@@ -70,12 +70,14 @@ public final class InstallerProto {
       "iles\030\002 \003(\0132\037.install.InstallInfo.FilesEn" +
       "try\032,\n\nFilesEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030" +
       "\002 \001(\t:\0028\001\"%\n\017InstallResponse\022\022\n\ninstall_" +
-      "id\030\001 \001(\t\"5\n\tFileReady\022\014\n\004name\030\001 \001(\t\022\014\n\004s" +
-      "ha1\030\002 \001(\t\022\014\n\004path\030\003 \001(\t\"V\n\014FileResponse\022" +
-      "\014\n\004name\030\001 \001(\t\022\014\n\004path\030\002 \001(\t\022*\n\014error_det" +
-      "ail\030\003 \001(\0132\024.install.ErrorDetail\"\036\n\013Error" +
-      "Detail\022\017\n\007message\030\001 \001(\t\"\n\n\010Shutdown\"\022\n\020S" +
-      "hutdownResponse2\313\001\n\tInstaller\022;\n\007Install" +
+      "id\030\001 \001(\t\"I\n\tFileReady\022\022\n\ninstall_id\030\001 \001(" +
+      "\t\022\014\n\004name\030\002 \001(\t\022\014\n\004sha1\030\003 \001(\t\022\014\n\004path\030\004 " +
+      "\001(\t\"j\n\014FileResponse\022\022\n\ninstall_id\030\001 \001(\t\022" +
+      "\014\n\004name\030\002 \001(\t\022\014\n\004path\030\003 \001(\t\022*\n\014error_det" +
+      "ail\030\004 \001(\0132\024.install.ErrorDetail\"\036\n\013Error" +
+      "Detail\022\017\n\007message\030\001 \001(\t\"\036\n\010Shutdown\022\022\n\ni" +
+      "nstall_id\030\001 \001(\t\"&\n\020ShutdownResponse\022\022\n\ni" +
+      "nstall_id\030\001 \001(\t2\313\001\n\tInstaller\022;\n\007Install" +
       "\022\024.install.InstallInfo\032\030.install.Install" +
       "Response\"\000\022?\n\020FileReadyRequest\022\022.install" +
       ".FileReady\032\025.install.FileResponse\"\000\022@\n\016S" +
@@ -119,13 +121,13 @@ public final class InstallerProto {
     internal_static_install_FileReady_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_install_FileReady_descriptor,
-        new java.lang.String[] { "Name", "Sha1", "Path", });
+        new java.lang.String[] { "InstallId", "Name", "Sha1", "Path", });
     internal_static_install_FileResponse_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_install_FileResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_install_FileResponse_descriptor,
-        new java.lang.String[] { "Name", "Path", "ErrorDetail", });
+        new java.lang.String[] { "InstallId", "Name", "Path", "ErrorDetail", });
     internal_static_install_ErrorDetail_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_install_ErrorDetail_fieldAccessorTable = new
@@ -137,13 +139,13 @@ public final class InstallerProto {
     internal_static_install_Shutdown_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_install_Shutdown_descriptor,
-        new java.lang.String[] { });
+        new java.lang.String[] { "InstallId", });
     internal_static_install_ShutdownResponse_descriptor =
       getDescriptor().getMessageTypes().get(6);
     internal_static_install_ShutdownResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_install_ShutdownResponse_descriptor,
-        new java.lang.String[] { });
+        new java.lang.String[] { "InstallId", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

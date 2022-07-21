@@ -10,31 +10,41 @@ public interface FileReadyOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>string name = 1;</code>
+   * <code>string install_id = 1;</code>
+   */
+  java.lang.String getInstallId();
+  /**
+   * <code>string install_id = 1;</code>
+   */
+  com.google.protobuf.ByteString
+      getInstallIdBytes();
+
+  /**
+   * <code>string name = 2;</code>
    */
   java.lang.String getName();
   /**
-   * <code>string name = 1;</code>
+   * <code>string name = 2;</code>
    */
   com.google.protobuf.ByteString
       getNameBytes();
 
   /**
-   * <code>string sha1 = 2;</code>
+   * <code>string sha1 = 3;</code>
    */
   java.lang.String getSha1();
   /**
-   * <code>string sha1 = 2;</code>
+   * <code>string sha1 = 3;</code>
    */
   com.google.protobuf.ByteString
       getSha1Bytes();
 
   /**
-   * <code>string path = 3;</code>
+   * <code>string path = 4;</code>
    */
   java.lang.String getPath();
   /**
-   * <code>string path = 3;</code>
+   * <code>string path = 4;</code>
    */
   com.google.protobuf.ByteString
       getPathBytes();

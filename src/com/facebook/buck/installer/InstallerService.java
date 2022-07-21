@@ -60,13 +60,14 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
 
   @Override
   public void fileReadyRequest(FileReady request, StreamObserver<FileResponse> responseObserver) {
+    InstallId installId = InstallId.of(request.getInstallId());
     String name = request.getName();
     String path = request.getPath();
     logger.info(String.format("Received artifact %s located at %s", name, path));
     InstallResult installResult = installer.install(name, Paths.get(path));
 
     FileResponse.Builder fileResponseBuilder =
-        FileResponse.newBuilder().setName(name).setPath(path);
+        FileResponse.newBuilder().setName(name).setPath(path).setInstallId(installId.getValue());
     if (installResult.isError()) {
       fileResponseBuilder.setErrorDetail(
           ErrorDetail.newBuilder().setMessage(installResult.getErrorMessage()).build());
@@ -77,7 +78,9 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
 
   @Override
   public void shutdownServer(Shutdown request, StreamObserver<ShutdownResponse> responseObserver) {
-    responseObserver.onNext(ShutdownResponse.newBuilder().build());
+    InstallId installId = InstallId.of(request.getInstallId());
+    responseObserver.onNext(
+        ShutdownResponse.newBuilder().setInstallId(installId.getValue()).build());
     responseObserver.onCompleted();
     installFinished.set(Unit.UNIT);
   }
