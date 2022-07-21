@@ -52,6 +52,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.util.Memoizer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -380,6 +381,15 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .map(AbsPath::getPath)
                 .collect(ImmutableList.toImmutableList()))
         .setRequiredPaths(requiredPaths)
+        .setPackageSuperProjectRelativePath(
+            testRunningOptions
+                .getSuperProjectRootPath()
+                .map(
+                    projectRootPath ->
+                        TestRunningUtils.getSuperProjectRelativePath(
+                            projectRootPath,
+                            buildContext.getCellPathResolver(),
+                            getBuildTarget().getCellRelativeBasePath())))
         .build();
   }
 
