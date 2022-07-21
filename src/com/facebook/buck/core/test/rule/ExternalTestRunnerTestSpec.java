@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A JSON-serializable structure that gets passed to external test runners.
@@ -83,6 +84,9 @@ public abstract class ExternalTestRunnerTestSpec implements ExternalTestSpec {
    */
   public abstract ImmutableSet<Path> getRequiredPaths();
 
+  /** @return folder path of the package relative to project root. */
+  public abstract Optional<Path> getPackageSuperProjectRelativePath();
+
   @Override
   public void serialize(JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
       throws IOException {
@@ -108,6 +112,10 @@ public abstract class ExternalTestRunnerTestSpec implements ExternalTestSpec {
         "labels",
         getLabels().stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
     jsonGenerator.writeObjectField("contacts", getContacts());
+    if (getPackageSuperProjectRelativePath().isPresent()) {
+      jsonGenerator.writeObjectField(
+          "package_project_relative_path", getPackageSuperProjectRelativePath().get());
+    }
     jsonGenerator.writeEndObject();
   }
 

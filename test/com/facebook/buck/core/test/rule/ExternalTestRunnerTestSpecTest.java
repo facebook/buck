@@ -32,16 +32,20 @@ public class ExternalTestRunnerTestSpecTest {
   @Test
   public void serializeToJson() throws IOException {
     Path cwd = Paths.get("/some/directory");
+    Path packageSuperProjectRelativePath = Paths.get("/path/to/target");
     String result =
         ObjectMappers.WRITER.writeValueAsString(
             ExternalTestRunnerTestSpec.builder()
                 .setCwd(cwd)
                 .setTarget(BuildTargetFactory.newInstance("//:target"))
+                .setPackageSuperProjectRelativePath(packageSuperProjectRelativePath)
                 .setType("custom")
                 .setLabels(ImmutableList.of("label"))
                 .setRequiredPaths(ImmutableList.of(Paths.get("foo")))
                 .build());
     String jsonEncodedCwd = ObjectMappers.WRITER.writeValueAsString(cwd.toAbsolutePath());
+    String jsonEncodedPackageSuperProjectRelativePath =
+        ObjectMappers.WRITER.writeValueAsString(packageSuperProjectRelativePath);
     assertThat(
         result,
         Matchers.equalTo(
@@ -54,6 +58,9 @@ public class ExternalTestRunnerTestSpecTest {
                 + "\"env\":{},"
                 + "\"required_paths\":[\"foo\"],"
                 + "\"labels\":[\"label\"],"
-                + "\"contacts\":[]}"));
+                + "\"contacts\":[],"
+                + "\"package_project_relative_path\":"
+                + jsonEncodedPackageSuperProjectRelativePath
+                + "}"));
   }
 }
