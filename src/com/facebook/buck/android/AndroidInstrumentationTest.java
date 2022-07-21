@@ -52,6 +52,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.annotations.VisibleForTesting;
@@ -518,6 +519,15 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         .setContacts(getContacts())
         .setRequiredPaths(requiredPaths)
         .setEnv(envs)
+        .setPackageSuperProjectRelativePath(
+            testRunningOptions
+                .getSuperProjectRootPath()
+                .map(
+                    projectRootPath ->
+                        TestRunningUtils.getSuperProjectRelativePath(
+                            projectRootPath,
+                            buildContext.getCellPathResolver(),
+                            getBuildTarget().getCellRelativeBasePath())))
         .build();
   }
 
