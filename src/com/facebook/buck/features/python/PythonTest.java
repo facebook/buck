@@ -49,6 +49,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.util.Memoizer;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.stream.RichStream;
@@ -325,6 +326,15 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             requiredPaths.stream()
                 .map(PathWrapper::getPath)
                 .collect(ImmutableList.toImmutableList()))
+        .setPackageSuperProjectRelativePath(
+            testRunningOptions
+                .getSuperProjectRootPath()
+                .map(
+                    projectRootPath ->
+                        TestRunningUtils.getSuperProjectRelativePath(
+                            projectRootPath,
+                            buildContext.getCellPathResolver(),
+                            getBuildTarget().getCellRelativeBasePath())))
         .build();
   }
 
