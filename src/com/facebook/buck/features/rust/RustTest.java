@@ -47,6 +47,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -188,6 +189,15 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .setEnv(getEnv(sourcePathResolver))
+        .setPackageSuperProjectRelativePath(
+            testRunningOptions
+                .getSuperProjectRootPath()
+                .map(
+                    projectRootPath ->
+                        TestRunningUtils.getSuperProjectRelativePath(
+                            projectRootPath,
+                            buildContext.getCellPathResolver(),
+                            getBuildTarget().getCellRelativeBasePath())))
         .build();
   }
 
