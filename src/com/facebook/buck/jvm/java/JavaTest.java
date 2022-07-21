@@ -59,6 +59,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
@@ -597,6 +598,15 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setEnv(externalJunitStep.getEnvironmentVariables(executionContext.getPlatform()))
         .setLabels(getLabels())
         .setContacts(getContacts())
+        .setPackageSuperProjectRelativePath(
+            options
+                .getSuperProjectRootPath()
+                .map(
+                    projectRootPath ->
+                        TestRunningUtils.getSuperProjectRelativePath(
+                            projectRootPath,
+                            buildContext.getCellPathResolver(),
+                            getBuildTarget().getCellRelativeBasePath())))
         .addAllRequiredPaths(getRuntimeClasspath(buildContext))
         .addAllRequiredPaths(
             includeBootClasspathInRequiredPaths() ? getBootClasspathEntries() : ImmutableSet.of())
