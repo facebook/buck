@@ -471,10 +471,12 @@ public final class ApkBuilder implements IArchiveBuilder {
           if (libs != null) {
             for (File lib : libs) {
               // only consider files that are .so or, if in debug mode, that
-              // are gdbserver executables
+              // are gdbserver executables. Also permit wrap shell scripts (see
+              // https://developer.android.com/ndk/guides/wrap-script).
               if (lib.isFile() &&
                   (PATTERN_NATIVELIB_EXT.matcher(lib.getName()).matches() ||
                       PATTERN_BITCODELIB_EXT.matcher(lib.getName()).matches() ||
+                      SdkConstants.FN_WRAP_SH.equals(lib.getName()) ||
                       (mDebugMode &&
                           SdkConstants.FN_GDBSERVER.equals(
                               lib.getName())))) {
