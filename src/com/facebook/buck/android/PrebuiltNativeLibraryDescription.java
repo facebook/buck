@@ -65,6 +65,7 @@ public class PrebuiltNativeLibraryDescription
             params,
             args.getNativeLibs(),
             args.getIsAsset(),
+            args.getIncludeInMainApk(),
             librarySources);
       } catch (IOException e) {
         throw new HumanReadableException(e, "Error traversing directory %s.", nativeLibsDir.get());
@@ -76,6 +77,7 @@ public class PrebuiltNativeLibraryDescription
           params,
           args.getNativeLibs(),
           args.getIsAsset(),
+          args.getIncludeInMainApk(),
           ImmutableSortedSet.of());
     }
   }
@@ -88,5 +90,10 @@ public class PrebuiltNativeLibraryDescription
     }
 
     SourcePath getNativeLibs();
+
+    @Value.Default
+    default boolean getIncludeInMainApk() {
+      return false;
+    }
   }
 }

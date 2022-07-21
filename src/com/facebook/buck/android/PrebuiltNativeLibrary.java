@@ -62,6 +62,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
     implements NativeLibraryBuildRule, AndroidPackageable {
 
   @AddToRuleKey private final boolean isAsset;
+  @AddToRuleKey private final boolean includeInMainApk;
   @AddToRuleKey private final SourcePath nativeLibsPath;
 
   @SuppressWarnings("PMD.UnusedPrivateField")
@@ -79,6 +80,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
       BuildRuleParams params,
       SourcePath nativeLibsPath,
       boolean isAsset,
+      boolean includeInMainApk,
       ImmutableSortedSet<? extends SourcePath> librarySources) {
     super(buildTarget, projectFilesystem, params);
 
@@ -86,6 +88,7 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
     this.genDirectory =
         BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, "__lib%s");
     this.isAsset = isAsset;
+    this.includeInMainApk = includeInMainApk;
     this.nativeLibsPath = nativeLibsPath;
   }
 
@@ -138,6 +141,9 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
       ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     if (isAsset) {
       collector.addNativeLibAssetsDirectory(
+          getBuildTarget(), ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibraryPath()));
+    } else if (includeInMainApk) {
+      collector.addNativeLibsDirectoryForSystemLoader(
           getBuildTarget(), ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibraryPath()));
     } else {
       collector.addNativeLibsDirectory(
