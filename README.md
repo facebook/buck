@@ -42,4 +42,3 @@ Buck tries to move fast with respect to its internals. However, for user facing 
 License
 -------
 Apache License 2.0
-
