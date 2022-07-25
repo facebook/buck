@@ -64,6 +64,10 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
   private InstallResponse handleInstallRequest(InstallInfo request) {
     InstallId installId = InstallId.of(request.getInstallId());
     Map<String, String> filesMap = request.getFilesMap();
+    logger.info(
+        String.format(
+            "Received install id: %s to files map request info: %s",
+            installId.getValue(), filesMap));
     installIdToFilesMap.put(installId, filesMap.keySet());
     return InstallResponse.newBuilder().setInstallId(installId.getValue()).build();
   }
@@ -83,7 +87,12 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
     InstallId installId = InstallId.of(request.getInstallId());
     String name = request.getName();
     String path = request.getPath();
-    logger.info(String.format("Received artifact %s located at %s", name, path));
+    logger.info(
+        String.format(
+            "Received artifact %s located at %s for install id: %s",
+            name, path, installId.getValue()));
+
+    logger.info("Starting install for file name: " + name);
     InstallResult installResult = installer.install(name, Paths.get(path));
 
     FileResponse.Builder fileResponseBuilder =
@@ -107,6 +116,8 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
   private void handleShutdownServerRequest(
       Shutdown request, StreamObserver<ShutdownResponse> responseObserver) {
     InstallId installId = InstallId.of(request.getInstallId());
+    logger.info(
+        String.format("Received shutting down request for install id: %s", installId.getValue()));
     responseObserver.onNext(
         ShutdownResponse.newBuilder().setInstallId(installId.getValue()).build());
     responseObserver.onCompleted();
