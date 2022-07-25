@@ -4,9 +4,9 @@
 
 package com.facebook.buck.install.model;
 
-@javax.annotation.Generated(value="protoc", comments="annotations:InstallInfoOrBuilder.java.pb.meta")
-public interface InstallInfoOrBuilder extends
-    // @@protoc_insertion_point(interface_extends:install.InstallInfo)
+@javax.annotation.Generated(value="protoc", comments="annotations:InstallInfoRequestOrBuilder.java.pb.meta")
+public interface InstallInfoRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:install.InstallInfoRequest)
     com.google.protobuf.MessageOrBuilder {
 
   /**

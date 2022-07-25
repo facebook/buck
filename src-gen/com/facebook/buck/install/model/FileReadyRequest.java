@@ -5,19 +5,19 @@
 package com.facebook.buck.install.model;
 
 /**
- * Protobuf type {@code install.FileReady}
+ * Protobuf type {@code install.FileReadyRequest}
  */
-@javax.annotation.Generated(value="protoc", comments="annotations:FileReady.java.pb.meta")
-public  final class FileReady extends
+@javax.annotation.Generated(value="protoc", comments="annotations:FileReadyRequest.java.pb.meta")
+public  final class FileReadyRequest extends
     com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:install.FileReady)
-    FileReadyOrBuilder {
+    // @@protoc_insertion_point(message_implements:install.FileReadyRequest)
+    FileReadyRequestOrBuilder {
 private static final long serialVersionUID = 0L;
-  // Use FileReady.newBuilder() to construct.
-  private FileReady(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  // Use FileReadyRequest.newBuilder() to construct.
+  private FileReadyRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private FileReady() {
+  private FileReadyRequest() {
     installId_ = "";
     name_ = "";
     sha1_ = "";
@@ -29,7 +29,7 @@ private static final long serialVersionUID = 0L;
   getUnknownFields() {
     return this.unknownFields;
   }
-  private FileReady(
+  private FileReadyRequest(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -93,15 +93,15 @@ private static final long serialVersionUID = 0L;
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReady_descriptor;
+    return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReadyRequest_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReady_fieldAccessorTable
+    return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReadyRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.facebook.buck.install.model.FileReady.class, com.facebook.buck.install.model.FileReady.Builder.class);
+            com.facebook.buck.install.model.FileReadyRequest.class, com.facebook.buck.install.model.FileReadyRequest.Builder.class);
   }
 
   public static final int INSTALL_ID_FIELD_NUMBER = 1;
@@ -297,10 +297,10 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof com.facebook.buck.install.model.FileReady)) {
+    if (!(obj instanceof com.facebook.buck.install.model.FileReadyRequest)) {
       return super.equals(obj);
     }
-    com.facebook.buck.install.model.FileReady other = (com.facebook.buck.install.model.FileReady) obj;
+    com.facebook.buck.install.model.FileReadyRequest other = (com.facebook.buck.install.model.FileReadyRequest) obj;
 
     if (!getInstallId()
         .equals(other.getInstallId())) return false;
@@ -334,69 +334,69 @@ private static final long serialVersionUID = 0L;
     return hash;
   }
 
-  public static com.facebook.buck.install.model.FileReady parseFrom(
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.install.model.FileReady parseFrom(
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.FileReady parseFrom(
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.install.model.FileReady parseFrom(
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.FileReady parseFrom(byte[] data)
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.install.model.FileReady parseFrom(
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.FileReady parseFrom(java.io.InputStream input)
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.install.model.FileReady parseFrom(
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.FileReady parseDelimitedFrom(java.io.InputStream input)
+  public static com.facebook.buck.install.model.FileReadyRequest parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.install.model.FileReady parseDelimitedFrom(
+  public static com.facebook.buck.install.model.FileReadyRequest parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.FileReady parseFrom(
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.install.model.FileReady parseFrom(
+  public static com.facebook.buck.install.model.FileReadyRequest parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -409,7 +409,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.facebook.buck.install.model.FileReady prototype) {
+  public static Builder newBuilder(com.facebook.buck.install.model.FileReadyRequest prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -425,26 +425,26 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
-   * Protobuf type {@code install.FileReady}
+   * Protobuf type {@code install.FileReadyRequest}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:install.FileReady)
-      com.facebook.buck.install.model.FileReadyOrBuilder {
+      // @@protoc_insertion_point(builder_implements:install.FileReadyRequest)
+      com.facebook.buck.install.model.FileReadyRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReady_descriptor;
+      return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReadyRequest_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReady_fieldAccessorTable
+      return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReadyRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.facebook.buck.install.model.FileReady.class, com.facebook.buck.install.model.FileReady.Builder.class);
+              com.facebook.buck.install.model.FileReadyRequest.class, com.facebook.buck.install.model.FileReadyRequest.Builder.class);
     }
 
-    // Construct using com.facebook.buck.install.model.FileReady.newBuilder()
+    // Construct using com.facebook.buck.install.model.FileReadyRequest.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -476,17 +476,17 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReady_descriptor;
+      return com.facebook.buck.install.model.InstallerProto.internal_static_install_FileReadyRequest_descriptor;
     }
 
     @java.lang.Override
-    public com.facebook.buck.install.model.FileReady getDefaultInstanceForType() {
-      return com.facebook.buck.install.model.FileReady.getDefaultInstance();
+    public com.facebook.buck.install.model.FileReadyRequest getDefaultInstanceForType() {
+      return com.facebook.buck.install.model.FileReadyRequest.getDefaultInstance();
     }
 
     @java.lang.Override
-    public com.facebook.buck.install.model.FileReady build() {
-      com.facebook.buck.install.model.FileReady result = buildPartial();
+    public com.facebook.buck.install.model.FileReadyRequest build() {
+      com.facebook.buck.install.model.FileReadyRequest result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -494,8 +494,8 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public com.facebook.buck.install.model.FileReady buildPartial() {
-      com.facebook.buck.install.model.FileReady result = new com.facebook.buck.install.model.FileReady(this);
+    public com.facebook.buck.install.model.FileReadyRequest buildPartial() {
+      com.facebook.buck.install.model.FileReadyRequest result = new com.facebook.buck.install.model.FileReadyRequest(this);
       result.installId_ = installId_;
       result.name_ = name_;
       result.sha1_ = sha1_;
@@ -538,16 +538,16 @@ private static final long serialVersionUID = 0L;
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.facebook.buck.install.model.FileReady) {
-        return mergeFrom((com.facebook.buck.install.model.FileReady)other);
+      if (other instanceof com.facebook.buck.install.model.FileReadyRequest) {
+        return mergeFrom((com.facebook.buck.install.model.FileReadyRequest)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.facebook.buck.install.model.FileReady other) {
-      if (other == com.facebook.buck.install.model.FileReady.getDefaultInstance()) return this;
+    public Builder mergeFrom(com.facebook.buck.install.model.FileReadyRequest other) {
+      if (other == com.facebook.buck.install.model.FileReadyRequest.getDefaultInstance()) return this;
       if (!other.getInstallId().isEmpty()) {
         installId_ = other.installId_;
         onChanged();
@@ -579,11 +579,11 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      com.facebook.buck.install.model.FileReady parsedMessage = null;
+      com.facebook.buck.install.model.FileReadyRequest parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (com.facebook.buck.install.model.FileReady) e.getUnfinishedMessage();
+        parsedMessage = (com.facebook.buck.install.model.FileReadyRequest) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -881,41 +881,41 @@ private static final long serialVersionUID = 0L;
     }
 
 
-    // @@protoc_insertion_point(builder_scope:install.FileReady)
+    // @@protoc_insertion_point(builder_scope:install.FileReadyRequest)
   }
 
-  // @@protoc_insertion_point(class_scope:install.FileReady)
-  private static final com.facebook.buck.install.model.FileReady DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:install.FileReadyRequest)
+  private static final com.facebook.buck.install.model.FileReadyRequest DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new com.facebook.buck.install.model.FileReady();
+    DEFAULT_INSTANCE = new com.facebook.buck.install.model.FileReadyRequest();
   }
 
-  public static com.facebook.buck.install.model.FileReady getDefaultInstance() {
+  public static com.facebook.buck.install.model.FileReadyRequest getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<FileReady>
-      PARSER = new com.google.protobuf.AbstractParser<FileReady>() {
+  private static final com.google.protobuf.Parser<FileReadyRequest>
+      PARSER = new com.google.protobuf.AbstractParser<FileReadyRequest>() {
     @java.lang.Override
-    public FileReady parsePartialFrom(
+    public FileReadyRequest parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return new FileReady(input, extensionRegistry);
+      return new FileReadyRequest(input, extensionRegistry);
     }
   };
 
-  public static com.google.protobuf.Parser<FileReady> parser() {
+  public static com.google.protobuf.Parser<FileReadyRequest> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<FileReady> getParserForType() {
+  public com.google.protobuf.Parser<FileReadyRequest> getParserForType() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.facebook.buck.install.model.FileReady getDefaultInstanceForType() {
+  public com.facebook.buck.install.model.FileReadyRequest getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

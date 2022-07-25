@@ -8,14 +8,4 @@ package com.facebook.buck.install.model;
 public interface ShutdownResponseOrBuilder extends
     // @@protoc_insertion_point(interface_extends:install.ShutdownResponse)
     com.google.protobuf.MessageOrBuilder {
-
-  /**
-   * <code>string install_id = 1;</code>
-   */
-  java.lang.String getInstallId();
-  /**
-   * <code>string install_id = 1;</code>
-   */
-  com.google.protobuf.ByteString
-      getInstallIdBytes();
 }

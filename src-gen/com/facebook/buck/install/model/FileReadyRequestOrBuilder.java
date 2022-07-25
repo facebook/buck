@@ -4,9 +4,9 @@
 
 package com.facebook.buck.install.model;
 
-@javax.annotation.Generated(value="protoc", comments="annotations:FileReadyOrBuilder.java.pb.meta")
-public interface FileReadyOrBuilder extends
-    // @@protoc_insertion_point(interface_extends:install.FileReady)
+@javax.annotation.Generated(value="protoc", comments="annotations:FileReadyRequestOrBuilder.java.pb.meta")
+public interface FileReadyRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:install.FileReadyRequest)
     com.google.protobuf.MessageOrBuilder {
 
   /**

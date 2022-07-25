@@ -17,12 +17,12 @@
 package com.facebook.buck.installer;
 
 import com.facebook.buck.install.model.ErrorDetail;
-import com.facebook.buck.install.model.FileReady;
+import com.facebook.buck.install.model.FileReadyRequest;
 import com.facebook.buck.install.model.FileResponse;
-import com.facebook.buck.install.model.InstallInfo;
+import com.facebook.buck.install.model.InstallInfoRequest;
 import com.facebook.buck.install.model.InstallResponse;
 import com.facebook.buck.install.model.InstallerGrpc;
-import com.facebook.buck.install.model.Shutdown;
+import com.facebook.buck.install.model.ShutdownRequest;
 import com.facebook.buck.install.model.ShutdownResponse;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Throwables;
@@ -51,7 +51,8 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
   }
 
   @Override
-  public void install(InstallInfo request, StreamObserver<InstallResponse> responseObserver) {
+  public void install(
+      InstallInfoRequest request, StreamObserver<InstallResponse> responseObserver) {
     try {
       InstallResponse response = handleInstallRequest(request);
       responseObserver.onNext(response);
@@ -61,7 +62,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
     }
   }
 
-  private InstallResponse handleInstallRequest(InstallInfo request) {
+  private InstallResponse handleInstallRequest(InstallInfoRequest request) {
     InstallId installId = InstallId.of(request.getInstallId());
     Map<String, String> filesMap = request.getFilesMap();
     logger.info(
@@ -73,7 +74,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
   }
 
   @Override
-  public void fileReadyRequest(FileReady request, StreamObserver<FileResponse> responseObserver) {
+  public void fileReady(FileReadyRequest request, StreamObserver<FileResponse> responseObserver) {
     try {
       FileResponse fileResponse = handleFileReadyRequest(request);
       responseObserver.onNext(fileResponse);
@@ -83,7 +84,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
     }
   }
 
-  private FileResponse handleFileReadyRequest(FileReady request) {
+  private FileResponse handleFileReadyRequest(FileReadyRequest request) {
     InstallId installId = InstallId.of(request.getInstallId());
     String name = request.getName();
     String path = request.getPath();
@@ -105,21 +106,18 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
   }
 
   @Override
-  public void shutdownServer(Shutdown request, StreamObserver<ShutdownResponse> responseObserver) {
+  public void shutdownServer(
+      ShutdownRequest request, StreamObserver<ShutdownResponse> responseObserver) {
     try {
-      handleShutdownServerRequest(request, responseObserver);
+      handleShutdownServerRequest(responseObserver);
     } catch (Exception e) {
       handleException(responseObserver, e);
     }
   }
 
-  private void handleShutdownServerRequest(
-      Shutdown request, StreamObserver<ShutdownResponse> responseObserver) {
-    InstallId installId = InstallId.of(request.getInstallId());
-    logger.info(
-        String.format("Received shutting down request for install id: %s", installId.getValue()));
-    responseObserver.onNext(
-        ShutdownResponse.newBuilder().setInstallId(installId.getValue()).build());
+  private void handleShutdownServerRequest(StreamObserver<ShutdownResponse> responseObserver) {
+    logger.info("Received shutting down request");
+    responseObserver.onNext(ShutdownResponse.getDefaultInstance());
     responseObserver.onCompleted();
     installFinished.set(Unit.UNIT);
   }

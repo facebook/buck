@@ -5,19 +5,19 @@
 package com.facebook.buck.install.model;
 
 /**
- * Protobuf type {@code install.InstallInfo}
+ * Protobuf type {@code install.InstallInfoRequest}
  */
-@javax.annotation.Generated(value="protoc", comments="annotations:InstallInfo.java.pb.meta")
-public  final class InstallInfo extends
+@javax.annotation.Generated(value="protoc", comments="annotations:InstallInfoRequest.java.pb.meta")
+public  final class InstallInfoRequest extends
     com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:install.InstallInfo)
-    InstallInfoOrBuilder {
+    // @@protoc_insertion_point(message_implements:install.InstallInfoRequest)
+    InstallInfoRequestOrBuilder {
 private static final long serialVersionUID = 0L;
-  // Use InstallInfo.newBuilder() to construct.
-  private InstallInfo(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  // Use InstallInfoRequest.newBuilder() to construct.
+  private InstallInfoRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private InstallInfo() {
+  private InstallInfoRequest() {
     installId_ = "";
   }
 
@@ -26,7 +26,7 @@ private static final long serialVersionUID = 0L;
   getUnknownFields() {
     return this.unknownFields;
   }
-  private InstallInfo(
+  private InstallInfoRequest(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -85,7 +85,7 @@ private static final long serialVersionUID = 0L;
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfo_descriptor;
+    return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfoRequest_descriptor;
   }
 
   @SuppressWarnings({"rawtypes"})
@@ -103,9 +103,9 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfo_fieldAccessorTable
+    return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfoRequest_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.facebook.buck.install.model.InstallInfo.class, com.facebook.buck.install.model.InstallInfo.Builder.class);
+            com.facebook.buck.install.model.InstallInfoRequest.class, com.facebook.buck.install.model.InstallInfoRequest.Builder.class);
   }
 
   private int bitField0_;
@@ -149,7 +149,7 @@ private static final long serialVersionUID = 0L;
         java.lang.String, java.lang.String> defaultEntry =
             com.google.protobuf.MapEntry
             .<java.lang.String, java.lang.String>newDefaultInstance(
-                com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfo_FilesEntry_descriptor, 
+                com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfoRequest_FilesEntry_descriptor, 
                 com.google.protobuf.WireFormat.FieldType.STRING,
                 "",
                 com.google.protobuf.WireFormat.FieldType.STRING,
@@ -274,10 +274,10 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof com.facebook.buck.install.model.InstallInfo)) {
+    if (!(obj instanceof com.facebook.buck.install.model.InstallInfoRequest)) {
       return super.equals(obj);
     }
-    com.facebook.buck.install.model.InstallInfo other = (com.facebook.buck.install.model.InstallInfo) obj;
+    com.facebook.buck.install.model.InstallInfoRequest other = (com.facebook.buck.install.model.InstallInfoRequest) obj;
 
     if (!getInstallId()
         .equals(other.getInstallId())) return false;
@@ -305,69 +305,69 @@ private static final long serialVersionUID = 0L;
     return hash;
   }
 
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(byte[] data)
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(java.io.InputStream input)
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseDelimitedFrom(java.io.InputStream input)
+  public static com.facebook.buck.install.model.InstallInfoRequest parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseDelimitedFrom(
+  public static com.facebook.buck.install.model.InstallInfoRequest parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.install.model.InstallInfo parseFrom(
+  public static com.facebook.buck.install.model.InstallInfoRequest parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -380,7 +380,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.facebook.buck.install.model.InstallInfo prototype) {
+  public static Builder newBuilder(com.facebook.buck.install.model.InstallInfoRequest prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -396,15 +396,15 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
-   * Protobuf type {@code install.InstallInfo}
+   * Protobuf type {@code install.InstallInfoRequest}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:install.InstallInfo)
-      com.facebook.buck.install.model.InstallInfoOrBuilder {
+      // @@protoc_insertion_point(builder_implements:install.InstallInfoRequest)
+      com.facebook.buck.install.model.InstallInfoRequestOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfo_descriptor;
+      return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfoRequest_descriptor;
     }
 
     @SuppressWarnings({"rawtypes"})
@@ -432,12 +432,12 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfo_fieldAccessorTable
+      return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfoRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.facebook.buck.install.model.InstallInfo.class, com.facebook.buck.install.model.InstallInfo.Builder.class);
+              com.facebook.buck.install.model.InstallInfoRequest.class, com.facebook.buck.install.model.InstallInfoRequest.Builder.class);
     }
 
-    // Construct using com.facebook.buck.install.model.InstallInfo.newBuilder()
+    // Construct using com.facebook.buck.install.model.InstallInfoRequest.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -464,17 +464,17 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfo_descriptor;
+      return com.facebook.buck.install.model.InstallerProto.internal_static_install_InstallInfoRequest_descriptor;
     }
 
     @java.lang.Override
-    public com.facebook.buck.install.model.InstallInfo getDefaultInstanceForType() {
-      return com.facebook.buck.install.model.InstallInfo.getDefaultInstance();
+    public com.facebook.buck.install.model.InstallInfoRequest getDefaultInstanceForType() {
+      return com.facebook.buck.install.model.InstallInfoRequest.getDefaultInstance();
     }
 
     @java.lang.Override
-    public com.facebook.buck.install.model.InstallInfo build() {
-      com.facebook.buck.install.model.InstallInfo result = buildPartial();
+    public com.facebook.buck.install.model.InstallInfoRequest build() {
+      com.facebook.buck.install.model.InstallInfoRequest result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -482,8 +482,8 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public com.facebook.buck.install.model.InstallInfo buildPartial() {
-      com.facebook.buck.install.model.InstallInfo result = new com.facebook.buck.install.model.InstallInfo(this);
+    public com.facebook.buck.install.model.InstallInfoRequest buildPartial() {
+      com.facebook.buck.install.model.InstallInfoRequest result = new com.facebook.buck.install.model.InstallInfoRequest(this);
       int from_bitField0_ = bitField0_;
       int to_bitField0_ = 0;
       result.installId_ = installId_;
@@ -528,16 +528,16 @@ private static final long serialVersionUID = 0L;
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.facebook.buck.install.model.InstallInfo) {
-        return mergeFrom((com.facebook.buck.install.model.InstallInfo)other);
+      if (other instanceof com.facebook.buck.install.model.InstallInfoRequest) {
+        return mergeFrom((com.facebook.buck.install.model.InstallInfoRequest)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.facebook.buck.install.model.InstallInfo other) {
-      if (other == com.facebook.buck.install.model.InstallInfo.getDefaultInstance()) return this;
+    public Builder mergeFrom(com.facebook.buck.install.model.InstallInfoRequest other) {
+      if (other == com.facebook.buck.install.model.InstallInfoRequest.getDefaultInstance()) return this;
       if (!other.getInstallId().isEmpty()) {
         installId_ = other.installId_;
         onChanged();
@@ -559,11 +559,11 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      com.facebook.buck.install.model.InstallInfo parsedMessage = null;
+      com.facebook.buck.install.model.InstallInfoRequest parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (com.facebook.buck.install.model.InstallInfo) e.getUnfinishedMessage();
+        parsedMessage = (com.facebook.buck.install.model.InstallInfoRequest) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -778,41 +778,41 @@ private static final long serialVersionUID = 0L;
     }
 
 
-    // @@protoc_insertion_point(builder_scope:install.InstallInfo)
+    // @@protoc_insertion_point(builder_scope:install.InstallInfoRequest)
   }
 
-  // @@protoc_insertion_point(class_scope:install.InstallInfo)
-  private static final com.facebook.buck.install.model.InstallInfo DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:install.InstallInfoRequest)
+  private static final com.facebook.buck.install.model.InstallInfoRequest DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new com.facebook.buck.install.model.InstallInfo();
+    DEFAULT_INSTANCE = new com.facebook.buck.install.model.InstallInfoRequest();
   }
 
-  public static com.facebook.buck.install.model.InstallInfo getDefaultInstance() {
+  public static com.facebook.buck.install.model.InstallInfoRequest getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<InstallInfo>
-      PARSER = new com.google.protobuf.AbstractParser<InstallInfo>() {
+  private static final com.google.protobuf.Parser<InstallInfoRequest>
+      PARSER = new com.google.protobuf.AbstractParser<InstallInfoRequest>() {
     @java.lang.Override
-    public InstallInfo parsePartialFrom(
+    public InstallInfoRequest parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return new InstallInfo(input, extensionRegistry);
+      return new InstallInfoRequest(input, extensionRegistry);
     }
   };
 
-  public static com.google.protobuf.Parser<InstallInfo> parser() {
+  public static com.google.protobuf.Parser<InstallInfoRequest> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<InstallInfo> getParserForType() {
+  public com.google.protobuf.Parser<InstallInfoRequest> getParserForType() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.facebook.buck.install.model.InstallInfo getDefaultInstanceForType() {
+  public com.facebook.buck.install.model.InstallInfoRequest getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

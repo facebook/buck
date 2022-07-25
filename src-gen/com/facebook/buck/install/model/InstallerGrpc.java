@@ -30,32 +30,32 @@ public final class InstallerGrpc {
   // Static method descriptors that strictly reflect the proto.
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   @java.lang.Deprecated // Use {@link #getInstallMethod()} instead. 
-  public static final io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo,
+  public static final io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfoRequest,
       com.facebook.buck.install.model.InstallResponse> METHOD_INSTALL = getInstallMethodHelper();
 
-  private static volatile io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo,
+  private static volatile io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfoRequest,
       com.facebook.buck.install.model.InstallResponse> getInstallMethod;
 
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
-  public static io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo,
+  public static io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfoRequest,
       com.facebook.buck.install.model.InstallResponse> getInstallMethod() {
     return getInstallMethodHelper();
   }
 
-  private static io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo,
+  private static io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfoRequest,
       com.facebook.buck.install.model.InstallResponse> getInstallMethodHelper() {
-    io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfo, com.facebook.buck.install.model.InstallResponse> getInstallMethod;
+    io.grpc.MethodDescriptor<com.facebook.buck.install.model.InstallInfoRequest, com.facebook.buck.install.model.InstallResponse> getInstallMethod;
     if ((getInstallMethod = InstallerGrpc.getInstallMethod) == null) {
       synchronized (InstallerGrpc.class) {
         if ((getInstallMethod = InstallerGrpc.getInstallMethod) == null) {
           InstallerGrpc.getInstallMethod = getInstallMethod = 
-              io.grpc.MethodDescriptor.<com.facebook.buck.install.model.InstallInfo, com.facebook.buck.install.model.InstallResponse>newBuilder()
+              io.grpc.MethodDescriptor.<com.facebook.buck.install.model.InstallInfoRequest, com.facebook.buck.install.model.InstallResponse>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(
                   "install.Installer", "Install"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.facebook.buck.install.model.InstallInfo.getDefaultInstance()))
+                  com.facebook.buck.install.model.InstallInfoRequest.getDefaultInstance()))
               .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                   com.facebook.buck.install.model.InstallResponse.getDefaultInstance()))
                   .setSchemaDescriptor(new InstallerMethodDescriptorSupplier("Install"))
@@ -66,70 +66,70 @@ public final class InstallerGrpc {
      return getInstallMethod;
   }
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
-  @java.lang.Deprecated // Use {@link #getFileReadyRequestMethod()} instead. 
-  public static final io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReady,
-      com.facebook.buck.install.model.FileResponse> METHOD_FILE_READY_REQUEST = getFileReadyRequestMethodHelper();
+  @java.lang.Deprecated // Use {@link #getFileReadyMethod()} instead. 
+  public static final io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReadyRequest,
+      com.facebook.buck.install.model.FileResponse> METHOD_FILE_READY = getFileReadyMethodHelper();
 
-  private static volatile io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReady,
-      com.facebook.buck.install.model.FileResponse> getFileReadyRequestMethod;
+  private static volatile io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReadyRequest,
+      com.facebook.buck.install.model.FileResponse> getFileReadyMethod;
 
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
-  public static io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReady,
-      com.facebook.buck.install.model.FileResponse> getFileReadyRequestMethod() {
-    return getFileReadyRequestMethodHelper();
+  public static io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReadyRequest,
+      com.facebook.buck.install.model.FileResponse> getFileReadyMethod() {
+    return getFileReadyMethodHelper();
   }
 
-  private static io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReady,
-      com.facebook.buck.install.model.FileResponse> getFileReadyRequestMethodHelper() {
-    io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReady, com.facebook.buck.install.model.FileResponse> getFileReadyRequestMethod;
-    if ((getFileReadyRequestMethod = InstallerGrpc.getFileReadyRequestMethod) == null) {
+  private static io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReadyRequest,
+      com.facebook.buck.install.model.FileResponse> getFileReadyMethodHelper() {
+    io.grpc.MethodDescriptor<com.facebook.buck.install.model.FileReadyRequest, com.facebook.buck.install.model.FileResponse> getFileReadyMethod;
+    if ((getFileReadyMethod = InstallerGrpc.getFileReadyMethod) == null) {
       synchronized (InstallerGrpc.class) {
-        if ((getFileReadyRequestMethod = InstallerGrpc.getFileReadyRequestMethod) == null) {
-          InstallerGrpc.getFileReadyRequestMethod = getFileReadyRequestMethod = 
-              io.grpc.MethodDescriptor.<com.facebook.buck.install.model.FileReady, com.facebook.buck.install.model.FileResponse>newBuilder()
+        if ((getFileReadyMethod = InstallerGrpc.getFileReadyMethod) == null) {
+          InstallerGrpc.getFileReadyMethod = getFileReadyMethod = 
+              io.grpc.MethodDescriptor.<com.facebook.buck.install.model.FileReadyRequest, com.facebook.buck.install.model.FileResponse>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(
-                  "install.Installer", "FileReadyRequest"))
+                  "install.Installer", "FileReady"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.facebook.buck.install.model.FileReady.getDefaultInstance()))
+                  com.facebook.buck.install.model.FileReadyRequest.getDefaultInstance()))
               .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                   com.facebook.buck.install.model.FileResponse.getDefaultInstance()))
-                  .setSchemaDescriptor(new InstallerMethodDescriptorSupplier("FileReadyRequest"))
+                  .setSchemaDescriptor(new InstallerMethodDescriptorSupplier("FileReady"))
                   .build();
           }
         }
      }
-     return getFileReadyRequestMethod;
+     return getFileReadyMethod;
   }
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   @java.lang.Deprecated // Use {@link #getShutdownServerMethod()} instead. 
-  public static final io.grpc.MethodDescriptor<com.facebook.buck.install.model.Shutdown,
+  public static final io.grpc.MethodDescriptor<com.facebook.buck.install.model.ShutdownRequest,
       com.facebook.buck.install.model.ShutdownResponse> METHOD_SHUTDOWN_SERVER = getShutdownServerMethodHelper();
 
-  private static volatile io.grpc.MethodDescriptor<com.facebook.buck.install.model.Shutdown,
+  private static volatile io.grpc.MethodDescriptor<com.facebook.buck.install.model.ShutdownRequest,
       com.facebook.buck.install.model.ShutdownResponse> getShutdownServerMethod;
 
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
-  public static io.grpc.MethodDescriptor<com.facebook.buck.install.model.Shutdown,
+  public static io.grpc.MethodDescriptor<com.facebook.buck.install.model.ShutdownRequest,
       com.facebook.buck.install.model.ShutdownResponse> getShutdownServerMethod() {
     return getShutdownServerMethodHelper();
   }
 
-  private static io.grpc.MethodDescriptor<com.facebook.buck.install.model.Shutdown,
+  private static io.grpc.MethodDescriptor<com.facebook.buck.install.model.ShutdownRequest,
       com.facebook.buck.install.model.ShutdownResponse> getShutdownServerMethodHelper() {
-    io.grpc.MethodDescriptor<com.facebook.buck.install.model.Shutdown, com.facebook.buck.install.model.ShutdownResponse> getShutdownServerMethod;
+    io.grpc.MethodDescriptor<com.facebook.buck.install.model.ShutdownRequest, com.facebook.buck.install.model.ShutdownResponse> getShutdownServerMethod;
     if ((getShutdownServerMethod = InstallerGrpc.getShutdownServerMethod) == null) {
       synchronized (InstallerGrpc.class) {
         if ((getShutdownServerMethod = InstallerGrpc.getShutdownServerMethod) == null) {
           InstallerGrpc.getShutdownServerMethod = getShutdownServerMethod = 
-              io.grpc.MethodDescriptor.<com.facebook.buck.install.model.Shutdown, com.facebook.buck.install.model.ShutdownResponse>newBuilder()
+              io.grpc.MethodDescriptor.<com.facebook.buck.install.model.ShutdownRequest, com.facebook.buck.install.model.ShutdownResponse>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(
                   "install.Installer", "ShutdownServer"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.facebook.buck.install.model.Shutdown.getDefaultInstance()))
+                  com.facebook.buck.install.model.ShutdownRequest.getDefaultInstance()))
               .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                   com.facebook.buck.install.model.ShutdownResponse.getDefaultInstance()))
                   .setSchemaDescriptor(new InstallerMethodDescriptorSupplier("ShutdownServer"))
@@ -169,21 +169,21 @@ public final class InstallerGrpc {
 
     /**
      */
-    public void install(com.facebook.buck.install.model.InstallInfo request,
+    public void install(com.facebook.buck.install.model.InstallInfoRequest request,
         io.grpc.stub.StreamObserver<com.facebook.buck.install.model.InstallResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getInstallMethodHelper(), responseObserver);
     }
 
     /**
      */
-    public void fileReadyRequest(com.facebook.buck.install.model.FileReady request,
+    public void fileReady(com.facebook.buck.install.model.FileReadyRequest request,
         io.grpc.stub.StreamObserver<com.facebook.buck.install.model.FileResponse> responseObserver) {
-      asyncUnimplementedUnaryCall(getFileReadyRequestMethodHelper(), responseObserver);
+      asyncUnimplementedUnaryCall(getFileReadyMethodHelper(), responseObserver);
     }
 
     /**
      */
-    public void shutdownServer(com.facebook.buck.install.model.Shutdown request,
+    public void shutdownServer(com.facebook.buck.install.model.ShutdownRequest request,
         io.grpc.stub.StreamObserver<com.facebook.buck.install.model.ShutdownResponse> responseObserver) {
       asyncUnimplementedUnaryCall(getShutdownServerMethodHelper(), responseObserver);
     }
@@ -194,21 +194,21 @@ public final class InstallerGrpc {
             getInstallMethodHelper(),
             asyncUnaryCall(
               new MethodHandlers<
-                com.facebook.buck.install.model.InstallInfo,
+                com.facebook.buck.install.model.InstallInfoRequest,
                 com.facebook.buck.install.model.InstallResponse>(
                   this, METHODID_INSTALL)))
           .addMethod(
-            getFileReadyRequestMethodHelper(),
+            getFileReadyMethodHelper(),
             asyncUnaryCall(
               new MethodHandlers<
-                com.facebook.buck.install.model.FileReady,
+                com.facebook.buck.install.model.FileReadyRequest,
                 com.facebook.buck.install.model.FileResponse>(
-                  this, METHODID_FILE_READY_REQUEST)))
+                  this, METHODID_FILE_READY)))
           .addMethod(
             getShutdownServerMethodHelper(),
             asyncUnaryCall(
               new MethodHandlers<
-                com.facebook.buck.install.model.Shutdown,
+                com.facebook.buck.install.model.ShutdownRequest,
                 com.facebook.buck.install.model.ShutdownResponse>(
                   this, METHODID_SHUTDOWN_SERVER)))
           .build();
@@ -235,7 +235,7 @@ public final class InstallerGrpc {
 
     /**
      */
-    public void install(com.facebook.buck.install.model.InstallInfo request,
+    public void install(com.facebook.buck.install.model.InstallInfoRequest request,
         io.grpc.stub.StreamObserver<com.facebook.buck.install.model.InstallResponse> responseObserver) {
       asyncUnaryCall(
           getChannel().newCall(getInstallMethodHelper(), getCallOptions()), request, responseObserver);
@@ -243,15 +243,15 @@ public final class InstallerGrpc {
 
     /**
      */
-    public void fileReadyRequest(com.facebook.buck.install.model.FileReady request,
+    public void fileReady(com.facebook.buck.install.model.FileReadyRequest request,
         io.grpc.stub.StreamObserver<com.facebook.buck.install.model.FileResponse> responseObserver) {
       asyncUnaryCall(
-          getChannel().newCall(getFileReadyRequestMethodHelper(), getCallOptions()), request, responseObserver);
+          getChannel().newCall(getFileReadyMethodHelper(), getCallOptions()), request, responseObserver);
     }
 
     /**
      */
-    public void shutdownServer(com.facebook.buck.install.model.Shutdown request,
+    public void shutdownServer(com.facebook.buck.install.model.ShutdownRequest request,
         io.grpc.stub.StreamObserver<com.facebook.buck.install.model.ShutdownResponse> responseObserver) {
       asyncUnaryCall(
           getChannel().newCall(getShutdownServerMethodHelper(), getCallOptions()), request, responseObserver);
@@ -278,21 +278,21 @@ public final class InstallerGrpc {
 
     /**
      */
-    public com.facebook.buck.install.model.InstallResponse install(com.facebook.buck.install.model.InstallInfo request) {
+    public com.facebook.buck.install.model.InstallResponse install(com.facebook.buck.install.model.InstallInfoRequest request) {
       return blockingUnaryCall(
           getChannel(), getInstallMethodHelper(), getCallOptions(), request);
     }
 
     /**
      */
-    public com.facebook.buck.install.model.FileResponse fileReadyRequest(com.facebook.buck.install.model.FileReady request) {
+    public com.facebook.buck.install.model.FileResponse fileReady(com.facebook.buck.install.model.FileReadyRequest request) {
       return blockingUnaryCall(
-          getChannel(), getFileReadyRequestMethodHelper(), getCallOptions(), request);
+          getChannel(), getFileReadyMethodHelper(), getCallOptions(), request);
     }
 
     /**
      */
-    public com.facebook.buck.install.model.ShutdownResponse shutdownServer(com.facebook.buck.install.model.Shutdown request) {
+    public com.facebook.buck.install.model.ShutdownResponse shutdownServer(com.facebook.buck.install.model.ShutdownRequest request) {
       return blockingUnaryCall(
           getChannel(), getShutdownServerMethodHelper(), getCallOptions(), request);
     }
@@ -319,30 +319,30 @@ public final class InstallerGrpc {
     /**
      */
     public com.google.common.util.concurrent.ListenableFuture<com.facebook.buck.install.model.InstallResponse> install(
-        com.facebook.buck.install.model.InstallInfo request) {
+        com.facebook.buck.install.model.InstallInfoRequest request) {
       return futureUnaryCall(
           getChannel().newCall(getInstallMethodHelper(), getCallOptions()), request);
     }
 
     /**
      */
-    public com.google.common.util.concurrent.ListenableFuture<com.facebook.buck.install.model.FileResponse> fileReadyRequest(
-        com.facebook.buck.install.model.FileReady request) {
+    public com.google.common.util.concurrent.ListenableFuture<com.facebook.buck.install.model.FileResponse> fileReady(
+        com.facebook.buck.install.model.FileReadyRequest request) {
       return futureUnaryCall(
-          getChannel().newCall(getFileReadyRequestMethodHelper(), getCallOptions()), request);
+          getChannel().newCall(getFileReadyMethodHelper(), getCallOptions()), request);
     }
 
     /**
      */
     public com.google.common.util.concurrent.ListenableFuture<com.facebook.buck.install.model.ShutdownResponse> shutdownServer(
-        com.facebook.buck.install.model.Shutdown request) {
+        com.facebook.buck.install.model.ShutdownRequest request) {
       return futureUnaryCall(
           getChannel().newCall(getShutdownServerMethodHelper(), getCallOptions()), request);
     }
   }
 
   private static final int METHODID_INSTALL = 0;
-  private static final int METHODID_FILE_READY_REQUEST = 1;
+  private static final int METHODID_FILE_READY = 1;
   private static final int METHODID_SHUTDOWN_SERVER = 2;
 
   private static final class MethodHandlers<Req, Resp> implements
@@ -363,15 +363,15 @@ public final class InstallerGrpc {
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
         case METHODID_INSTALL:
-          serviceImpl.install((com.facebook.buck.install.model.InstallInfo) request,
+          serviceImpl.install((com.facebook.buck.install.model.InstallInfoRequest) request,
               (io.grpc.stub.StreamObserver<com.facebook.buck.install.model.InstallResponse>) responseObserver);
           break;
-        case METHODID_FILE_READY_REQUEST:
-          serviceImpl.fileReadyRequest((com.facebook.buck.install.model.FileReady) request,
+        case METHODID_FILE_READY:
+          serviceImpl.fileReady((com.facebook.buck.install.model.FileReadyRequest) request,
               (io.grpc.stub.StreamObserver<com.facebook.buck.install.model.FileResponse>) responseObserver);
           break;
         case METHODID_SHUTDOWN_SERVER:
-          serviceImpl.shutdownServer((com.facebook.buck.install.model.Shutdown) request,
+          serviceImpl.shutdownServer((com.facebook.buck.install.model.ShutdownRequest) request,
               (io.grpc.stub.StreamObserver<com.facebook.buck.install.model.ShutdownResponse>) responseObserver);
           break;
         default:
@@ -436,7 +436,7 @@ public final class InstallerGrpc {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
               .setSchemaDescriptor(new InstallerFileDescriptorSupplier())
               .addMethod(getInstallMethodHelper())
-              .addMethod(getFileReadyRequestMethodHelper())
+              .addMethod(getFileReadyMethodHelper())
               .addMethod(getShutdownServerMethodHelper())
               .build();
         }

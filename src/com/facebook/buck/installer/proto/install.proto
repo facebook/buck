@@ -32,12 +32,12 @@ option java_outer_classname = "InstallerProto";
 package install;
 
 service Installer {
-    rpc Install(InstallInfo) returns (InstallResponse) {};
-    rpc FileReadyRequest(FileReady) returns (FileResponse) {};
-    rpc ShutdownServer(Shutdown) returns (ShutdownResponse) {};
+    rpc Install(InstallInfoRequest) returns (InstallResponse) {};
+    rpc FileReady(FileReadyRequest) returns (FileResponse) {};
+    rpc ShutdownServer(ShutdownRequest) returns (ShutdownResponse) {};
 }
 
-message InstallInfo{
+message InstallInfoRequest {
     string install_id = 1;
     map<string, string> files = 2;
 }
@@ -46,7 +46,7 @@ message InstallResponse{
     string install_id = 1;
 }
 
-message FileReady {
+message FileReadyRequest {
   string install_id = 1;
   string name = 2;
   string sha1 = 3;
@@ -65,10 +65,10 @@ message ErrorDetail {
     string message = 1;
 }
 
-message Shutdown {
-    string install_id = 1;
+message ShutdownRequest {
+    reserved 1;
 }
 
 message ShutdownResponse {
-    string install_id = 1;
+    reserved 1;
 }
