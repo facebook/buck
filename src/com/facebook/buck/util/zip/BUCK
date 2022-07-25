@@ -1,11 +1,17 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar", "buck_java_library", "buck_java_binary")
+
+ZIP_SCRUBBER_SRCS = ["ZipScrubber.java", "ZipConstants.java"]
+
 buck_java_library(
     name = "zip",
-    srcs = glob(["*.java"]),
+    srcs = glob(["*.java"], exclude = ZIP_SCRUBBER_SRCS),
     tests = [
         "//test/com/facebook/buck/util/zip:zip",
     ],
     visibility = ["PUBLIC"],
+    exported_deps = [
+        ":zip_scrubber",
+    ],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/log:log",
@@ -13,7 +19,6 @@ buck_java_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/io/filesystem/impl:utils",
         "//src/com/facebook/buck/io/pathformat:pathformat",
-        "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/function:function",
         "//src/com/facebook/buck/util/io:io",
         "//src/com/facebook/buck/util/nio:nio",
@@ -23,4 +28,31 @@ buck_java_library(
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],
+)
+
+buck_java_library(
+    name = "zip_scrubber",
+    srcs = ZIP_SCRUBBER_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/nio:nio",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+# This is a prebuilt jar so that it can be part of the buck2 bootstrap toolchain.
+# To rebuild the jar, do:
+# `buck build buck//src/com/facebook/buck/util/zip:zip_scrubber_main --out xplat/build_infra/buck_client/src/com/facebook/buck/util/zip/zip_scrubber_main.jar`
+buck_prebuilt_jar(
+    name = "zip_scrubber_main_jar",
+    binary_jar = "zip_scrubber_main.jar",
+    visibility = ["PUBLIC"],
+)
+
+buck_java_binary(
+    name = "zip_scrubber_main",
+    main_class = "com.facebook.buck.util.zip.ZipScrubber",
+    deps = [":zip_scrubber"],
+    visibility = ["PUBLIC"],
 )

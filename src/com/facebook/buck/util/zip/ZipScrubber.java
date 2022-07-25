@@ -18,11 +18,13 @@ package com.facebook.buck.util.zip;
 
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -186,11 +188,15 @@ public class ZipScrubber {
   }
 
   public static void main(String[] args) throws IOException {
-    if (args.length != 1) {
-      System.err.println("usage: ZipScrubberCli file-to-scrub-in-place.zip");
+    if (args.length != 2) {
+      System.err.println("usage: ZipScrubberCli input_file scrubbed_file_output");
       System.exit(2);
     }
 
-    scrubZip(Paths.get(args[0]));
+    Path inputZip = Paths.get(args[0]);
+    Path scrubbedZip = Paths.get(args[1]);
+    Files.copy(inputZip, scrubbedZip);
+    Preconditions.checkState(scrubbedZip.toFile().setWritable(true));
+    scrubZip(scrubbedZip);
   }
 }
