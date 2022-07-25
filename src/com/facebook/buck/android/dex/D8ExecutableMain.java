@@ -17,6 +17,7 @@
 package com.facebook.buck.android.dex;
 
 import com.android.tools.r8.CompilationFailedException;
+import com.facebook.buck.util.zip.ZipScrubber;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -107,6 +108,8 @@ public class D8ExecutableMain {
   @Option(name = "--secondary-dex-canary-class-name")
   private String secondaryDexCanaryClassName;
 
+  private static final String DEX_JAR_SUFFIX = ".dex.jar";
+
   public static void main(String[] args) throws IOException {
     D8ExecutableMain main = new D8ExecutableMain();
     CmdLineParser parser = new CmdLineParser(main);
@@ -160,6 +163,10 @@ public class D8ExecutableMain {
               classpathFiles,
               minSdkVersion);
 
+      if (d8Output.endsWith(DEX_JAR_SUFFIX)) {
+        ZipScrubber.scrubZip(d8Output);
+      }
+
       Preconditions.checkState(
           primaryDexClassNamesPath.isPresent() || secondaryDexCompression == null);
       if (primaryDexClassNamesPath.isPresent()) {
@@ -168,7 +175,7 @@ public class D8ExecutableMain {
             classesDotDex.toFile().exists(), "D8 command must produce a classes.dex");
 
         if ("jar".equals(secondaryDexCompression)) {
-          Preconditions.checkState(outputDex.endsWith(".dex.jar"));
+          Preconditions.checkState(outputDex.endsWith(DEX_JAR_SUFFIX));
           Preconditions.checkNotNull(secondaryDexMetadataFile);
           Path secondaryDexMetadataFilePath = Paths.get(secondaryDexMetadataFile);
           Preconditions.checkState(
@@ -190,8 +197,8 @@ public class D8ExecutableMain {
           Preconditions.checkState(
               outputDex.endsWith(".dex"),
               String.format(
-                  "Expect the outputDex to end with '.dex' if not '.dex.jar', but it is %s",
-                  outputDex));
+                  "Expect the outputDex to end with '.dex' if not '%s', but it is %s",
+                  DEX_JAR_SUFFIX, outputDex));
           Files.move(classesDotDex, outputPath);
         }
       }
