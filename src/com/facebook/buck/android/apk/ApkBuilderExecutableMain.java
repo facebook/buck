@@ -23,6 +23,7 @@ import com.android.sdklib.build.SealedApkException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.zip.RepackZipEntries;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
+import com.facebook.buck.util.zip.ZipScrubber;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -126,6 +127,11 @@ public class ApkBuilderExecutableMain {
           keystorePath,
           keystoreProperties,
           null);
+
+      // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it,
+      // making the output non-deterministic. Use an additional scrubbing step to zero these out.
+      ZipScrubber.scrubZip(intermediateApk);
+
       if (compressResourcesDotArsc) {
         Path intermediateApkWithCompressedResources =
             Files.createTempFile("intermediate", "output_with_compressed_resources.apk");
