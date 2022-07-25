@@ -39,7 +39,8 @@ public class AppleInstallerMain {
   static {
     // set java.util.logging (JUL) simple formatter to 1 liner.
     System.setProperty(
-        "java.util.logging.SimpleFormatter.format", "[%1$tF %1$tT] [%4$-7s] %5$s %n");
+        "java.util.logging.SimpleFormatter.format",
+        "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS] [%4$s] %5$s%6$s%n");
   }
 
   public static final String INSTALLER_LOG_PATH =
