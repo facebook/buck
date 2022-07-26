@@ -164,6 +164,9 @@ public class AndroidInstrumentationApkDescription
             .getNativeLinkablesAssets()
             .get(rootAPKModule);
 
+    ImmutableCollection<SourcePath> nativeLibsForSystemLoaderToExclude =
+        apkUnderTest.getAndroidPackageableCollection().getNativeLibsDirectoriesForSystemLoader();
+
     ListeningExecutorService dxExecutorService =
         toolchainProvider
             .getByName(
@@ -235,6 +238,7 @@ public class AndroidInstrumentationApkDescription
             nativeLinkablesToExcludeGroup,
             nativeLibAssetsToExclude,
             nativeLinkableGroupAssetsToExclude,
+            nativeLibsForSystemLoaderToExclude,
             /* skipCrunchPngs */ false,
             args.getIncludesVectorDrawables(),
             /* noAutoVersionResources */ false,

@@ -11,6 +11,7 @@ android_binary(
         "//:cxx_asset_in_app",
         "//:prebuilt_in_app",
         "//:prebuilt_asset_in_app",
+        "//:prebuilt_has_wrap_script_in_app",
         "//java/com/sample/lib:lib",
         "//res:res",
     ],
@@ -66,6 +67,12 @@ prebuilt_native_library(
     is_asset = True,
 )
 
+prebuilt_native_library(
+    name = "prebuilt_has_wrap_script_in_app",
+    native_libs = "lib/prebuilt_has_wrap_script",
+    has_wrap_script = True,
+)
+
 android_instrumentation_apk(
     name = "app_cxx_lib_dep",
     apk = ":app",
@@ -74,6 +81,7 @@ android_instrumentation_apk(
         "//:cxx",
         "//:prebuilt_in_app",
         "//:prebuilt_asset_in_app",
+        "//:prebuilt_has_wrap_script_in_app",
         "//java/com/sample/app:app",
     ],
 )

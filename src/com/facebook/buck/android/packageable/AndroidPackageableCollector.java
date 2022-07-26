@@ -66,6 +66,7 @@ public class AndroidPackageableCollector {
   private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesToExcludeGroup;
   private final ImmutableCollection<SourcePath> nativeLibAssetsToExclude;
   private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesAssetsToExcludeGroup;
+  private final ImmutableCollection<SourcePath> nativeLibsForSystemLoaderToExclude;
   private final APKModuleGraph apkModuleGraph;
   private final AndroidPackageableFilter androidPackageableFilter;
   private final Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms;
@@ -100,6 +101,7 @@ public class AndroidPackageableCollector {
         ImmutableSet.of(),
         ImmutableSet.of(),
         ImmutableSet.of(),
+        ImmutableSet.of(),
         apkModuleGraph,
         new NoopAndroidPackageableFilter(),
         ndkCxxPlatforms);
@@ -113,6 +115,7 @@ public class AndroidPackageableCollector {
     this(
         collectionRoot,
         buildTargetsToExcludeFromDex,
+        ImmutableSet.of(),
         ImmutableSet.of(),
         ImmutableSet.of(),
         ImmutableSet.of(),
@@ -138,6 +141,7 @@ public class AndroidPackageableCollector {
       ImmutableCollection<NativeLinkableGroup> nativeLinkablesToExcludeGroup,
       ImmutableCollection<SourcePath> nativeLibAssetsToExclude,
       ImmutableCollection<NativeLinkableGroup> nativeLinkableGroupAssetsToExclude,
+      ImmutableCollection<SourcePath> nativeLibsForSystemLoaderToExclude,
       APKModuleGraph apkModuleGraph,
       AndroidPackageableFilter androidPackageableFilter,
       Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
@@ -148,6 +152,7 @@ public class AndroidPackageableCollector {
     this.nativeLinkablesToExcludeGroup = nativeLinkablesToExcludeGroup;
     this.nativeLibAssetsToExclude = nativeLibAssetsToExclude;
     this.nativeLinkablesAssetsToExcludeGroup = nativeLinkableGroupAssetsToExclude;
+    this.nativeLibsForSystemLoaderToExclude = nativeLibsForSystemLoaderToExclude;
     this.apkModuleGraph = apkModuleGraph;
     this.androidPackageableFilter = androidPackageableFilter;
     this.ndkCxxPlatforms = ndkCxxPlatforms;
@@ -240,7 +245,7 @@ public class AndroidPackageableCollector {
    */
   public AndroidPackageableCollector addNativeLibsDirectoryForSystemLoader(
       BuildTarget owner, SourcePath nativeLibDir) {
-    if (nativeLibsToExclude.contains(nativeLibDir)) {
+    if (nativeLibsForSystemLoaderToExclude.contains(nativeLibDir)) {
       return this;
     }
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
