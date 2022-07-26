@@ -27,3 +27,10 @@ prebuilt_native_library(
     native_libs = "prebuilt_asset",
     visibility = ["PUBLIC"],
 )
+
+prebuilt_native_library(
+    name = "prebuilt_native_has_wrap_script",
+    has_wrap_script = True,
+    native_libs = "prebuilt_has_wrap_script",
+    visibility = ["PUBLIC"],
+)

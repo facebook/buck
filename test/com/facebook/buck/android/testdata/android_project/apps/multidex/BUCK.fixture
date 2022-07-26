@@ -601,9 +601,6 @@ android_binary(
 
 android_binary(
     name = "app-native-exo",
-    cpu_filters = [
-        "armv7",
-    ],
     exopackage_modes = ["native_library"],
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
@@ -615,6 +612,8 @@ android_binary(
         "//java/com/sample/app:app",
         "//java/com/sample/lib:lib",
         "//native/cxx:lib",
+        "//native/fakenative/jni:prebuilt_native",
+        "//native/fakenative/jni:prebuilt_native_has_wrap_script",
         "//third-party:kiwi",
     ],
 )

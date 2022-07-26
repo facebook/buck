@@ -154,7 +154,7 @@ public class AndroidExopackageApkIntegrationTest {
   }
 
   @Test
-  public void testNativeExopackageHasNoNativeLibraries() throws IOException {
+  public void testNativeExopackageHasExpectedNativeLibraries() throws IOException {
     ZipInspector zipInspector =
         new ZipInspector(
             workspace.getGenPath(
@@ -165,6 +165,11 @@ public class AndroidExopackageApkIntegrationTest {
     zipInspector.assertFileExists("classes2.dex");
 
     zipInspector.assertFileExists("classes.dex");
+
+    zipInspector.assertFileExists("lib/arm64-v8a/libprebuilt_has_wrap_script.so");
+    zipInspector.assertFileExists("lib/arm64-v8a/wrap.sh");
+
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libprebuilt.so");
 
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
   }
