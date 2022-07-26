@@ -95,5 +95,13 @@ public class PrebuiltNativeLibraryDescription
     default boolean getHasWrapScript() {
       return false;
     }
+
+    @Value.Check
+    default void checkHasWrapScriptUsage() {
+      if (getIsAsset() && getHasWrapScript()) {
+        throw new HumanReadableException(
+            "Cannot use `is_asset` and `has_wrap_script` in the same rule");
+      }
+    }
   }
 }

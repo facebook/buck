@@ -1,0 +1,6 @@
+prebuilt_native_library(
+    name = "prebuilt_asset_and_has_wrap_script",
+    native_libs = "lib",
+    is_asset = True,
+    has_wrap_script = True,
+)

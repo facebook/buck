@@ -70,7 +70,8 @@ A <code>prebuilt_native_library()</code> rule is used to bundle native libraries
   included in the primary APK even if native libraries would otherwise not be
   placed in it. This is intended for a native library directory that contains a
   {sp}<a href="https://developer.android.com/ndk/guides/wrap-script">wrap.sh</a>
-  {sp}script, which must be included in the primary APK to take effect.
+  {sp}script, which must be included in the primary APK to take effect. Only one
+  of <code>is_asset</code> and <code>has_wrap_script</code> can be set for a rule.
   {/param}
 {/call}
 
