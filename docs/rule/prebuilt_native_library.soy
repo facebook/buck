@@ -61,6 +61,19 @@ A <code>prebuilt_native_library()</code> rule is used to bundle native libraries
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'has_wrap_script' /}
+  {param default: 'False' /}
+  {param desc}
+  When using an <a href="{ROOT}article/exopackage.html">exopackage</a>, if this
+  parameter is set to <code>True</code>, then the libraries for this rule are
+  included in the primary APK even if native libraries would otherwise not be
+  placed in it. This is intended for a native library directory that contains a
+  {sp}<a href="https://developer.android.com/ndk/guides/wrap-script">wrap.sh</a>
+  {sp}script, which must be included in the primary APK to take effect.
+  {/param}
+{/call}
+
 {/param} // args
 
 {param examples}
