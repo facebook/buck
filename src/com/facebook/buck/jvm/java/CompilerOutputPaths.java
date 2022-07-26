@@ -104,6 +104,11 @@ public abstract class CompilerOutputPaths {
     return reportDirPath.resolveRel("kapt-used-classes-tmp.txt");
   }
 
+  /** Returns a path to a file that contains files accessed by KSP in Kotlin compilation */
+  public static RelPath getKspDepFilePath(RelPath reportDirPath) {
+    return reportDirPath.resolveRel("ksp-used-classes-tmp.txt");
+  }
+
   public static ImmutableCompilerOutputPaths.Builder builder() {
     return ImmutableCompilerOutputPaths.builder();
   }

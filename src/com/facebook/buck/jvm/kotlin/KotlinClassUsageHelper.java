@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.facebook.buck.jvm.java.CompilerOutputPaths.getKAPTDepFilePath;
 import static com.facebook.buck.jvm.java.CompilerOutputPaths.getKotlinTempDepFilePath;
+import static com.facebook.buck.jvm.java.CompilerOutputPaths.getKspDepFilePath;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -59,6 +60,12 @@ public class KotlinClassUsageHelper {
         ruleCellRoot.resolve(getKAPTDepFilePath(reportDirPath)).getPath();
     if (kaptClassUsageReportPath.toFile().exists()) {
       classUsages = merge(classUsages, readUriBasedClassUsageFile(kaptClassUsageReportPath));
+    }
+
+    // merge ksp generated class usage report file if it exist
+    Path kspClassUsageReportPath = ruleCellRoot.resolve(getKspDepFilePath(reportDirPath)).getPath();
+    if (kspClassUsageReportPath.toFile().exists()) {
+      classUsages = merge(classUsages, readUriBasedClassUsageFile(kspClassUsageReportPath));
     }
 
     return classUsages;

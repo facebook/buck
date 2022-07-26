@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.kotlin;
 
 import static com.facebook.buck.jvm.java.CompilerOutputPaths.getKAPTDepFilePath;
+import static com.facebook.buck.jvm.java.CompilerOutputPaths.getKspDepFilePath;
 import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.transform;
@@ -337,6 +338,7 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory<KotlinE
           sourcesOutput,
           classesOutput,
           reportsOutput,
+          parameters.shouldTrackClassUsage(),
           postKotlinCompilationSteps,
           allClasspaths,
           extraParams.getResolvedKotlinHomeLibraries(),
@@ -596,6 +598,7 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory<KotlinE
       RelPath sourcesOutput,
       RelPath classesOutput,
       RelPath reportsOutput,
+      boolean shouldTrackClassUsage,
       Builder<IsolatedStep> postKotlinCompilationSteps,
       ImmutableSortedSet<AbsPath> allClasspaths,
       ImmutableSortedSet<AbsPath> kotlinHomeLibraries,
@@ -682,6 +685,14 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory<KotlinE
             .join(transform(allClasspaths, path -> path.getPath().toString()));
     allClasspath = allClasspath.replace(',', '-');
     kspPluginOptionsBuilder.add(KSP_PLUGIN_ID + "apoption=" + "cp=" + allClasspath);
+
+    if (shouldTrackClassUsage) {
+      kspPluginOptionsBuilder.add(
+          KSP_PLUGIN_ID
+              + "apoption="
+              + "fileAccessHistoryReportFile="
+              + rootPath.resolve(getKspDepFilePath(reportsOutput)));
+    }
 
     Builder<String> kspTriggerBuilder = ImmutableList.builder();
     kspTriggerBuilder
