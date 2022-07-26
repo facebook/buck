@@ -87,6 +87,13 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testWrapShIsIncluded() throws IOException {
+    Path output = workspace.buildAndReturnOutput("//apps/sample:app_with_prebuilt_native_libs");
+    ZipInspector zipInspector = new ZipInspector(output);
+    zipInspector.assertFileExists("lib/armeabi/wrap.sh");
+  }
+
+  @Test
   public void testNativeLibraryMergeMap() throws IOException, InterruptedException {
     SymbolGetter syms = getSymbolGetter();
 

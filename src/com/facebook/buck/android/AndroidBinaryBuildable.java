@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.android.BinaryType.APK;
 
+import com.android.common.SdkConstants;
 import com.facebook.buck.android.apk.KeystoreProperties;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageMode;
@@ -549,7 +550,8 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
               @Override
               public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                   throws IOException {
-                if (!file.toString().endsWith(".so")) {
+                if (!file.getFileName().toString().equals(SdkConstants.FN_WRAP_SH)
+                    && !file.toString().endsWith(".so")) {
                   throw new IOException("unexpected file in lib directory");
                 }
                 inputAssetLibrariesBuilder.add(file);
