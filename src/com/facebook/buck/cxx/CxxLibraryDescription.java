@@ -576,6 +576,20 @@ public class CxxLibraryDescription
       return true;
     }
 
+    /** Whether the library is used by a wrap.sh script and must be included in the primary APK. */
+    @Value.Default
+    default boolean getUsedByWrapScript() {
+      return false;
+    }
+
+    @Value.Check
+    default void checkUsedByWrapScriptUsage() {
+      if (getCanBeAsset().orElse(false) && getUsedByWrapScript()) {
+        throw new HumanReadableException(
+            "Cannot use `can_be_asset` and `used_by_wrap_script` in the same rule");
+      }
+    }
+
     Optional<Boolean> getUseArchive();
   }
 }

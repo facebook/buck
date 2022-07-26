@@ -166,6 +166,9 @@ public class AndroidExopackageApkIntegrationTest {
 
     zipInspector.assertFileExists("classes.dex");
 
+    zipInspector.assertFileExists("lib/armeabi-v7a/lib_used_by_wrap_script.so");
+    zipInspector.assertFileExists("lib/x86/lib_used_by_wrap_script.so");
+
     zipInspector.assertFileExists("lib/arm64-v8a/libprebuilt_has_wrap_script.so");
     zipInspector.assertFileExists("lib/arm64-v8a/wrap.sh");
 

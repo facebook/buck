@@ -287,7 +287,10 @@ class NativeLibraryMergeEnhancer {
       mergedLinkablesBuilder.put(
           cpuType,
           NativeLinkableEnhancementResult.of(
-              moduleLinkablesBuilder.build(), moduleAssetLinkablesBuilder.build()));
+              moduleLinkablesBuilder.build(),
+              moduleAssetLinkablesBuilder.build(),
+              // Linkables used by the wrap script are not intended to be merged
+              baseResult.getNativeLinkablesUsedByWrapScript()));
     }
 
     ImmutableSortedMap.Builder<String, ImmutableSortedSet<String>> finalSonameTargetsBuilder =

@@ -9,6 +9,7 @@ android_binary(
     deps = [
         "//:cxx_in_app",
         "//:cxx_asset_in_app",
+        "//:cxx_used_by_wrap_script_in_app",
         "//:prebuilt_in_app",
         "//:prebuilt_asset_in_app",
         "//:prebuilt_has_wrap_script_in_app",
@@ -38,6 +39,7 @@ cxx_library(
     deps = [
         "//:cxx_in_app",
         "//:cxx_asset_in_app",
+        "//:cxx_used_by_wrap_script_in_app",
     ],
 )
 
@@ -54,6 +56,14 @@ cxx_library(
         "lib.cpp",
     ],
     can_be_asset = True,
+)
+
+cxx_library(
+    name = "cxx_used_by_wrap_script_in_app",
+    srcs = [
+        "lib.cpp",
+    ],
+    used_by_wrap_script = True,
 )
 
 prebuilt_native_library(

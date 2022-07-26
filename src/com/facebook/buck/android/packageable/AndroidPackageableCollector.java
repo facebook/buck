@@ -67,6 +67,8 @@ public class AndroidPackageableCollector {
   private final ImmutableCollection<SourcePath> nativeLibAssetsToExclude;
   private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesAssetsToExcludeGroup;
   private final ImmutableCollection<SourcePath> nativeLibsForSystemLoaderToExclude;
+  private final ImmutableCollection<NativeLinkableGroup>
+      nativeLinkablesUsedByWrapScriptToExcludeGroup;
   private final APKModuleGraph apkModuleGraph;
   private final AndroidPackageableFilter androidPackageableFilter;
   private final Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms;
@@ -102,6 +104,7 @@ public class AndroidPackageableCollector {
         ImmutableSet.of(),
         ImmutableSet.of(),
         ImmutableSet.of(),
+        ImmutableSet.of(),
         apkModuleGraph,
         new NoopAndroidPackageableFilter(),
         ndkCxxPlatforms);
@@ -115,6 +118,7 @@ public class AndroidPackageableCollector {
     this(
         collectionRoot,
         buildTargetsToExcludeFromDex,
+        ImmutableSet.of(),
         ImmutableSet.of(),
         ImmutableSet.of(),
         ImmutableSet.of(),
@@ -142,6 +146,7 @@ public class AndroidPackageableCollector {
       ImmutableCollection<SourcePath> nativeLibAssetsToExclude,
       ImmutableCollection<NativeLinkableGroup> nativeLinkableGroupAssetsToExclude,
       ImmutableCollection<SourcePath> nativeLibsForSystemLoaderToExclude,
+      ImmutableCollection<NativeLinkableGroup> nativeLinkablesUsedByWrapScriptToExcludeGroup,
       APKModuleGraph apkModuleGraph,
       AndroidPackageableFilter androidPackageableFilter,
       Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
@@ -153,6 +158,8 @@ public class AndroidPackageableCollector {
     this.nativeLibAssetsToExclude = nativeLibAssetsToExclude;
     this.nativeLinkablesAssetsToExcludeGroup = nativeLinkableGroupAssetsToExclude;
     this.nativeLibsForSystemLoaderToExclude = nativeLibsForSystemLoaderToExclude;
+    this.nativeLinkablesUsedByWrapScriptToExcludeGroup =
+        nativeLinkablesUsedByWrapScriptToExcludeGroup;
     this.apkModuleGraph = apkModuleGraph;
     this.androidPackageableFilter = androidPackageableFilter;
     this.ndkCxxPlatforms = ndkCxxPlatforms;
@@ -279,6 +286,27 @@ public class AndroidPackageableCollector {
     }
     APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkableGroup.getBuildTarget());
     collectionBuilder.putNativeLinkablesAssets(module, nativeLinkableGroup);
+    return this;
+  }
+
+  /**
+   * Add a native linkable that's used by a wrap.sh script and must be packaged in the primary APK
+   */
+  public AndroidPackageableCollector addNativeLinkableUsedByWrapScript(
+      NativeLinkableGroup nativeLinkableGroup) {
+    if (nativeLinkablesUsedByWrapScriptToExcludeGroup.contains(nativeLinkableGroup)) {
+      return this;
+    }
+
+    BuildTarget buildTarget = nativeLinkableGroup.getBuildTarget();
+    APKModule module = apkModuleGraph.findModuleForTarget(buildTarget);
+    if (!module.isRootModule()) {
+      throw new HumanReadableException(
+          "%s which is marked as used_by_wrap_script cannot be included in non-root-module %s",
+          buildTarget, module.getName());
+    }
+
+    collectionBuilder.addNativeLinkablesUsedByWrapScript(nativeLinkableGroup);
     return this;
   }
 

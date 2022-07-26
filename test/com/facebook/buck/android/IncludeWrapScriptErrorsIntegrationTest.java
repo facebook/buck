@@ -53,4 +53,24 @@ public class IncludeWrapScriptErrorsIntegrationTest {
         result.getStderr(),
         containsString("Cannot use `is_asset` and `has_wrap_script` in the same rule"));
   }
+
+  @Test
+  public void testCxxLibraryCanBeAssetAndUsedByWrapScript() throws IOException {
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "//:cxx_asset_and_used_by_wrap_script");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString("Cannot use `can_be_asset` and `used_by_wrap_script` in the same rule"));
+  }
+
+  @Test
+  public void testCxxLibraryUsedByWrapScriptInModule() throws IOException {
+    ProcessResult result = workspace.runBuckBuild("//:cxx_used_by_wrap_script_in_module");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "//:cxx_used_by_wrap_script which is marked as used_by_wrap_script cannot be included in non-root-module native"));
+  }
 }

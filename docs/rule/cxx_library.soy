@@ -156,6 +156,21 @@ that the <code>cxx_library</code> depends on <em>might not be built</em>.
   {/param}
 {/call}
 
+{call buck.arg}
+ {param name : 'used_by_wrap_script' /}
+ {param default : 'False' /}
+ {param desc}
+ When using an <a href="{ROOT}article/exopackage.html">exopackage</a> for
+ Android, if this parameter is set to <code>True</code>, then the library is
+ included in the primary APK even if native libraries would otherwise not be
+ placed in it. This is intended for native libraries that are used by a
+ {sp}<a href="https://developer.android.com/ndk/guides/wrap-script">wrap.sh</a>
+ {sp}script, which must be placed in the primary APK. Only one of
+ {sp}<code>can_be_asset</code> and <code>used_by_wrap_script</code> can be set
+ for a rule.
+ {/param}
+{/call}
+
 {call cxx_common.supported_platforms_regex_arg /}
 
 {call cxx_common.force_static /}

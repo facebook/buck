@@ -1045,6 +1045,7 @@ public class AndroidApkGraphEnhancerTest {
         /* nativeLibAssetsToExclude */ ImmutableSet.of(),
         /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
         /* nativeLibsForSystemLoaderToExclude */ ImmutableSet.of(),
+        /* nativeLinkablesUsedByWrapScriptToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         /* noAutoVersionResources */ false,

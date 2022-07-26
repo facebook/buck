@@ -40,6 +40,18 @@ cxx_library(
 )
 
 cxx_library(
+    name = "lib_used_by_wrap_script",
+    srcs = [
+        "bar.cpp",
+    ],
+    used_by_wrap_script = True,
+    soname = "lib_used_by_wrap_script.$(ext)",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+cxx_library(
     name = "foo1",
     srcs = [
         "foo.cpp",

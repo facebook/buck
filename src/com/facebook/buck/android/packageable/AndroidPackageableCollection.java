@@ -83,6 +83,12 @@ public interface AndroidPackageableCollection {
   /** Native libraries to be packaged as assets. */
   ImmutableMultimap<APKModule, NativeLinkableGroup> getNativeLinkablesAssets();
 
+  /**
+   * Native libraries that are used by a wrap script and must be packaged in the primary APK. Since
+   * these must be in the root module, we use a list instead of a map.
+   */
+  ImmutableList<NativeLinkableGroup> getNativeLinkablesUsedByWrapScript();
+
   /** Directories containing native libraries. */
   ImmutableMultimap<APKModule, SourcePath> getNativeLibsDirectories();
 

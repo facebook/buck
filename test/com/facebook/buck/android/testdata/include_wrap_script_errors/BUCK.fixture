@@ -4,3 +4,32 @@ prebuilt_native_library(
     is_asset = True,
     has_wrap_script = True,
 )
+
+cxx_library(
+    name = "cxx_asset_and_used_by_wrap_script",
+    can_be_asset = True,
+    used_by_wrap_script = True,
+)
+
+cxx_library(
+    name = "cxx_used_by_wrap_script",
+    used_by_wrap_script = True,
+)
+
+keystore(
+    name = "debug",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+)
+
+android_binary(
+    name = "cxx_used_by_wrap_script_in_module",
+    application_module_configs = {
+        "native": [":cxx_used_by_wrap_script"],
+    },
+    keystore = ":debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        ":cxx_used_by_wrap_script",
+    ],
+)

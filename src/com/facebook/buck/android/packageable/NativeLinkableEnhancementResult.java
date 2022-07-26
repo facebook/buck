@@ -19,8 +19,10 @@ package com.facebook.buck.android.packageable;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import java.util.List;
 
 /**
  * A simple data object to hold mapping from {@link APKModule} to {@link NativeLinkable} for both
@@ -31,8 +33,10 @@ public interface NativeLinkableEnhancementResult {
 
   static NativeLinkableEnhancementResult of(
       Multimap<? extends APKModule, ? extends NativeLinkable> nativeLinkables,
-      Multimap<? extends APKModule, ? extends NativeLinkable> nativeLinkableAssets) {
-    return ImmutableNativeLinkableEnhancementResult.ofImpl(nativeLinkables, nativeLinkableAssets);
+      Multimap<? extends APKModule, ? extends NativeLinkable> nativeLinkableAssets,
+      List<? extends NativeLinkable> nativeLinkablesUsedByWrapScript) {
+    return ImmutableNativeLinkableEnhancementResult.ofImpl(
+        nativeLinkables, nativeLinkableAssets, nativeLinkablesUsedByWrapScript);
   }
 
   /** Native libraries by platform. */
@@ -40,4 +44,7 @@ public interface NativeLinkableEnhancementResult {
 
   /** Native libraries to be packaged as assets by platform. */
   ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkableAssets();
+
+  /** Native libraries to be packaged in the primary APK. */
+  ImmutableList<NativeLinkable> getNativeLinkablesUsedByWrapScript();
 }

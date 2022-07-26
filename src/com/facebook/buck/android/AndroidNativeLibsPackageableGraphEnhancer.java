@@ -153,7 +153,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   }
 
   // Populates an immutable map builder with all given linkables set to the given cpu type.
-  // Returns true iff linkables is not empty.
   private void getNativeLinkableMetadata(
       ImmutableMultimap<APKModule, NativeLinkable> linkables,
       ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> builder,
@@ -161,22 +160,36 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       TargetCpuType targetCpuType)
       throws HumanReadableException {
     for (Map.Entry<APKModule, NativeLinkable> linkableEntry : linkables.entries()) {
-      NativeLinkable nativeLinkable = linkableEntry.getValue();
-      if (nativeLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
-        if (!androidNativeTargetConfigurationMatcher.nativeTargetConfigurationMatchesCpuType(
-            linkableEntry.getValue().getBuildTarget(), targetCpuType)) {
-          continue;
-        }
+      getMetadataForNativeLinkable(
+          linkableEntry.getKey(),
+          linkableEntry.getValue(),
+          builder,
+          duplicateReporter,
+          targetCpuType);
+    }
+  }
 
-        getSharedLibrariesAndMetadata(
-            targetCpuType,
-            nativeLinkable,
-            linkableEntry.getKey(),
-            (metadata, libraryPath) -> {
-              builder.put(metadata, libraryPath);
-              duplicateReporter.accept(metadata, nativeLinkable.getBuildTarget());
-            });
+  private void getMetadataForNativeLinkable(
+      APKModule apkModule,
+      NativeLinkable nativeLinkable,
+      ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> builder,
+      BiConsumer<AndroidLinkableMetadata, BuildTarget> duplicateReporter,
+      TargetCpuType targetCpuType)
+      throws HumanReadableException {
+    if (nativeLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
+      if (!androidNativeTargetConfigurationMatcher.nativeTargetConfigurationMatchesCpuType(
+          nativeLinkable.getBuildTarget(), targetCpuType)) {
+        return;
       }
+
+      getSharedLibrariesAndMetadata(
+          targetCpuType,
+          nativeLinkable,
+          apkModule,
+          (metadata, libraryPath) -> {
+            builder.put(metadata, libraryPath);
+            duplicateReporter.accept(metadata, nativeLinkable.getBuildTarget());
+          });
     }
   }
 
@@ -199,11 +212,15 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         packageableCollection.getNativeLinkables();
     ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkableGroupsAssets =
         packageableCollection.getNativeLinkablesAssets();
+    ImmutableList<NativeLinkableGroup> nativeLinkableGroupsUsedByWrapScript =
+        packageableCollection.getNativeLinkablesUsedByWrapScript();
 
     // TODO(cjhopman): The linkables handling is much more complex and we probably should split it
     // out into its own function.
     boolean hasLinkables =
-        !(nativeLinkableGroups.isEmpty() && nativeLinkableGroupsAssets.isEmpty());
+        !(nativeLinkableGroups.isEmpty()
+            && nativeLinkableGroupsAssets.isEmpty()
+            && nativeLinkableGroupsUsedByWrapScript.isEmpty());
     boolean hasNativeLibDirs =
         !(packageableCollection.getNativeLibsDirectories().isEmpty()
             && packageableCollection.getNativeLibAssetsDirectories().isEmpty()
@@ -248,7 +265,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           expandLinkableGroups(
               nativePlatforms.get(cpuType).getCxxPlatform(),
               nativeLinkableGroups,
-              nativeLinkableGroupsAssets));
+              nativeLinkableGroupsAssets,
+              nativeLinkableGroupsUsedByWrapScript));
     }
 
     ImmutableMap<TargetCpuType, NativeLinkableEnhancementResult> nativeLinkables =
@@ -292,16 +310,19 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
     // Make sure we process the root module last so that we know if any of the module contain
     // libraries that depend on a non-system runtime and add it to the root module if needed.
+    APKModule rootAPKModule = apkModuleGraph.getRootAPKModule();
     ImmutableSet<APKModule> apkModules =
         FluentIterable.from(apkModuleGraph.getAPKModules())
             .filter(input -> !input.isRootModule())
-            .append(apkModuleGraph.getRootAPKModule())
+            .append(rootAPKModule)
             .toSet();
 
     ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsBuilder =
         ImmutableMap.builder();
     ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssetsBuilder =
         ImmutableMap.builder();
+    ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath>
+        nativeLinkableLibsUsedByWrapScriptBuilder = ImmutableMap.builder();
 
     BiConsumer<AndroidLinkableMetadata, BuildTarget> duplicateReporter =
         new BiConsumer<AndroidLinkableMetadata, BuildTarget>() {
@@ -330,12 +351,27 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           nativeLinkableLibsAssetsBuilder,
           duplicateReporter,
           targetCpuType);
+      for (NativeLinkable nativeLinkable :
+          nativeLinkables.get(targetCpuType).getNativeLinkablesUsedByWrapScript()) {
+        getMetadataForNativeLinkable(
+            rootAPKModule,
+            nativeLinkable,
+            nativeLinkableLibsUsedByWrapScriptBuilder,
+            duplicateReporter,
+            targetCpuType);
+      }
     }
 
     // Adds a cxxruntime linkable to the nativeLinkableLibsBuilder for every platform that needs it.
     ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssets =
         nativeLinkableLibsAssetsBuilder.build();
-    addCxxRuntimeLinkables(nativePlatforms, nativeLinkableLibsBuilder, nativeLinkableLibsAssets);
+    ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsUsedByWrapScript =
+        nativeLinkableLibsUsedByWrapScriptBuilder.build();
+    addCxxRuntimeLinkables(
+        nativePlatforms,
+        nativeLinkableLibsBuilder,
+        nativeLinkableLibsAssets,
+        nativeLinkableLibsUsedByWrapScript);
 
     ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibs =
         nativeLinkableLibsBuilder.build();
@@ -354,10 +390,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               nativePlatforms,
               nativeLinkableLibs,
               nativeLinkableLibsAssets,
+              nativeLinkableLibsUsedByWrapScript,
               relinkerWhitelist);
 
       nativeLinkableLibs = relinker.getRelinkedLibs();
       nativeLinkableLibsAssets = relinker.getRelinkedLibsAssets();
+      nativeLinkableLibsUsedByWrapScript = relinker.getRelinkedLibsUsedByWrapScript();
       for (BuildRule rule : relinker.getRules()) {
         graphBuilder.addToIndex(rule);
       }
@@ -367,10 +405,14 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         generateStripRules(nativePlatforms, nativeLinkableLibs);
     ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
         strippedLibsAssetsMap = generateStripRules(nativePlatforms, nativeLinkableLibsAssets);
+    ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+        strippedLibsUsedByWrapScriptMap =
+            generateStripRules(nativePlatforms, nativeLinkableLibsUsedByWrapScript);
 
     ImmutableSortedSet<SourcePath> unstrippedLibraries =
         RichStream.from(nativeLinkableLibs.values())
             .concat(nativeLinkableLibsAssets.values().stream())
+            .concat(nativeLinkableLibsUsedByWrapScript.values().stream())
             .toImmutableSortedSet(Ordering.natural());
 
     Optional<CopyNativeLibraries> nativeLibrariesForPrimaryApk = Optional.empty();
@@ -388,6 +430,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                   FluentIterable.from(strippedLibsAssetsMap.entrySet())
                       .filter(entry -> module.equals(entry.getValue().getApkModule())));
 
+      ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+          filteredStrippedLibsUsedByWrapScriptMap =
+              ImmutableMap.copyOf(
+                  FluentIterable.from(strippedLibsUsedByWrapScriptMap.entrySet())
+                      .filter(entry -> module.equals(entry.getValue().getApkModule())));
+
       ImmutableCollection<SourcePath> nativeLibsDirectories =
           packageableCollection.getNativeLibsDirectories().get(module);
 
@@ -399,12 +447,14 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           module.isRootModule()
               ? packageableCollection.getNativeLibsDirectoriesForSystemLoader()
               : ImmutableList.of();
-      if (module.isRootModule() && !nativeLibsDirectoriesForPrimaryDexModule.isEmpty()) {
+      if (module.isRootModule()
+          && !(filteredStrippedLibsUsedByWrapScriptMap.isEmpty()
+              && nativeLibsDirectoriesForPrimaryDexModule.isEmpty())) {
         nativeLibrariesForPrimaryApk =
             Optional.of(
                 createCopyNativeLibraries(
                     module,
-                    ImmutableMap.of(),
+                    filteredStrippedLibsUsedByWrapScriptMap,
                     ImmutableMap.of(),
                     nativeLibsDirectoriesForPrimaryDexModule,
                     ImmutableList.of(),
@@ -520,12 +570,15 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private NativeLinkableEnhancementResult expandLinkableGroups(
       CxxPlatform cxxPlatform,
       ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkableGroups,
-      ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkableGroupssAssets) {
+      ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkableGroupssAssets,
+      ImmutableList<NativeLinkableGroup> nativeLinkableGroupsUsedByWrapScript) {
 
     ImmutableMultimap.Builder<APKModule, NativeLinkable> linkablesBuilder =
         ImmutableMultimap.builder();
     ImmutableMultimap.Builder<APKModule, NativeLinkable> linkableAssetsBuilder =
         ImmutableMultimap.builder();
+    ImmutableList.Builder<NativeLinkable> linkablesUsedByWrapScriptBuilder =
+        ImmutableList.builder();
 
     nativeLinkableGroups.forEach(
         (module, group) ->
@@ -535,16 +588,25 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         (module, group) ->
             linkableAssetsBuilder.put(module, group.getNativeLinkable(cxxPlatform, graphBuilder)));
 
+    nativeLinkableGroupsUsedByWrapScript.forEach(
+        group ->
+            linkablesUsedByWrapScriptBuilder.add(
+                group.getNativeLinkable(cxxPlatform, graphBuilder)));
+
     return NativeLinkableEnhancementResult.of(
-        linkablesBuilder.build(), linkableAssetsBuilder.build());
+        linkablesBuilder.build(),
+        linkableAssetsBuilder.build(),
+        linkablesUsedByWrapScriptBuilder.build());
   }
 
   private void addCxxRuntimeLinkables(
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsBuilder,
-      ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssets) {
+      ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssets,
+      ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsUsedByWrapScript) {
     RichStream.from(nativeLinkableLibsBuilder.build().keySet())
         .concat(RichStream.from(nativeLinkableLibsAssets.keySet()))
+        .concat(RichStream.from(nativeLinkableLibsUsedByWrapScript.keySet()))
         .map(AndroidLinkableMetadata::getTargetCpuType)
         .distinct()
         .forEach(

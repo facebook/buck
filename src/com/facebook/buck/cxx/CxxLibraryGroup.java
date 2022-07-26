@@ -117,6 +117,7 @@ public class CxxLibraryGroup extends NoopBuildRule
   private final Linkage linkage;
   private final boolean linkWhole;
   private final boolean includeInAndroidMergeMapOutput;
+  private final boolean usedByWrapScript;
   private final Optional<String> soname;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final boolean canBeAsset;
@@ -165,6 +166,7 @@ public class CxxLibraryGroup extends NoopBuildRule
       ImmutableSet<FrameworkPath> libraries,
       Linkage linkage,
       boolean includeInAndroidMergeMapOutput,
+      boolean usedByWrapScript,
       boolean linkWhole,
       Optional<String> soname,
       ImmutableSortedSet<BuildTarget> tests,
@@ -188,6 +190,7 @@ public class CxxLibraryGroup extends NoopBuildRule
     this.libraries = libraries;
     this.linkage = linkage;
     this.includeInAndroidMergeMapOutput = includeInAndroidMergeMapOutput;
+    this.usedByWrapScript = usedByWrapScript;
     this.linkWhole = linkWhole;
     this.soname = soname;
     this.tests = tests;
@@ -598,6 +601,8 @@ public class CxxLibraryGroup extends NoopBuildRule
       ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     if (canBeAsset) {
       collector.addNativeLinkableAsset(this);
+    } else if (usedByWrapScript) {
+      collector.addNativeLinkableUsedByWrapScript(this);
     } else {
       collector.addNativeLinkable(this);
     }

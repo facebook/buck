@@ -503,6 +503,7 @@ public class CxxLibraryFactory {
             ? NativeLinkableGroup.Linkage.STATIC
             : args.getPreferredLinkage().orElse(NativeLinkableGroup.Linkage.ANY),
         args.getIncludeInAndroidMergeMapOutput(),
+        args.getUsedByWrapScript(),
         args.getLinkWhole().orElse(false),
         args.getSoname(),
         args.getTests(),

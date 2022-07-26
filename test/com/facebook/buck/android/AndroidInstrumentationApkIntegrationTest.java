@@ -145,6 +145,9 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libcxx_asset_in_app.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libcxx_asset_in_app.so");
 
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libcxx_used_by_wrap_script_in_app.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libcxx_used_by_wrap_script_in_app.so");
+
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libprebuilt.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libprebuilt_asset.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libprebuilt_has_wrap_script.so");

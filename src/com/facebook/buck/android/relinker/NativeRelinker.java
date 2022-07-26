@@ -73,6 +73,7 @@ public class NativeRelinker {
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibs;
   private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibsAssets;
+  private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibsUsedByWrapScript;
   private final ProjectFilesystem projectFilesystem;
   private final SourcePathRuleFinder ruleFinder;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
@@ -91,6 +92,7 @@ public class NativeRelinker {
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibs,
       ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibsAssets,
+      ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibsUsedByWrapScript,
       ImmutableList<Pattern> symbolPatternWhitelist) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -122,7 +124,10 @@ public class NativeRelinker {
     ImmutableSet.Builder<Pair<TargetCpuType, SourcePath>> copiedLibraries = ImmutableSet.builder();
 
     for (Map.Entry<AndroidLinkableMetadata, SourcePath> entry :
-        Iterables.concat(linkableLibs.entrySet(), linkableLibsAssets.entrySet())) {
+        Iterables.concat(
+            linkableLibs.entrySet(),
+            linkableLibsAssets.entrySet(),
+            linkableLibsUsedByWrapScript.entrySet())) {
       SourcePath source = entry.getValue();
       Optional<BuildRule> rule = ruleFinder.getRule(source);
       if (rule.isPresent()) {
@@ -202,6 +207,8 @@ public class NativeRelinker {
     relinkedLibs = ImmutableMap.copyOf(Maps.transformValues(linkableLibs, pathMapper::apply));
     relinkedLibsAssets =
         ImmutableMap.copyOf(Maps.transformValues(linkableLibsAssets, pathMapper::apply));
+    relinkedLibsUsedByWrapScript =
+        ImmutableMap.copyOf(Maps.transformValues(linkableLibsUsedByWrapScript, pathMapper::apply));
   }
 
   private static DirectedAcyclicGraph<BuildRule> getBuildGraph(Set<BuildRule> rules) {
@@ -277,6 +284,10 @@ public class NativeRelinker {
 
   public ImmutableMap<AndroidLinkableMetadata, SourcePath> getRelinkedLibsAssets() {
     return relinkedLibsAssets;
+  }
+
+  public ImmutableMap<AndroidLinkableMetadata, SourcePath> getRelinkedLibsUsedByWrapScript() {
+    return relinkedLibsUsedByWrapScript;
   }
 
   public ImmutableList<RelinkerRule> getRules() {

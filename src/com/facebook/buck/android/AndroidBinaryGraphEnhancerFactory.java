@@ -180,6 +180,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         /* nativeLibAssetsToExclude */ ImmutableSet.of(),
         /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
         /* nativeLibsForSystemLoaderToExclude */ ImmutableSet.of(),
+        /* nativeLinkablesUsedByWrapScriptToExclude */ ImmutableSet.of(),
         shouldSkipCrunchPngs,
         args.isIncludesVectorDrawables(),
         args.isNoAutoVersionResources(),

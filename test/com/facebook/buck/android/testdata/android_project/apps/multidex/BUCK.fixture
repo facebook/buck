@@ -612,6 +612,7 @@ android_binary(
         "//java/com/sample/app:app",
         "//java/com/sample/lib:lib",
         "//native/cxx:lib",
+        "//native/cxx:lib_used_by_wrap_script",
         "//native/fakenative/jni:prebuilt_native",
         "//native/fakenative/jni:prebuilt_native_has_wrap_script",
         "//third-party:kiwi",

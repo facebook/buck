@@ -131,6 +131,8 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableCollection<SourcePath> nativeLibAssetsToExclude;
   private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesAssetsToExcludeGroup;
   private final ImmutableCollection<SourcePath> nativeLibsForSystemLoaderToExclude;
+  private final ImmutableCollection<NativeLinkableGroup>
+      nativeLinkablesUsedByWrapScriptToExcludeGroup;
   private final JavaBuckConfig javaBuckConfig;
   private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
@@ -185,6 +187,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableCollection<SourcePath> nativeLibAssetsToExclude,
       ImmutableCollection<NativeLinkableGroup> nativeLinkableGroupAssetsToExclude,
       ImmutableCollection<SourcePath> nativeLibsForSystemLoaderToExclude,
+      ImmutableCollection<NativeLinkableGroup> nativeLinkablesUsedByWrapScriptToExcludeGroup,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
       boolean noAutoVersionResources,
@@ -249,6 +252,8 @@ public class AndroidBinaryGraphEnhancer {
     this.nativeLibAssetsToExclude = nativeLibAssetsToExclude;
     this.nativeLinkablesAssetsToExcludeGroup = nativeLinkableGroupAssetsToExclude;
     this.nativeLibsForSystemLoaderToExclude = nativeLibsForSystemLoaderToExclude;
+    this.nativeLinkablesUsedByWrapScriptToExcludeGroup =
+        nativeLinkablesUsedByWrapScriptToExcludeGroup;
     this.javaBuckConfig = javaBuckConfig;
     this.javaCDBuckConfig = javaCDBuckConfig;
     this.javacOptions = javacOptions;
@@ -340,6 +345,7 @@ public class AndroidBinaryGraphEnhancer {
             nativeLibAssetsToExclude,
             nativeLinkablesAssetsToExcludeGroup,
             nativeLibsForSystemLoaderToExclude,
+            nativeLinkablesUsedByWrapScriptToExcludeGroup,
             apkModuleGraph,
             AndroidPackageableFilterFactory.createFromConfigurationMatcher(
                 originalBuildTarget, androidNativeTargetConfigurationMatcher),
