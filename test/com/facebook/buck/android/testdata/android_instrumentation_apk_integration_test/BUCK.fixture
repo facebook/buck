@@ -2,10 +2,15 @@ android_binary(
     name = "app",
     keystore = ":keystore",
     manifest = "AndroidManifest.xml",
+    package_asset_libraries = True,
     visibility = [
         "PUBLIC",
     ],
     deps = [
+        "//:cxx_in_app",
+        "//:cxx_asset_in_app",
+        "//:prebuilt_in_app",
+        "//:prebuilt_asset_in_app",
         "//java/com/sample/lib:lib",
         "//res:res",
     ],
@@ -29,6 +34,36 @@ cxx_library(
     visibility = [
         "PUBLIC",
     ],
+    deps = [
+        "//:cxx_in_app",
+        "//:cxx_asset_in_app",
+    ],
+)
+
+cxx_library(
+    name = "cxx_in_app",
+    srcs = [
+        "lib.cpp",
+    ],
+)
+
+cxx_library(
+    name = "cxx_asset_in_app",
+    srcs = [
+        "lib.cpp",
+    ],
+    can_be_asset = True,
+)
+
+prebuilt_native_library(
+    name = "prebuilt_in_app",
+    native_libs = "lib/prebuilt",
+)
+
+prebuilt_native_library(
+    name = "prebuilt_asset_in_app",
+    native_libs = "lib/prebuilt_asset",
+    is_asset = True,
 )
 
 android_instrumentation_apk(
@@ -37,6 +72,8 @@ android_instrumentation_apk(
     manifest = "AndroidManifest.xml",
     deps = [
         "//:cxx",
+        "//:prebuilt_in_app",
+        "//:prebuilt_asset_in_app",
         "//java/com/sample/app:app",
     ],
 )

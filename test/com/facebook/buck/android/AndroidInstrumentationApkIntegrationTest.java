@@ -118,4 +118,34 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
     testApkDexInspector.assertTypeDoesNotExist("Lcom/example/R;");
     testApkDexInspector.assertTypeDoesNotExist("Lcom/example/R$color;");
   }
+
+  @Test
+  public void testCxxLibraryExclusion() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_instrumentation_apk_integration_test", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+    setWorkspaceCompilationMode(workspace);
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+
+    String target = "//:app_cxx_lib_dep";
+    workspace.runBuckCommand("build", target).assertSuccess();
+
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libcxx_in_app.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libcxx_in_app.so");
+
+    // Note that assets are packaged in the lib directory in an instrumentation APK
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libcxx_asset_in_app.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libcxx_asset_in_app.so");
+
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libprebuilt.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libprebuilt_asset.so");
+  }
 }
