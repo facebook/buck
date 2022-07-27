@@ -101,6 +101,9 @@ public class AppleCommandLineOptions {
   @Option(name = "--idb_path", usage = "Use this option to set the idb path for the install")
   private String idbPath = "/usr/local/bin/idb";
 
+  @Option(name = "--log-path", usage = "Use this option to set the log path for the install")
+  private String logPath;
+
   public AppleCommandLineOptions() {}
 
   public boolean getRun() {
@@ -133,6 +136,10 @@ public class AppleCommandLineOptions {
 
   public String getIdbPath() {
     return idbPath;
+  }
+
+  public String getLogPath() {
+    return logPath;
   }
 
   /** Gets Target Device Options for Install */
