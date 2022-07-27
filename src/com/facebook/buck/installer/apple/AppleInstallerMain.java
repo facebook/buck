@@ -106,6 +106,6 @@ public class AppleInstallerMain {
     am.setLogger(logger);
     am.setCLIOptions(options);
     /** Starts the GRPC Server */
-    new InstallerServer(options.unix_domain_socket, am, logger);
+    new InstallerServer(options.getUnixDomainSocket(), am, logger, options.getTcpPort());
   }
 }

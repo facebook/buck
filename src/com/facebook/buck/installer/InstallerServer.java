@@ -36,13 +36,12 @@ import java.util.logging.Logger; // NOPMD
 
 public class InstallerServer {
 
-  private static final int DEFAULT_TCP_PORT = 50055;
-
-  public InstallerServer(String unixDomainSocket, InstallCommand installer, Logger logger)
+  public InstallerServer(
+      String unixDomainSocket, InstallCommand installer, Logger logger, int tcpPort)
       throws IOException, InterruptedException {
     SettableFuture<Unit> isDone = SettableFuture.create();
     InstallerService installerService = new InstallerService(installer, isDone, logger);
-    Server grpcServer = buildServer(installerService, unixDomainSocket, logger);
+    Server grpcServer = buildServer(installerService, unixDomainSocket, logger, tcpPort);
     isDone.addCallback(
         new FutureCallback<>() {
           @Override
@@ -72,15 +71,17 @@ public class InstallerServer {
     grpcServer.awaitTermination();
   }
 
-  /**
-   * Build an installer server at requested {@code unixDomainSocket} or fallback to TCP on 50055.
-   */
-  private Server buildServer(InstallerService service, String unixDomainSocket, Logger logger) {
+  /** Build an installer server at requested {@code unixDomainSocket} or fallback to TCP. */
+  private Server buildServer(
+      InstallerService service, String unixDomainSocket, Logger logger, int tcpPort) {
+    logger.info(
+        String.format(
+            "Starting Installer Server using UDS: %s or TCP: %s", unixDomainSocket, tcpPort));
     /// We can use UDS if Epoll available
     if (Epoll.isAvailable()) {
       return getUDSServer(service, unixDomainSocket, logger);
     }
-    return getTCPServer(service, logger);
+    return getTCPServer(service, logger, tcpPort);
   }
 
   private Server getUDSServer(InstallerService service, String unixDomainSocket, Logger logger) {
@@ -96,16 +97,16 @@ public class InstallerServer {
     return server;
   }
 
-  private Server getTCPServer(InstallerService service, Logger logger) {
+  private Server getTCPServer(InstallerService service, Logger logger, int tcpPort) {
     EventLoopGroup group = new NioEventLoopGroup();
     Server server =
-        NettyServerBuilder.forPort(DEFAULT_TCP_PORT)
+        NettyServerBuilder.forPort(tcpPort)
             .channelType(NioServerSocketChannel.class)
             .workerEventLoopGroup(group)
             .bossEventLoopGroup(group)
             .addService(service)
             .build();
-    logger.info(String.format("Starting server listening on TCP port %s", DEFAULT_TCP_PORT));
+    logger.info(String.format("Starting server listening on TCP port %s", tcpPort));
     return server;
   }
 

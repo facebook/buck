@@ -18,7 +18,6 @@ package com.facebook.buck.installer.apple;
 
 import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.installer.common.ConsumeAllOptionsHandler;
-import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,8 +30,8 @@ import org.kohsuke.args4j.Option;
  */
 public class AppleCommandLineOptions {
 
-  @VisibleForTesting static final String RUN_LONG_ARG = "--run";
-  @VisibleForTesting static final String RUN_SHORT_ARG = "-r";
+  private static final String RUN_LONG_ARG = "--run";
+  private static final String RUN_SHORT_ARG = "-r";
 
   @Option(
       name = RUN_LONG_ARG,
@@ -47,8 +46,8 @@ public class AppleCommandLineOptions {
       depends = "-r")
   private final List<String> runArgs = new ArrayList<>();
 
-  @VisibleForTesting static final String WAIT_FOR_DEBUGGER_LONG_ARG = "--wait-for-debugger";
-  @VisibleForTesting static final String WAIT_FOR_DEBUGGER_SHORT_ARG = "-w";
+  private static final String WAIT_FOR_DEBUGGER_LONG_ARG = "--wait-for-debugger";
+  private static final String WAIT_FOR_DEBUGGER_SHORT_ARG = "-w";
 
   @Option(
       name = WAIT_FOR_DEBUGGER_LONG_ARG,
@@ -56,8 +55,8 @@ public class AppleCommandLineOptions {
       usage = "Have the launched process wait for the debugger")
   private final boolean waitForDebugger = false;
 
-  @VisibleForTesting static final String DEVICE_MODE_SHORT_ARG = "-d";
-  @VisibleForTesting static final String DEVICE_MODE_LONG_ARG = "--device";
+  private static final String DEVICE_MODE_SHORT_ARG = "-d";
+  private static final String DEVICE_MODE_LONG_ARG = "--device";
 
   @Option(
       name = DEVICE_MODE_LONG_ARG,
@@ -65,8 +64,8 @@ public class AppleCommandLineOptions {
       usage = "Use this option to use real devices only.")
   private boolean useRealDevicesOnlyMode;
 
-  @VisibleForTesting static final String SERIAL_NUMBER_SHORT_ARG = "-s";
-  @VisibleForTesting static final String SERIAL_NUMBER_LONG_ARG = "--serial";
+  static final String SERIAL_NUMBER_SHORT_ARG = "-s";
+  static final String SERIAL_NUMBER_LONG_ARG = "--serial";
   static final String UDID_ARG = "--udid";
 
   @Option(
@@ -92,21 +91,17 @@ public class AppleCommandLineOptions {
 
   @Option(name = "--named-pipe", usage = "unix domain socket used for connection if available")
   @Nullable
-  public String unix_domain_socket;
+  private String unixDomainSocket;
+
+  @Option(
+      name = "--tcp-port",
+      usage = "TCP port used for connection in case TCP protocol is chosen")
+  private int tcpPort = 50055;
 
   @Option(name = "--idb_path", usage = "Use this option to set the idb path for the install")
-  public String idb_path = "/usr/local/bin/idb";
+  private String idbPath = "/usr/local/bin/idb";
 
   public AppleCommandLineOptions() {}
-
-  @VisibleForTesting
-  AppleCommandLineOptions(String serial) {
-    this.serialNumber = serial;
-  }
-
-  public String getIdbPath() {
-    return idb_path;
-  }
 
   public boolean getRun() {
     return isRun;
@@ -126,6 +121,18 @@ public class AppleCommandLineOptions {
 
   public Optional<String> getSimulatorName() {
     return Optional.ofNullable(simulatorName);
+  }
+
+  public String getUnixDomainSocket() {
+    return unixDomainSocket;
+  }
+
+  public int getTcpPort() {
+    return tcpPort;
+  }
+
+  public String getIdbPath() {
+    return idbPath;
   }
 
   /** Gets Target Device Options for Install */

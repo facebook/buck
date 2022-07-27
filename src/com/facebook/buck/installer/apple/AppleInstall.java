@@ -77,7 +77,7 @@ public class AppleInstall {
     this.options = options;
     this.appInstallOptions = appInstallOptions;
     this.appleDeviceController = appleDeviceController;
-    this.idbPath = Paths.get(options.idb_path);
+    this.idbPath = Paths.get(options.getIdbPath());
     this.log = log;
     this.xcodeDeveloperPath = Optional.of(Paths.get(appInstallOptions.xcodeDeveloperPath));
     setAppleBundleID(app.getParent());
