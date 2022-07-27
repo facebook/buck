@@ -108,6 +108,7 @@ public class FatJarMain {
           getCommand(
               isWrapperScript,
               innerArtifact,
+              debug,
               debug ? Arrays.copyOfRange(args, 1, args.length) : args);
       if (debug) {
         printDebugInfo("Executing command: " + command);
@@ -195,8 +196,8 @@ public class FatJarMain {
   }
 
   /** @return a command to start a new JVM process to execute the given main class. */
-  private static List<String> getCommand(boolean wrapperScript, Path artifact, String[] args)
-      throws IOException {
+  private static List<String> getCommand(
+      boolean wrapperScript, Path artifact, boolean isDebug, String[] args) throws IOException {
     List<String> cmd = new ArrayList<>();
 
     // Look for the Java binary given in an alternate location if given,
@@ -205,11 +206,21 @@ public class FatJarMain {
     cmd.add(Paths.get(javaHome, "bin", "java").toString());
     // Pass through any VM arguments to the child process
     cmd.addAll(getJVMArguments());
-    // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
-    // https://stackoverflow.com/a/16535804/5208808
-    cmd.add("-XX:-MaxFDLimit");
+    if (!cmd.contains("-XX:-MaxFDLimit")) {
+      // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+      // https://stackoverflow.com/a/16535804/5208808
+      cmd.add("-XX:-MaxFDLimit");
+    }
 
     if (wrapperScript) {
+      String customWrapper = getEnvValue("FAT_JAR_CUSTOM_SCRIPT");
+      if (customWrapper != null) {
+        if (isDebug) {
+          printDebugInfo("Using custom script wrapper: " + customWrapper);
+        }
+        cmd.add(0, customWrapper);
+      }
+
       List<String> strings = Files.readAllLines(artifact, StandardCharsets.UTF_8);
       if (strings.size() != 1) {
         throw new IllegalStateException(
