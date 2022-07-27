@@ -93,17 +93,6 @@ public class FileClassPathRunner {
         || System.getProperty(CLASSPATH_FILE_PROPERTY) != null;
   }
 
-  private static String readRequiredProperty(String propertyName) {
-    String value = System.getProperty(propertyName);
-    if (value == null) {
-      throw new IllegalArgumentException(
-          String.format(
-              "System property %s is required by %s",
-              propertyName, FileClassPathRunner.class.getSimpleName()));
-    }
-    return value;
-  }
-
   private static ClassLoader getClassLoaderForTests(URL[] classpath) {
     if (JavaVersionUtils.getMajorVersion() <= 8) {
       URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
@@ -131,7 +120,10 @@ public class FileClassPathRunner {
   // VisibleForTesting (can not use guava as dependency)
   static URL[] getClassPath(StringBuilder classPathPropertyOut) throws IOException {
     List<Path> classPath = new ArrayList<>();
-    classPath.add(getTestRunnerClassPath());
+    String testRunnerClassPath = System.getProperty(TESTRUNNER_CLASSES_PROPERTY);
+    if (testRunnerClassPath != null) {
+      classPath.add(Paths.get(testRunnerClassPath));
+    }
 
     String classPathFileProperty = System.getProperty(CLASSPATH_FILE_PROPERTY);
     if (classPathFileProperty != null) {
@@ -156,11 +148,6 @@ public class FileClassPathRunner {
         .map(Paths::get)
         .filter(Files::exists)
         .collect(Collectors.toList());
-  }
-
-  static Path getTestRunnerClassPath() {
-    String path = readRequiredProperty(TESTRUNNER_CLASSES_PROPERTY);
-    return Paths.get(path);
   }
 
   // VisibleForTesting (can not use guava as dependency)
