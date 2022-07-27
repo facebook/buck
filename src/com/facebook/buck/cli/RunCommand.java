@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.support.fix.BuckRunSpec;
 import com.facebook.buck.util.CommandLineException;
@@ -40,12 +41,14 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import java.io.Closeable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.kohsuke.args4j.Argument;
@@ -53,6 +56,8 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
 
 public final class RunCommand extends AbstractCommand {
+
+  private static final Logger LOG = Logger.get(RunCommand.class);
 
   /**
    * Expected usage:
@@ -182,11 +187,21 @@ public final class RunCommand extends AbstractCommand {
               .addAll(executable.getCommandPrefix(resolver))
               .addAll(getTargetArguments())
               .build();
+
+      ImmutableMap<String, String> envs = params.getEnvironment();
+      ImmutableMap<String, String> extraEnvs = executable.getEnvironment(resolver);
+
+      Sets.SetView<String> intersection = Sets.intersection(envs.keySet(), extraEnvs.keySet());
+      if (!intersection.isEmpty()) {
+        LOG.info("Env variables have the same keys [%s]. ", intersection);
+        envs =
+            envs.entrySet().stream()
+                .filter(e -> !intersection.contains(e.getKey()))
+                .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+      }
+
       ImmutableMap<String, String> envp =
-          ImmutableMap.<String, String>builder()
-              .putAll(params.getEnvironment())
-              .putAll(executable.getEnvironment(resolver))
-              .build();
+          ImmutableMap.<String, String>builder().putAll(envs).putAll(extraEnvs).build();
       BuckRunSpec cmd = BuckRunSpec.of(argv, envp, Optional.empty(), false, printCommand);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;

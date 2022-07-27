@@ -70,6 +70,13 @@ public class FatJarMain {
 
     boolean debug = args.length > 0 && args[0].equals(DEBUG_OPTION);
 
+    ProcessBuilder processBuilder = new ProcessBuilder();
+    Map<String, String> environment = processBuilder.environment();
+
+    if (debug) {
+      printDebugInfo("System envs: " + environment);
+    }
+
     ClassLoader classLoader = FatJarMain.class.getClassLoader();
 
     // Create a temp dir to house the native libraries.
@@ -97,7 +104,6 @@ public class FatJarMain {
 
       // Update the appropriate environment variable with the location of our native libraries
       // and start the real main class in a new process so that it picks it up.
-      ProcessBuilder builder = new ProcessBuilder();
       List<String> command =
           getCommand(
               isWrapperScript,
@@ -106,13 +112,13 @@ public class FatJarMain {
       if (debug) {
         printDebugInfo("Executing command: " + command);
       }
-      builder.command(command);
-      updateEnvironment(builder.environment(), nativeLibs, debug);
-      builder.inheritIO();
+      processBuilder.command(command);
+      updateEnvironment(environment, nativeLibs, debug);
+      processBuilder.inheritIO();
 
       // Wait for the inner process to finish, and propagate it's exit code, before cleaning
       // up the native libraries.
-      System.exit(builder.start().waitFor());
+      System.exit(processBuilder.start().waitFor());
     }
   }
 

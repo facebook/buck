@@ -49,8 +49,10 @@ import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.PatternsMatcher;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
@@ -68,6 +70,9 @@ import javax.annotation.Nullable;
 @BuildsAnnotationProcessor
 public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasClasspathDeps, HasClasspathEntries, HasRuntimeDeps {
+
+  private static final ImmutableMap<String, String> SYSTEM_ENV =
+      EnvVariablesProvider.getSystemEnv();
 
   // We're just propagating the runtime launcher through `getExecutable`, so don't add it to the
   // rule key.
@@ -291,11 +296,14 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         getBuildTarget());
 
     if (prepareWrapperScript) {
-      return new CommandTool.Builder()
-          .addArg("/bin/bash")
-          .addArg("-e")
-          .addArg(SourcePathArg.of(getSourcePathToOutput()))
-          .build();
+      CommandTool.Builder commandToolBuilder =
+          new CommandTool.Builder()
+              .addArg("/bin/bash")
+              .addArg("-e")
+              .addArg(SourcePathArg.of(getSourcePathToOutput()));
+      // copy env variables
+      SYSTEM_ENV.forEach(commandToolBuilder::addEnv);
+      return commandToolBuilder.build();
     }
 
     return new CommandTool.Builder(javaRuntimeLauncher)
