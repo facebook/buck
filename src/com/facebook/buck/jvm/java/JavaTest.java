@@ -63,6 +63,7 @@ import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.util.collect.MoreSets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -220,6 +221,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
+  }
+
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
   }
 
   /** */
@@ -598,6 +604,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setEnv(externalJunitStep.getEnvironmentVariables(executionContext.getPlatform()))
         .setLabels(getLabels())
         .setContacts(getContacts())
+        .setOncall(getOncall())
         .setPackageSuperProjectRelativePath(
             options
                 .getSuperProjectRootPath()

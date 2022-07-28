@@ -46,6 +46,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -112,6 +113,11 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
+  }
+
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
   }
 
   @Override
@@ -231,6 +237,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
         .setEnv(Arg.stringify(env, buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .setOncall(getOncall())
         .setRequiredPaths(
             requiredPaths.stream()
                 .map(PathWrapper::getPath)

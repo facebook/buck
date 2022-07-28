@@ -50,6 +50,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
@@ -270,6 +271,11 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return contacts;
   }
 
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
+  }
+
   public Pair<ImmutableList<Step>, ExternalTestRunnerTestSpec> getTestCommand(
       StepExecutionContext context,
       TestRunningOptions options,
@@ -283,6 +289,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setTarget(getBuildTarget())
             .setLabels(getLabels())
             .setContacts(getContacts())
+            .setOncall(getOncall())
             .setPackageSuperProjectRelativePath(
                 options
                     .getSuperProjectRootPath()

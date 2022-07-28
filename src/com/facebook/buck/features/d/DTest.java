@@ -42,6 +42,7 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.collect.MoreSets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -91,6 +92,11 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
+  }
+
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
   }
 
   private ImmutableList<String> getExecutableCommand(SourcePathResolverAdapter pathResolver) {
@@ -232,6 +238,7 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setCommand(getShellCommand(buildContext.getSourcePathResolver()))
         .setLabels(getLabels())
         .setContacts(getContacts())
+        .setOncall(getOncall())
         .build();
   }
 

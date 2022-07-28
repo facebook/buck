@@ -46,6 +46,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
+import com.facebook.buck.util.collect.MoreSets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -53,6 +54,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Stream;
@@ -125,6 +127,11 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
+  }
+
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
   }
 
   @Override

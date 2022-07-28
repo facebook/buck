@@ -54,6 +54,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.util.Memoizer;
+import com.facebook.buck.util.collect.MoreSets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -285,6 +286,11 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return contacts;
   }
 
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
+  }
+
   protected ImmutableSet<SourcePath> getAdditionalCoverageTargets() {
     return additionalCoverageTargets;
   }
@@ -375,6 +381,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .setOncall(getOncall())
         .addAllAdditionalCoverageTargets(
             buildContext.getSourcePathResolver().getAllAbsolutePaths(getAdditionalCoverageTargets())
                 .stream()

@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 /** A {@link BuildRule} that is designed to run tests. */
@@ -104,6 +105,9 @@ public interface TestRule extends BuildRule {
 
   /** @return The set of email addresses to act as contact points for this test. */
   ImmutableSet<String> getContacts();
+
+  /** @return An email address to act as oncall for this test. */
+  Optional<String> getOncall();
 
   /** @return The relative path to the output directory of the test rule. */
   Path getPathToTestOutputDirectory();

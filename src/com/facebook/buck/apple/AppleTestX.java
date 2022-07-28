@@ -46,6 +46,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
@@ -148,6 +149,11 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
+  }
+
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
   }
 
   @Override

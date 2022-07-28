@@ -31,6 +31,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.collect.MoreSets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -128,6 +129,11 @@ public class FakeTestRule extends AbstractBuildRuleWithDeclaredAndExtraDeps impl
   @Override
   public ImmutableSet<String> getContacts() {
     return ImmutableSet.of();
+  }
+
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
   }
 
   @Override

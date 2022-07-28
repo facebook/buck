@@ -49,6 +49,7 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.collect.MoreSets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -287,6 +288,11 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
+  }
+
+  @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
             getProjectFilesystem().getBuckPaths(), getBuildTarget(), "__test_%s_output__")
@@ -364,6 +370,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .getCommandPrefix(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .setOncall(getOncall())
         .build();
   }
 

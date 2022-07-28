@@ -75,6 +75,9 @@ public abstract class ExternalTestRunnerTestSpec implements ExternalTestSpec {
   /** @return test contacts. */
   public abstract ImmutableList<String> getContacts();
 
+  /** @return oncall */
+  public abstract Optional<String> getOncall();
+
   /**
    * @return the set of files and directories (may include symlinks or symlink-trees) which *must*
    *     be materialized in order to run this test. This is used by external test runners that wish
@@ -112,6 +115,10 @@ public abstract class ExternalTestRunnerTestSpec implements ExternalTestSpec {
         "labels",
         getLabels().stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
     jsonGenerator.writeObjectField("contacts", getContacts());
+    if (getOncall().isPresent()) {
+
+      jsonGenerator.writeObjectField("oncall", getOncall().get());
+    }
     if (getPackageSuperProjectRelativePath().isPresent()) {
       jsonGenerator.writeObjectField(
           "package_project_relative_path", getPackageSuperProjectRelativePath().get());

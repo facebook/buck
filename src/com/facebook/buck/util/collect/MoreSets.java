@@ -17,6 +17,7 @@
 package com.facebook.buck.util.collect;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 
 /** Additional methods to deal with sets. */
 public class MoreSets {
@@ -52,5 +53,10 @@ public class MoreSets {
           .addAll(set3)
           .build();
     }
+  }
+
+  /** Get only value or empty optional from an immutable set */
+  public static <T> Optional<T> only(ImmutableSet<T> set) {
+    return set.size() == 1 ? set.stream().findFirst() : Optional.empty();
   }
 }

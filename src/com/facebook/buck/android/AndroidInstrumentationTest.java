@@ -55,6 +55,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.collect.MoreSets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -197,6 +198,11 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   @Override
   public ImmutableSet<String> getContacts() {
     return contacts;
+  }
+
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
   }
 
   @Override
@@ -517,6 +523,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         .setCommand(externalInstrumentationTestStep.getShellCommandInternal(executionContext))
         .setLabels(getLabels())
         .setContacts(getContacts())
+        .setOncall(getOncall())
         .setRequiredPaths(requiredPaths)
         .setEnv(envs)
         .setPackageSuperProjectRelativePath(

@@ -51,6 +51,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.util.Memoizer;
+import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
@@ -209,6 +210,11 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
+  }
+
+  @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
             getProjectFilesystem().getBuckPaths(), getBuildTarget(), "__test_%s_output__")
@@ -317,6 +323,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .putAllEnv(getMergedEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .setOncall(getOncall())
         .addAllAdditionalCoverageTargets(
             buildContext.getSourcePathResolver().getAllAbsolutePaths(getAdditionalCoverageTargets())
                 .stream()

@@ -42,6 +42,7 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -167,6 +168,11 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
   @Override
   public ImmutableSet<String> getContacts() {
     return testInfo.contacts();
+  }
+
+  @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
   }
 
   @Override

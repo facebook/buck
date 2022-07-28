@@ -49,6 +49,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestRunningUtils;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.collect.MoreSets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -159,6 +160,11 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public Optional<String> getOncall() {
+    return MoreSets.only(getContacts());
+  }
+
+  @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
             getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
@@ -188,6 +194,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .addAllCommand(getTestCommand(sourcePathResolver))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .setOncall(getOncall())
         .setEnv(getEnv(sourcePathResolver))
         .setPackageSuperProjectRelativePath(
             testRunningOptions
