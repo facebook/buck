@@ -397,9 +397,8 @@ public class KotlinLibraryIntegrationTest {
   @Test
   public void shouldGenerateClassUsageFileForKaptTargetIfEnabled() throws IOException {
     String bizTargetFqn = "//com/example/classusage:biz_with_kapt";
-    ProcessResult buildResult =
-        workspace.runBuckCommand(
-            "build", bizTargetFqn, "-c", "kotlin.track_class_usage_for_kapt_targets=true");
+    workspace.addBuckConfigLocalOption("kotlin", "track_class_usage_for_kapt_targets", true);
+    ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
     buildResult.assertSuccess("Build should have succeeded.");
 
     assertTrue(
@@ -448,6 +447,81 @@ public class KotlinLibraryIntegrationTest {
                 pathWithPlatformSeparators("kotlin/annotation/Retention.class"), 1,
                 pathWithPlatformSeparators("kotlin/annotation/Target.class"), 1,
                 pathWithPlatformSeparators("kotlin/jvm/JvmName.class"), 1)));
+  }
+
+  @Test
+  public void shouldNotGenerateClassUsageFileForKspTarget() throws IOException {
+    String bizTargetFqn = "//com/example/classusage:biz_with_ksp";
+    ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
+    buildResult.assertSuccess("Build should have succeeded.");
+
+    assertFalse(
+        "Should not generate kotlin-used-classes-tmp.json",
+        Files.exists(
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+    assertFalse(
+        "Should not generate ksp-used-classes-tmp.txt",
+        Files.exists(
+            workspace.getPath(getReportFilePath(bizTargetFqn, "ksp-used-classes-tmp.txt"))));
+    assertFalse(
+        "Should not generate used-classes.json",
+        Files.exists(workspace.getPath(getOutputFilePath(bizTargetFqn, "used-classes.json"))));
+    assertFalse(
+        "Should not generate kotlin-used-classes.json",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes.json"))));
+  }
+
+  @Test
+  public void shouldGenerateClassUsageFileForKspTargetIfEnabled() throws IOException {
+    String bizTargetFqn = "//com/example/classusage:biz_with_ksp";
+    workspace.addBuckConfigLocalOption("kotlin", "track_class_usage_for_ksp_targets", true);
+    ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
+    buildResult.assertSuccess("Build should have succeeded.");
+
+    assertTrue(
+        "Should generate kotlin-used-classes-tmp.json",
+        Files.exists(
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+    assertTrue(
+        "Expected KSP file usage report to contain KspKotlinAnnotation.class",
+        Files.readString(
+                workspace.getPath(getReportFilePath(bizTargetFqn, "ksp-used-classes-tmp.txt")))
+            .contains("KspKotlinAnnotation.class"));
+
+    List<String> kotlinClassUsageLines =
+        Files.readAllLines(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes.json")), UTF_8);
+    List<String> javaClassUsageLines =
+        Files.readAllLines(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "used-classes.json")), UTF_8);
+    assertEquals("Expected just one line of JSON", 1, kotlinClassUsageLines.size());
+    assertEquals("Expected just one line of JSON", 1, javaClassUsageLines.size());
+
+    Path utilJarPath = getOutputJarPath("//com/example/classusage:util");
+    assertEquals(
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(javaClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}),
+        Map.of(
+            pathWithPlatformSeparators(utilJarPath),
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1)));
+
+    assertEquals(
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}),
+        Map.of(
+            pathWithPlatformSeparators(utilJarPath),
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1),
+            pathWithPlatformSeparators("kotlinc/libexec/lib/kotlin-stdlib.jar"),
+            Map.of(pathWithPlatformSeparators("kotlin/Unit.class"), 1),
+            pathWithPlatformSeparators(
+                getOutputJarPath("//com/example/ap/kotlinannotation:annotation-lib")),
+            Map.of(
+                pathWithPlatformSeparators(
+                    "com/example/ap/kotlinannotation/KspKotlinAnnotation.class"),
+                1)));
   }
 
   private Path getOutputJarPath(String targetFqn) throws IOException {

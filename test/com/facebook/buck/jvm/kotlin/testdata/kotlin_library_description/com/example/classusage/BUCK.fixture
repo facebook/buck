@@ -30,6 +30,32 @@ kotlin_library(
     deps = [
        ":util",
         "//com/example/ap/kotlinannotation:annotation-lib",
+        "//com/example/ap/javaannotation:annotation-lib",
+    ],
+)
+
+kotlin_library(
+    name = "biz_with_ksp",
+    srcs = [
+       "JavaBusiness.java",
+       "KotlinBusiness.kt",
+    ],
+    annotation_processing_tool = "kapt",
+    plugins = [
+        "//com/example/ap/kotlinap_ksp_dump_file_usage:ap",
+    ],
+    kotlin_compiler_plugins = {
+        "//com/example/ap/libs:kotlin-symbol-processing-api.jar": {},
+        "//com/example/ap/libs:kotlin-symbol-processing-cmdline.jar": {},
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+       ":util",
+        "//com/example/ap/javaannotation:annotation-lib",
+        "//com/example/ap/kotlinannotation:annotation-lib",
+        "//com/example/ap/libs:kotlin-symbol-processing-api.jar",
     ],
 )
 
