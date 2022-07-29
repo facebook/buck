@@ -27,6 +27,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -285,7 +286,8 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
   }
 
   public String getUseCaseId() {
-    return getValue(USECASE_ID_KEY).orElse("buck-default");
+    return getValue(USECASE_ID_KEY)
+        .orElse(Platform.detect() == Platform.WINDOWS ? "buck-default-windows" : "buck-default");
   }
 
   public String getDebugURLString(RESessionID reSessionID) {
