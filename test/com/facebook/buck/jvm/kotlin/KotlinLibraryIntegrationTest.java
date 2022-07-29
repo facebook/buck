@@ -353,22 +353,22 @@ public class KotlinLibraryIntegrationTest {
 
     Path utilJarPath = getOutputJarPath("//com/example/classusage:util");
     assertEquals(
-        ObjectMappers.READER.readValue(
-            ObjectMappers.createParser(javaClassUsageLines.get(0)),
-            new TypeReference<Map<String, Map<String, Integer>>>() {}),
         Map.of(
             pathWithPlatformSeparators(utilJarPath),
-            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1)));
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1)),
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(javaClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}));
 
     assertEquals(
-        ObjectMappers.READER.readValue(
-            ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
-            new TypeReference<Map<String, Map<String, Integer>>>() {}),
         Map.of(
             pathWithPlatformSeparators(utilJarPath),
                 ImmutableMap.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1),
             pathWithPlatformSeparators("kotlinc/libexec/lib/kotlin-stdlib.jar"),
-                ImmutableMap.of(pathWithPlatformSeparators("kotlin/Unit.class"), 1)));
+                ImmutableMap.of(pathWithPlatformSeparators("kotlin/Unit.class"), 1)),
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}));
   }
 
   @Test
@@ -421,17 +421,14 @@ public class KotlinLibraryIntegrationTest {
 
     Path utilJarPath = getOutputJarPath("//com/example/classusage:util");
     assertEquals(
-        ObjectMappers.READER.readValue(
-            ObjectMappers.createParser(javaClassUsageLines.get(0)),
-            new TypeReference<Map<String, Map<String, Integer>>>() {}),
         Map.of(
             pathWithPlatformSeparators(utilJarPath),
-            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1)));
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1)),
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(javaClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}));
 
     assertEquals(
-        ObjectMappers.READER.readValue(
-            ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
-            new TypeReference<Map<String, Map<String, Integer>>>() {}),
         Map.of(
             pathWithPlatformSeparators(utilJarPath),
             Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 2),
@@ -446,7 +443,10 @@ public class KotlinLibraryIntegrationTest {
                 pathWithPlatformSeparators("kotlin/annotation/AnnotationTarget.class"), 1,
                 pathWithPlatformSeparators("kotlin/annotation/Retention.class"), 1,
                 pathWithPlatformSeparators("kotlin/annotation/Target.class"), 1,
-                pathWithPlatformSeparators("kotlin/jvm/JvmName.class"), 1)));
+                pathWithPlatformSeparators("kotlin/jvm/JvmName.class"), 1)),
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}));
   }
 
   @Test
@@ -500,17 +500,14 @@ public class KotlinLibraryIntegrationTest {
 
     Path utilJarPath = getOutputJarPath("//com/example/classusage:util");
     assertEquals(
-        ObjectMappers.READER.readValue(
-            ObjectMappers.createParser(javaClassUsageLines.get(0)),
-            new TypeReference<Map<String, Map<String, Integer>>>() {}),
         Map.of(
             pathWithPlatformSeparators(utilJarPath),
-            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1)));
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1)),
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(javaClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}));
 
     assertEquals(
-        ObjectMappers.READER.readValue(
-            ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
-            new TypeReference<Map<String, Map<String, Integer>>>() {}),
         Map.of(
             pathWithPlatformSeparators(utilJarPath),
             Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1),
@@ -521,7 +518,10 @@ public class KotlinLibraryIntegrationTest {
             Map.of(
                 pathWithPlatformSeparators(
                     "com/example/ap/kotlinannotation/KspKotlinAnnotation.class"),
-                1)));
+                1)),
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}));
   }
 
   private Path getOutputJarPath(String targetFqn) throws IOException {
