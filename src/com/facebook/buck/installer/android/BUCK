@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
+buck_java_library(
+    name = "installer_android_lib",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+ deps = [
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
+        "//src/com/facebook/buck/core/sourcepath:types",
+        "//src/com/facebook/buck/android/packageable:packageable",
+    ]
+)
