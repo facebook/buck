@@ -149,6 +149,11 @@ public class IjProjectSubCommand extends ProjectSubCommand {
       usage = "Write module iml files to each modules working directory, instead of .idea/modules.")
   private boolean keepModuleFilesInModuleDirs = false;
 
+  @Option(
+      name = "--generate-project-files-as-json",
+      usage = "Generate the json equivalent of project files in the `.idea` folder")
+  private boolean generateProjectFilesAsJson = false;
+
   @Override
   public String getOptionValue() {
     return "intellij";
@@ -181,6 +186,7 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             includeTransitiveDependencies,
             skipBuild || !build,
             keepModuleFilesInModuleDirs,
+            generateProjectFilesAsJson,
             includeTests.get(),
             excludeTests.get());
 

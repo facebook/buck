@@ -52,6 +52,7 @@ public class IjProjectBuckConfig {
       boolean includeTransitiveDependencies,
       boolean skipBuild,
       boolean keepModuleFilesInModuleDirsEnabled,
+      boolean generateProjectFilesAsJsonEnabled,
       ImmutableSet<String> includeTestPatterns,
       ImmutableSet<String> excludeTestPatterns) {
     Optional<String> excludedResourcePathsOption =
@@ -80,12 +81,18 @@ public class IjProjectBuckConfig {
                 INTELLIJ_BUCK_CONFIG_SECTION, "keep_module_files_in_module_dirs", false)
             || keepModuleFilesInModuleDirsEnabled;
 
+    generateProjectFilesAsJsonEnabled =
+        buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate-project-files-as-json", false)
+            || generateProjectFilesAsJsonEnabled;
+
     return createBuilder(buckConfig)
         .setExcludedResourcePaths(excludedResourcePaths)
         .setLabelToGeneratedSourcesMap(labelToGeneratedSourcesMap)
         .setAndroidManifest(androidManifest)
         .setCleanerEnabled(isCleanerEnabled)
         .setKeepModuleFilesInModuleDirsEnabled(keepModuleFilesInModuleDirsEnabled)
+        .setGenerateProjectFilesAsJsonEnabled(generateProjectFilesAsJsonEnabled)
         .setRemovingUnusedLibrariesEnabled(
             isRemovingUnusedLibrariesEnabled(removeUnusedLibraries, buckConfig))
         .setExcludeArtifactsEnabled(isExcludingArtifactsEnabled(excludeArtifacts, buckConfig))

@@ -44,6 +44,7 @@ public class IjTestProjectConfig {
         .setKeepModuleFilesInModuleDirsEnabled(true)
         .setProjectRoot(projectRoot)
         .setProjectPaths(new IjProjectPaths(projectRoot, true))
-        .setTargetConfigurationInLibrariesEnabled(true);
+        .setTargetConfigurationInLibrariesEnabled(true)
+        .setGenerateProjectFilesAsJsonEnabled(false);
   }
 }

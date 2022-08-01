@@ -152,6 +152,8 @@ public abstract class IjProjectConfig {
 
   public abstract boolean isTargetConfigurationInLibrariesEnabled();
 
+  public abstract boolean isGenerateProjectFilesAsJsonEnabled();
+
   public static Builder builder() {
     return new Builder();
   }
