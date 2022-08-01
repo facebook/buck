@@ -24,6 +24,7 @@ import com.facebook.buck.features.project.intellij.model.folders.InclusiveFolder
 import com.facebook.buck.features.project.intellij.moduleinfo.ContentRootInfo;
 import com.facebook.buck.features.project.intellij.moduleinfo.ModuleInfo;
 import com.facebook.buck.features.project.intellij.moduleinfo.ModuleInfoBinaryIndex;
+import com.facebook.buck.features.project.intellij.writer.IjProjectWriter;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

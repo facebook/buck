@@ -46,7 +46,7 @@ public class IjModuleTest {
         Paths.get("java", "src", "com", "facebook", "foo", "java_src_com_facebook_foo.iml"),
         IjTestProjectConfig.create()
             .getProjectPaths()
-            .getModuleImlFilePath(javaLibraryModule, IjTestProjectConfig.create()));
+            .getModuleFilePath(javaLibraryModule, IjTestProjectConfig.create(), ".iml"));
   }
 
   private static <T> IjModule createModule(TargetNode<?> targetNode) {

@@ -19,6 +19,7 @@ package com.facebook.buck.features.project.intellij;
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.folders.IjSourceFolder;
+import com.facebook.buck.features.project.intellij.writer.IjProjectWriter;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;

@@ -24,6 +24,8 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.features.project.intellij.writer.IjProjectWriter;
+import com.facebook.buck.features.project.intellij.writer.IjProjectXmlWriter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -123,7 +125,7 @@ public class IjProjectWriterTest {
     IntellijModulesListParser parser = new IntellijModulesListParser();
     IjProjectConfig config = projectConfig();
     IJProjectCleaner cleaner = new IJProjectCleaner(filesystem);
-    return new IjProjectWriter(
+    return new IjProjectXmlWriter(
         dataPreparer,
         config,
         filesystem,

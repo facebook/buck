@@ -35,6 +35,7 @@ import com.facebook.buck.features.project.intellij.model.folders.IjResourceFolde
 import com.facebook.buck.features.project.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.features.project.intellij.model.folders.ResourceFolder;
 import com.facebook.buck.features.project.intellij.model.folders.TestFolder;
+import com.facebook.buck.features.project.intellij.writer.IjProjectWriter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.google.common.annotations.VisibleForTesting;
@@ -336,11 +337,13 @@ public class IjProjectTemplateDataPreparer {
 
   public ImmutableSortedSet<ModuleIndexEntry> getModuleIndexEntries() {
     String moduleGroupName = projectConfig.getModuleGroupName();
+    String extension = projectConfig.isGenerateProjectFilesAsJsonEnabled() ? ".json" : ".iml";
     boolean needToPutModuleToGroup = !moduleGroupName.isEmpty();
     return modulesToBeWritten.stream()
         .map(
             module -> {
-              Path moduleOutputFilePath = projectPaths.getModuleImlFilePath(module, projectConfig);
+              Path moduleOutputFilePath =
+                  projectPaths.getModuleFilePath(module, projectConfig, extension);
               String fileUrl = getUrl(projectPaths.getProjectQualifiedPath(moduleOutputFilePath));
               Path moduleOutputFileRelativePath =
                   projectPaths.getProjectRelativePath(moduleOutputFilePath);

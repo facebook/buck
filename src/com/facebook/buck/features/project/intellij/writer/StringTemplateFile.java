@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.project.intellij;
+package com.facebook.buck.features.project.intellij.writer;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.MoreSuppliers;
@@ -31,6 +31,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
+/** Holds the template names for different types of project files. */
 enum StringTemplateFile {
   ANDROID_MANIFEST("android_manifest"),
   MODULE_TEMPLATE("ij_module"),

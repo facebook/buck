@@ -18,7 +18,9 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
+import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectElement;
+import com.facebook.buck.features.project.intellij.writer.IjProjectWriter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -144,7 +146,7 @@ public class IjDependencyListBuilder {
   }
 
   @BuckStyleValue
-  abstract static class DependencyEntryData {
+  public abstract static class DependencyEntryData {
     public abstract String getName();
 
     public abstract Scope getScope();

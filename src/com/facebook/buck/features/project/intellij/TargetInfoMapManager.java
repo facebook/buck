@@ -190,6 +190,7 @@ public class TargetInfoMapManager {
 
   private void writeModuleTargetInfo(
       ImmutableSet<IjModule> modules, BuckOutPathConverter buckOutPathConverter) {
+    String extension = projectConfig.isGenerateProjectFilesAsJsonEnabled() ? ".json" : ".iml";
     modules.forEach(
         module -> {
           Map<BuildTarget, List<IjFolder>> targetsToGeneratedSourcesMap =
@@ -205,7 +206,7 @@ public class TargetInfoMapManager {
                         INTELLIJ_FILE_PATH,
                         projectConfig
                             .getProjectPaths()
-                            .getModuleImlFilePath(module, projectConfig)
+                            .getModuleFilePath(module, projectConfig, extension)
                             .toString());
                     targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
                     if (targetsToGeneratedSourcesMap.containsKey(target)) {
@@ -232,6 +233,7 @@ public class TargetInfoMapManager {
 
   private void writeLibraryTargetInfo(
       ImmutableSet<IjLibrary> libraries, IjLibraryNameConflictResolver nameConflictResolver) {
+    String extension = projectConfig.isGenerateProjectFilesAsJsonEnabled() ? ".json" : ".xml";
     libraries.forEach(
         library -> {
           library
@@ -249,7 +251,8 @@ public class TargetInfoMapManager {
                         INTELLIJ_FILE_PATH,
                         projectConfig
                             .getProjectPaths()
-                            .getLibraryXmlFilePath(library, projectConfig, nameConflictResolver)
+                            .getLibraryXmlFilePath(
+                                library, projectConfig, nameConflictResolver, extension)
                             .toString());
                     targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
                     targetInfoMap.put(target.getFullyQualifiedName(), targetInfo);

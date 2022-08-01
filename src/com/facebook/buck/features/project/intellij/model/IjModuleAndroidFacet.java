@@ -144,6 +144,10 @@ public abstract class IjModuleAndroidFacet {
 
   private Path getGeneratedAndroidManifestPath(
       ProjectFilesystem filesystem, IjProjectConfig projectConfig) {
+    String manifestName =
+        projectConfig.isGenerateProjectFilesAsJsonEnabled()
+            ? "AndroidManifest.json"
+            : ANDROID_MANIFEST;
     if (projectConfig.isSharedAndroidManifestGenerationEnabled()) {
       // The path to the AndroidManifest.xml depends on its content
       Path manifestPath = Paths.get(IjAndroidHelper.getAndroidGenDir(filesystem, projectConfig));
@@ -158,9 +162,9 @@ public abstract class IjModuleAndroidFacet {
               getMinSdkVersionOrDefault(projectConfig).orElse("")
                   + "_"
                   + getPermissions().stream().sorted().collect(Collectors.joining("_")));
-      return manifestPath.resolve(hashedFolder).resolve(ANDROID_MANIFEST);
+      return manifestPath.resolve(hashedFolder).resolve(manifestName);
     } else {
-      return getGeneratedSourcePath().resolve(ANDROID_MANIFEST);
+      return getGeneratedSourcePath().resolve(manifestName);
     }
   }
 

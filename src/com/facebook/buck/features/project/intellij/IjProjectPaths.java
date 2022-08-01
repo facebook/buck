@@ -37,7 +37,6 @@ public class IjProjectPaths {
   private final Path librariesDir;
   private final Path modulesDir;
   private final boolean keepModuleFilesInModuleDirs;
-
   private static final String MODULE_DIR = "$MODULE_DIR$";
   private static final String PROJECT_DIR = "$PROJECT_DIR$";
 
@@ -77,13 +76,13 @@ public class IjProjectPaths {
     return name;
   }
 
-  /** @return path where the XML describing the module to IntelliJ will be written to. */
-  public Path getModuleImlFilePath(IjModule module, IjProjectConfig projectConfig) {
+  /** @return path where the .iml/.json file describing the module will be written to. */
+  public Path getModuleFilePath(IjModule module, IjProjectConfig projectConfig, String extension) {
     return getModuleDir(module)
         .resolve(
             truncateNameWithHash(
                     module.getName(), projectConfig.getMaxModuleNameLengthBeforeTruncate())
-                + ".iml");
+                + extension);
   }
 
   /** @return the directory containing the modules .iml file, $MODULE_DIR$ points to this. */
@@ -106,11 +105,12 @@ public class IjProjectPaths {
     return MorePaths.relativizeWithDotDotSupport(getModuleDir(module), path);
   }
 
-  /** @return path where the XML describing the IntelliJ library will be written to. */
+  /** @return path where the XML/JSON describing the IntelliJ library will be written to. */
   public Path getLibraryXmlFilePath(
       IjLibrary library,
       IjProjectConfig projectConfig,
-      IjLibraryNameConflictResolver nameConflictResolver) {
+      IjLibraryNameConflictResolver nameConflictResolver,
+      String extension) {
 
     String normalizedLibName;
     if (library.getLevel() == IjLibrary.Level.PROJECT) {
@@ -123,7 +123,7 @@ public class IjProjectPaths {
         .resolve(
             truncateNameWithHash(
                     normalizedLibName, projectConfig.getMaxLibraryNameLengthBeforeTruncate())
-                + ".xml");
+                + extension);
   }
 
   /**

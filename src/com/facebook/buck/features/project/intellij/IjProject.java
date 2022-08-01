@@ -24,6 +24,12 @@ import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageF
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.features.project.intellij.writer.IjProjectJsonWriter;
+import com.facebook.buck.features.project.intellij.writer.IjProjectWriter;
+import com.facebook.buck.features.project.intellij.writer.IjProjectXmlWriter;
+import com.facebook.buck.features.project.intellij.writer.PregeneratedCodeJsonWriter;
+import com.facebook.buck.features.project.intellij.writer.PregeneratedCodeWriter;
+import com.facebook.buck.features.project.intellij.writer.PregeneratedCodeXmlWriter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
@@ -143,16 +149,32 @@ public class IjProject {
     BuckOutPathConverter buckOutPathConverter = new BuckOutPathConverter(projectConfig);
     IjLibraryNameConflictResolver nameConflictResolver =
         new IjLibraryNameConflictResolver(templateDataPreparer);
-    IjProjectWriter writer =
-        new IjProjectWriter(
-            templateDataPreparer,
-            projectConfig,
-            projectFilesystem,
-            modulesParser,
-            cleaner,
-            outFilesystem,
-            buckOutPathConverter,
-            nameConflictResolver);
+
+    IjProjectWriter writer;
+    if (projectConfig.isGenerateProjectFilesAsJsonEnabled()) {
+      writer =
+          new IjProjectJsonWriter(
+              templateDataPreparer,
+              projectConfig,
+              projectFilesystem,
+              modulesParser,
+              cleaner,
+              outFilesystem,
+              buckOutPathConverter,
+              nameConflictResolver);
+
+    } else {
+      writer =
+          new IjProjectXmlWriter(
+              templateDataPreparer,
+              projectConfig,
+              projectFilesystem,
+              modulesParser,
+              cleaner,
+              outFilesystem,
+              buckOutPathConverter,
+              nameConflictResolver);
+    }
 
     if (updateOnly) {
       writer.update();
@@ -178,8 +200,16 @@ public class IjProject {
           nameConflictResolver);
     }
 
-    PregeneratedCodeWriter pregeneratedCodeWriter =
-        new PregeneratedCodeWriter(templateDataPreparer, projectConfig, outFilesystem, cleaner);
+    PregeneratedCodeWriter pregeneratedCodeWriter;
+    if (projectConfig.isGenerateProjectFilesAsJsonEnabled()) {
+      pregeneratedCodeWriter =
+          new PregeneratedCodeJsonWriter(
+              templateDataPreparer, projectConfig, outFilesystem, cleaner);
+    } else {
+      pregeneratedCodeWriter =
+          new PregeneratedCodeXmlWriter(
+              templateDataPreparer, projectConfig, outFilesystem, cleaner);
+    }
     pregeneratedCodeWriter.write();
 
     TargetConfigurationInfoManager targetConfigInfoManager =
