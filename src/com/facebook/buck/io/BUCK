@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "java_immutables_library")
 
 FINDER_SRCS = [
     "ExecutableFinder.java",

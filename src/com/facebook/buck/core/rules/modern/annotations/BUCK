@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 buck_java_library(
     name = "annotations",
     srcs = glob(["*.java"]),
@@ -7,8 +8,5 @@ buck_java_library(
         "//src/com/facebook/buck/core/...",
         "//src/com/facebook/buck/cxx/...",
         "//src/com/facebook/buck/rules/modern/...",
-    ],
-    deps = [
-        "//src/com/facebook/buck/core/rulekey:rulekey",
     ],
 )

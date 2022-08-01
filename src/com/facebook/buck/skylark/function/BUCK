@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 buck_java_library(
     name = "function",
     srcs = glob(["*.java"]),
@@ -9,12 +10,10 @@ buck_java_library(
     deps = [
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/rules/providers/lib:lib",
-        "//src/com/facebook/buck/core/starlark/coercer:coercer",
         "//src/com/facebook/buck/core/starlark/compatible:compatible",
         "//src/com/facebook/buck/core/starlark/rule:rule",
         "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
         "//src/com/facebook/buck/rules/param:param",
-        "//src/com/facebook/buck/rules/visibility:visibility",
         "//src/com/facebook/buck/skylark/function/packages:packages",
         "//src/com/facebook/buck/skylark/function/select:select",
         "//src/com/facebook/buck/skylark/io:io",

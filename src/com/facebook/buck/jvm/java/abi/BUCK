@@ -8,7 +8,7 @@ buck_java_library(
         exclude = [
             "ApiStubber.java",
         ],
-    ) +  glob(["java11/*.java"]),
+    ) + glob(["java11/*.java"]),
     tests = [
         "//test/com/facebook/buck/jvm/java/abi:abi",
     ],
@@ -46,7 +46,6 @@ alias(
     visibility = ["PUBLIC"],
 )
 
-
 buck_java_binary(
     name = "api-stubber-main",
     main_class = "com.facebook.buck.jvm.java.abi.ApiStubber",
@@ -74,7 +73,7 @@ buck_java_library(
     name = "lib-api-stubber",
     srcs = ["ApiStubber.java"],
     deps = [
-        "//src/com/facebook/buck/core/filesystems:filesystems",
         ":abi",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
     ],
 )

@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 buck_java_library(
     name = "adapter",
     # We use conditional compilation to support building against both Java 8 and 11, despite

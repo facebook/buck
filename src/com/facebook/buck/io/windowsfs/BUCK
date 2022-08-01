@@ -4,8 +4,5 @@ buck_java_library(
     name = "windowsfs",
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
-    deps = [
-        "//third-party/java/jna:jna",
-        "//third-party/java/jna:jna-platform",
-    ],
+    deps = ["//third-party/java/jna:jna"],
 )

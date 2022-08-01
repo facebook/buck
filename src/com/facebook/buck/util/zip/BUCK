@@ -1,17 +1,20 @@
-load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar", "buck_java_library", "buck_java_binary")
+load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library", "buck_prebuilt_jar")
 
-ZIP_SCRUBBER_SRCS = ["ZipScrubber.java", "ZipConstants.java"]
+ZIP_SCRUBBER_SRCS = [
+    "ZipScrubber.java",
+    "ZipConstants.java",
+]
 
 buck_java_library(
     name = "zip",
-    srcs = glob(["*.java"], exclude = ZIP_SCRUBBER_SRCS),
+    srcs = glob(
+        ["*.java"],
+        exclude = ZIP_SCRUBBER_SRCS,
+    ),
     tests = [
         "//test/com/facebook/buck/util/zip:zip",
     ],
     visibility = ["PUBLIC"],
-    exported_deps = [
-        ":zip_scrubber",
-    ],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/log:log",
@@ -21,12 +24,14 @@ buck_java_library(
         "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/util/function:function",
         "//src/com/facebook/buck/util/io:io",
-        "//src/com/facebook/buck/util/nio:nio",
         "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/timing:timing",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        ":zip_scrubber",
     ],
 )
 
@@ -53,6 +58,6 @@ buck_prebuilt_jar(
 buck_java_binary(
     name = "zip_scrubber_main",
     main_class = "com.facebook.buck.util.zip.ZipScrubber",
-    deps = [":zip_scrubber"],
     visibility = ["PUBLIC"],
+    deps = [":zip_scrubber"],
 )

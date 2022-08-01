@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 buck_java_library(
     name = "buildables",
     srcs = glob(["*.java"]),
@@ -6,14 +7,11 @@ buck_java_library(
     deps = [
         "//src-gen:buildable-command-model",
         "//src/com/facebook/buck/core/util/log:log",
-        "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
         "//src/com/facebook/buck/external/constants:constants",
-        "//src/com/facebook/buck/external/model:model",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/util/env:env",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/java:java",
-        "//third-party/java/jsr:jsr305",
     ],
 )

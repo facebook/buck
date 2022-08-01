@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "java_immutables_library")
 
 TYPES_SRCS = [
     "Query.java",
@@ -37,13 +37,9 @@ java_immutables_library(
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
     ],
     exported_deps = [
@@ -71,12 +67,9 @@ buck_java_library(
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules/coercer:interface",
-        "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/guava:guava",

@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 buck_java_library(
     name = "data",
     srcs = glob(
@@ -11,9 +12,6 @@ buck_java_library(
         "//test/com/facebook/buck/core/starlark/rule/data:data",
     ],
     visibility = ["PUBLIC"],
-    deps = [
-        "//third-party/java/guava:guava",
-    ],
     exported_deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules/providers/collect:collect",

@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 buck_java_library(
     name = "impl",
     srcs = glob(["*.java"]),
@@ -9,7 +10,6 @@ buck_java_library(
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/util/types:types",
         "//starlark:bazel",
-        "//third-party/java/jsr:jsr305",
     ],
     exported_deps = [
         "//src/com/facebook/buck/core/cell:cell",

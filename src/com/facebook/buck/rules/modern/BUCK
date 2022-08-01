@@ -1,9 +1,8 @@
 load(
     "//tools/build_rules:java_rules.bzl",
-    "java_immutables_library",
     "buck_java_library",
+    "java_immutables_library",
 )
-
 
 TYPES = [
     "OutputPath.java",
@@ -24,7 +23,6 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
-        "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//third-party/java/guava:guava",
     ],
@@ -63,9 +61,7 @@ buck_java_library(
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/external/model:model",
-        "//src/com/facebook/buck/jvm/java/version:version",
         "//src/com/facebook/buck/external/utils:utils",
-        "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/io/pathformat:pathformat",

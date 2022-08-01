@@ -1,4 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 buck_java_library(
     name = "event",
     srcs = glob(["*.java"]),
@@ -9,9 +10,7 @@ buck_java_library(
     deps = [
         "//src/com/facebook/buck/log/views:views",
         "//third-party/java/guava:guava",
-        "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",
-        "//third-party/java/jackson:jackson-core",
         "//third-party/java/jackson:jackson-databind",
     ],
     exported_deps = [

@@ -1,17 +1,10 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 buck_java_library(
     name = "interfaces",
     srcs = glob(["*.java"]),
     visibility = [
         "PUBLIC",
     ],
-    deps = [
-        "//src-gen:remoteexecution-protobuf",
-        "//src-gen:thrift",
-        "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/core/build/event:event",
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//third-party/java/guava:guava",
-    ],
+    deps = ["//third-party/java/guava:guava"],
 )
