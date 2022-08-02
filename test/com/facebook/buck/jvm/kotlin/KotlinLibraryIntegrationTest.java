@@ -363,9 +363,9 @@ public class KotlinLibraryIntegrationTest {
     assertEquals(
         Map.of(
             pathWithPlatformSeparators(utilJarPath),
-                ImmutableMap.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1),
+                ImmutableMap.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 5),
             pathWithPlatformSeparators("kotlinc/libexec/lib/kotlin-stdlib.jar"),
-                ImmutableMap.of(pathWithPlatformSeparators("kotlin/Unit.class"), 1)),
+                ImmutableMap.of(pathWithPlatformSeparators("kotlin/Unit.class"), 2)),
         ObjectMappers.READER.readValue(
             ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
             new TypeReference<Map<String, Map<String, Integer>>>() {}));
@@ -431,14 +431,14 @@ public class KotlinLibraryIntegrationTest {
     assertEquals(
         Map.of(
             pathWithPlatformSeparators(utilJarPath),
-            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 2),
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 6),
             pathWithPlatformSeparators("kotlinc/libexec/lib/annotations-13.0.jar"),
             Map.of(pathWithPlatformSeparators("org/jetbrains/annotations/NotNull.class"), 1),
             pathWithPlatformSeparators("kotlinc/libexec/lib/kotlin-stdlib.jar"),
             Map.of(
                 pathWithPlatformSeparators("kotlin/Metadata.class"), 1,
                 pathWithPlatformSeparators("kotlin/SinceKotlin.class"), 1,
-                pathWithPlatformSeparators("kotlin/Unit.class"), 1,
+                pathWithPlatformSeparators("kotlin/Unit.class"), 2,
                 pathWithPlatformSeparators("kotlin/annotation/AnnotationRetention.class"), 1,
                 pathWithPlatformSeparators("kotlin/annotation/AnnotationTarget.class"), 1,
                 pathWithPlatformSeparators("kotlin/annotation/Retention.class"), 1,
@@ -510,9 +510,9 @@ public class KotlinLibraryIntegrationTest {
     assertEquals(
         Map.of(
             pathWithPlatformSeparators(utilJarPath),
-            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1),
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 5),
             pathWithPlatformSeparators("kotlinc/libexec/lib/kotlin-stdlib.jar"),
-            Map.of(pathWithPlatformSeparators("kotlin/Unit.class"), 1),
+            Map.of(pathWithPlatformSeparators("kotlin/Unit.class"), 2),
             pathWithPlatformSeparators(
                 getOutputJarPath("//com/example/ap/kotlinannotation:annotation-lib")),
             Map.of(

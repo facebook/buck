@@ -18,13 +18,13 @@ package com.facebook.buck.jvm.kotlin.plugin
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
-import kotlin.reflect.jvm.internal.impl.load.java.sources.JavaSourceElement
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.ValueDescriptor
 import org.jetbrains.kotlin.load.java.JavaClassFinder
+import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
 import org.jetbrains.kotlin.load.java.structure.JavaClass
 import org.jetbrains.kotlin.load.java.structure.classId
 import org.jetbrains.kotlin.load.java.structure.impl.VirtualFileBoundJavaClass
@@ -79,15 +79,19 @@ class ClassUsageRecorder(project: Project, module: ModuleDescriptor) {
   fun recordClass(descriptor: DeclarationDescriptor) {
     val source = getSourceElement(descriptor)
     when {
+      // Related to split-package (code for same package in different folder) and extensions
       source is JvmPackagePartSource -> {
         source.knownJvmBinaryClass?.location?.let(::addFile)
       }
+      // For most Kotlin class, function, and property declarations
       source is KotlinJvmBinarySourceElement -> {
         addFile(source.binaryClass.location)
       }
+      // For Java class, method, and field declarations
       source is JavaSourceElement && source.javaElement is VirtualFileBoundJavaClass -> {
         (source.javaElement as VirtualFileBoundJavaClass).virtualFile?.path?.let(::addFile)
       }
+      // For Kotlin top level and extension functions and properties declarations
       descriptor is DescriptorWithContainerSource &&
           descriptor.containerSource is JvmPackagePartSource -> {
         (descriptor.containerSource as JvmPackagePartSource)
@@ -127,7 +131,7 @@ class ClassUsageRecorder(project: Project, module: ModuleDescriptor) {
     if (path.contains(JAR_FILE_SEPARATOR)) {
       val (jarPath, classPath) = path.split(JAR_FILE_SEPARATOR)
       val occurrences = results.computeIfAbsent(jarPath) { mutableMapOf() }
-      occurrences.compute(classPath) { _, count -> count ?: 0 + 1 }
+      occurrences.compute(classPath) { _, count -> (count ?: 0) + 1 }
     }
   }
 }
