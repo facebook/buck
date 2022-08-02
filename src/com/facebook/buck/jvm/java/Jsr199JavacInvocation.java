@@ -521,9 +521,11 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
               e,
               "The compiler crashed attempting to generate a source-only ABI: %s.\n"
                   + "Try building %s instead and fixing any errors that are emitted.\n"
-                  + "If there are none, file an issue, with the crash trace from the log.\n",
+                  + "If there are none, file an issue, with the crash trace from the log.\n"
+                  + "Exception: %s\n",
               fullyQualifiedName,
-              compilerOutputPathsValue.getLibraryTargetFullyQualifiedName());
+              compilerOutputPathsValue.getLibraryTargetFullyQualifiedName(),
+              e);
         } else {
           throw new BuckUncheckedExecutionException(
               e.getCause() != null ? e.getCause() : e, "When running javac");
