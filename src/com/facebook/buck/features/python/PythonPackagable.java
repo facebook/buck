@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.python;
 
-import com.facebook.buck.core.model.HasBuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -27,7 +27,9 @@ import java.util.Optional;
 /**
  * Represents a {@link BuildRule} which contributes components to a top-level Python binary or test.
  */
-public interface PythonPackagable extends HasBuildTarget {
+public interface PythonPackagable {
+
+  BuildTarget getBuildTarget();
 
   Iterable<BuildRule> getPythonPackageDeps(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
