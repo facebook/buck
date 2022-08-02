@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
 import com.facebook.buck.jvm.java.lang.model.AnnotationValueScanner8;
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -49,13 +50,18 @@ import org.objectweb.asm.tree.InnerClassNode;
 public class InnerClassesTable {
   private final DescriptorFactory descriptorFactory;
   private final AccessFlags accessFlagsUtils;
+  private final ElementsExtended elements;
   private final Element topElement;
   private final Set<TypeElement> referencesToInners = new HashSet<>();
 
   public InnerClassesTable(
-      DescriptorFactory descriptorFactory, AccessFlags accessFlagsUtils, Element topElement) {
+      DescriptorFactory descriptorFactory,
+      AccessFlags accessFlagsUtils,
+      ElementsExtended elements,
+      Element topElement) {
     this.descriptorFactory = descriptorFactory;
     this.accessFlagsUtils = accessFlagsUtils;
+    this.elements = elements;
     this.topElement = topElement;
   }
 
@@ -68,6 +74,7 @@ public class InnerClassesTable {
         }
 
         addTypeReferences(e.getAnnotationMirrors());
+        addTypeReferences(elements.getAllTypeAnnotations(e));
         e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
         addTypeReferences(e.getSuperclass());
         e.getInterfaces().forEach(InnerClassesTable.this::addTypeReferences);
@@ -79,6 +86,7 @@ public class InnerClassesTable {
       @Override
       public Void visitExecutable(ExecutableElement e, Void aVoid) {
         addTypeReferences(e.getAnnotationMirrors());
+        addTypeReferences(elements.getAllTypeAnnotations(e));
         e.getTypeParameters().forEach(typeParam -> scan(typeParam, aVoid));
         addTypeReferences(e.getReturnType());
         addTypeReferences(e.getDefaultValue());
@@ -90,6 +98,7 @@ public class InnerClassesTable {
       @Override
       public Void visitVariable(VariableElement e, Void aVoid) {
         addTypeReferences(e.getAnnotationMirrors());
+        addTypeReferences(elements.getAllTypeAnnotations(e));
         addTypeReferences(e.asType());
         return super.visitVariable(e, aVoid);
       }
@@ -97,6 +106,7 @@ public class InnerClassesTable {
       @Override
       public Void visitTypeParameter(TypeParameterElement e, Void aVoid) {
         addTypeReferences(e.getAnnotationMirrors());
+        addTypeReferences(elements.getAllTypeAnnotations(e));
         addTypeReferences(e.asType());
         return super.visitTypeParameter(e, aVoid);
       }

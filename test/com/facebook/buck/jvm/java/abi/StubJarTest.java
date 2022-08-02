@@ -3013,12 +3013,8 @@ public class StubJarTest {
 
   @Test
   public void preservesTypeAnnotationsInFields() throws IOException {
-    // TODO(arr): currently, source-abi stubber does emit type annotations, but doesn't emit an
-    // INNERCLASS entry for the annotation class used to annotate the field.
-    notYetImplementedForSource();
-
     createAnnotationFullJar()
-        .addFullJarToClasspath()
+        .addFullJarToClasspathAlways()
         .setSourceFile(
             "A.java",
             "package com.example.buck;",

@@ -263,6 +263,29 @@ public class InnerClassesTableTest {
   }
 
   @Test
+  public void findsInnerClassReferencesInClassTypeParameterTypeAnnotations() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A<T, U, @TopLevel.TypeUseAnnotation V> { }")
+        .expectInnerClassesTable(
+            "com.example.buck.A", "com/example/buck/TopLevel$TypeUseAnnotation");
+  }
+
+  @Test
+  public void findsInnerClassReferencesInClassTypeParameterBoundTypeAnnotations()
+      throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A<T, U extends @TopLevel.TypeUseAnnotation T> { }")
+        .expectInnerClassesTable(
+            "com.example.buck.A", "com/example/buck/TopLevel$TypeUseAnnotation");
+  }
+
+  @Test
   public void findsInnerClassReferencesInClassTypeParameters() throws IOException {
     tester
         .setSourceFile(
@@ -315,6 +338,20 @@ public class InnerClassesTableTest {
             "}")
         .expectInnerClassesTable(
             "com.example.buck.A", "com/example/buck/TopLevel$MemberAnnotation");
+  }
+
+  @Test
+  public void findsInnerClassReferencesInMethodTypeAnnotations() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  @TopLevel.TypeUseAnnotation",
+            "  String foo() { }",
+            "}")
+        .expectInnerClassesTable(
+            "com.example.buck.A", "com/example/buck/TopLevel$TypeUseAnnotation");
   }
 
   @Test
@@ -373,6 +410,33 @@ public class InnerClassesTableTest {
   }
 
   @Test
+  public void findsInnerClassReferencesInMethodTypeParameterTypeAnnotations() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  <T, U, @TopLevel.TypeUseAnnotation V> void foo(T t, U u, V v) { }",
+            "}")
+        .expectInnerClassesTable(
+            "com.example.buck.A", "com/example/buck/TopLevel$TypeUseAnnotation");
+  }
+
+  @Test
+  public void findsInnerClassReferencesInMethodTypeParameterBoundTypeAnnotations()
+      throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  <T, U extends @TopLevel.TypeUseAnnotation T> void foo(T t, U u) { }",
+            "}")
+        .expectInnerClassesTable(
+            "com.example.buck.A", "com/example/buck/TopLevel$TypeUseAnnotation");
+  }
+
+  @Test
   public void findsInnerClassReferencesInMethodTypeParameters() throws IOException {
     tester
         .setSourceFile(
@@ -407,6 +471,20 @@ public class InnerClassesTableTest {
   }
 
   @Test
+  public void findsInnerClassReferencesInFieldTypeAnnotations() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  @TopLevel.TypeUseAnnotation",
+            "  int field;",
+            "}")
+        .expectInnerClassesTable(
+            "com.example.buck.A", "com/example/buck/TopLevel$TypeUseAnnotation");
+  }
+
+  @Test
   public void findsInnerClassReferencesInFieldType() throws IOException {
     tester
         .setSourceFile(
@@ -429,6 +507,19 @@ public class InnerClassesTableTest {
             "}")
         .expectInnerClassesTable(
             "com.example.buck.A", "com/example/buck/TopLevel$MemberAnnotation");
+  }
+
+  @Test
+  public void findsInnerClassReferencesInParameterTypeAnnotations() throws IOException {
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  void foo(int param1, int param2, @TopLevel.TypeUseAnnotation int param3) { }",
+            "}")
+        .expectInnerClassesTable(
+            "com.example.buck.A", "com/example/buck/TopLevel$TypeUseAnnotation");
   }
 
   @Test
@@ -565,6 +656,8 @@ public class InnerClassesTableTest {
           "  @Target({ElementType.PACKAGE, ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.TYPE_PARAMETER})",
           "  public @interface MemberAnnotation { }",
           "  public class MemberException extends Exception { }",
+          "  @Target({ElementType.TYPE_USE})",
+          "  public @interface TypeUseAnnotation { }",
           "}");
       compiler.setProcessors(Collections.emptyList());
       compiler.enter();
@@ -579,7 +672,7 @@ public class InnerClassesTableTest {
       DescriptorFactory descriptorFactory = new DescriptorFactory(elements);
       AccessFlags accessFlags = new AccessFlags(elements);
       InnerClassesTable innerClassesTable =
-          new InnerClassesTable(descriptorFactory, accessFlags, topElement);
+          new InnerClassesTable(descriptorFactory, accessFlags, elements, topElement);
 
       ClassNode classNode = new ClassNode(Opcodes.ASM7);
       innerClassesTable.reportInnerClassReferences(classNode);

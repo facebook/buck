@@ -119,15 +119,13 @@ class ClassVisitorDriverFromElement {
 
       visitAnnotations(e, classVisitor::visitAnnotation);
 
-      new InnerClassesTable(descriptorFactory, accessFlagsUtils, e)
+      new InnerClassesTable(descriptorFactory, accessFlagsUtils, elements, e)
           .reportInnerClassReferences(classVisitor);
 
       classVisitor.visitEnd();
 
       return null;
     }
-
-    // TODO(jkeljo): Type annotations
 
     @Override
     public Void visitType(TypeElement e, ClassVisitor visitor) {
@@ -168,7 +166,7 @@ class ClassVisitorDriverFromElement {
       super.visitType(e, visitor);
 
       InnerClassesTable innerClassesTable =
-          new InnerClassesTable(descriptorFactory, accessFlagsUtils, e);
+          new InnerClassesTable(descriptorFactory, accessFlagsUtils, elements, e);
       if (e.getKind().isClass() || classFileVersion >= Opcodes.V1_8) {
         try {
           generateBridges(e, visitor, innerClassesTable);
