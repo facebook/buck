@@ -152,12 +152,15 @@ public class APKModuleGraph implements AddsToRuleKey {
    * root module.
    */
   public APKModuleGraph(TargetGraph targetGraph, BuildTarget target) {
-    this(Optional.empty(), Optional.empty(), Optional.empty(), targetGraph, target);
+    this(targetGraph, target, Optional.empty(), Optional.empty(), Optional.empty());
   }
   /**
    * Constructor for the {@code APKModule} graph generator object
    *
-   * @param seedConfigMap A map of names to seed targets to use for creating {@code APKModule}.
+   * @param targetGraph The full target graph of the build
+   * @param target The root target to use to traverse the graph
+   * @param suppliedSeedConfigMap A map of names to seed targets to use for creating {@code
+   *     APKModule}.
    * @param appModuleDependencies
    *     <p>a mapping of declared dependencies between module names. If a APKModule <b>m1</b>
    *     depends on <b>m2</b>, it implies to buck that in order for <b>m1</b> to be available for
@@ -167,26 +170,15 @@ public class APKModuleGraph implements AddsToRuleKey {
    *     target is required by both these modules, we can safely place it in the minimal cover which
    *     is the APKModule <b>m2</b>.
    * @param denylistModules A list of targets that will NOT be included in any module.
-   * @param targetGraph The full target graph of the build
-   * @param target The root target to use to traverse the graph
    */
   public APKModuleGraph(
-      Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> seedConfigMap,
-      Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies,
-      Optional<List<BuildTarget>> denylistModules,
       TargetGraph targetGraph,
-      BuildTarget target) {
-    this(targetGraph, target, seedConfigMap, appModuleDependencies, denylistModules);
-  }
-
-  private APKModuleGraph(
-      TargetGraph targetGraph,
-      BuildTarget buildTarget,
+      BuildTarget target,
       Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> suppliedSeedConfigMap,
       Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies,
       Optional<List<BuildTarget>> denylistModules) {
     this.targetGraph = targetGraph;
-    this.target = buildTarget;
+    this.target = target;
     this.suppliedSeedConfigMap = suppliedSeedConfigMap;
     this.appModuleDependencies = appModuleDependencies;
     this.denylistModules = denylistModules;

@@ -141,11 +141,11 @@ public class APKModuleTest {
 
     APKModuleGraph dag =
         new APKModuleGraph(
+            graph,
+            androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
             Optional.empty(),
-            Optional.empty(),
-            graph,
-            androidBinaryTarget);
+            Optional.empty());
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(2));
@@ -256,11 +256,11 @@ public class APKModuleTest {
 
     APKModuleGraph dag =
         new APKModuleGraph(
+            graph,
+            androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
             Optional.empty(),
-            Optional.empty(),
-            graph,
-            androidBinaryTarget);
+            Optional.empty());
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(2));
@@ -372,11 +372,11 @@ public class APKModuleTest {
 
     APKModuleGraph dag =
         new APKModuleGraph(
+            graph,
+            androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
             Optional.of(appModuleDependencies.build()),
-            Optional.empty(),
-            graph,
-            androidBinaryTarget);
+            Optional.empty());
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(1));
@@ -510,11 +510,11 @@ public class APKModuleTest {
 
     APKModuleGraph dag =
         new APKModuleGraph(
+            graph,
+            androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
             Optional.of(appModuleDependencies.build()),
-            Optional.empty(),
-            graph,
-            androidBinaryTarget);
+            Optional.empty());
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(2));
@@ -608,11 +608,11 @@ public class APKModuleTest {
 
     APKModuleGraph dag =
         new APKModuleGraph(
+            graph,
+            androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
             Optional.empty(),
-            Optional.empty(),
-            graph,
-            androidBinaryTarget);
+            Optional.empty());
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(1));
@@ -710,11 +710,11 @@ public class APKModuleTest {
 
     APKModuleGraph dag =
         new APKModuleGraph(
+            graph,
+            androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
             Optional.empty(),
-            Optional.empty(),
-            graph,
-            androidBinaryTarget);
+            Optional.empty());
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(1));
@@ -856,11 +856,11 @@ public class APKModuleTest {
 
     APKModuleGraph dag =
         new APKModuleGraph(
+            graph,
+            androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
             Optional.of(appModuleDependencies.build()),
-            Optional.empty(),
-            graph,
-            androidBinaryTarget);
+            Optional.empty());
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(1));
@@ -1011,11 +1011,11 @@ public class APKModuleTest {
 
     APKModuleGraph dag =
         new APKModuleGraph(
+            graph,
+            androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
             Optional.of(appModuleDependencies.build()),
-            Optional.empty(),
-            graph,
-            androidBinaryTarget);
+            Optional.empty());
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(1));
@@ -1139,11 +1139,11 @@ public class APKModuleTest {
 
     APKModuleGraph dag =
         new APKModuleGraph(
+            graph,
+            androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
             Optional.of(appModuleDependencies.build()),
-            Optional.empty(),
-            graph,
-            androidBinaryTarget);
+            Optional.empty());
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(1));

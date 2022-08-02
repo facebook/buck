@@ -116,11 +116,11 @@ public class AndroidBinaryGraphEnhancerFactory {
     } else {
       apkModuleGraph =
           new APKModuleGraph(
+              targetGraph,
+              buildTarget,
               Optional.of(args.getApplicationModuleConfigs()),
               args.getApplicationModuleDependencies(),
-              APKModuleGraph.extractTargetsFromQueries(args.getApplicationModuleBlacklist()),
-              targetGraph,
-              buildTarget);
+              APKModuleGraph.extractTargetsFromQueries(args.getApplicationModuleBlacklist()));
     }
 
     NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =

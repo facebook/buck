@@ -51,11 +51,11 @@ public class AndroidAppModularityDescription
       AndroidAppModularityDescriptionArg args) {
     APKModuleGraph apkModuleGraph =
         new APKModuleGraph(
+            context.getTargetGraph(),
+            buildTarget,
             Optional.of(args.getApplicationModuleConfigs()),
             args.getApplicationModuleDependencies(),
-            APKModuleGraph.extractTargetsFromQueries(args.getApplicationModuleBlacklist()),
-            context.getTargetGraph(),
-            buildTarget);
+            APKModuleGraph.extractTargetsFromQueries(args.getApplicationModuleBlacklist()));
 
     AndroidAppModularityGraphEnhancer graphEnhancer =
         new AndroidAppModularityGraphEnhancer(
