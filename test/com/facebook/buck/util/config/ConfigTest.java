@@ -404,4 +404,53 @@ public class ConfigTest {
 
     assertNotEquals(config1.getOrderIndependentHashCode(), config2.getOrderIndependentHashCode());
   }
+
+  @Test
+  public void testOverride() {
+    RawConfig.Builder rawConfig1 = new RawConfig.Builder();
+    rawConfig1.putAll(
+        ImmutableMap.of(
+            "config1",
+                ImmutableMap.of(
+                    "key3", "9",
+                    "key2", "8",
+                    "key1", "7"),
+            "config2",
+                ImmutableMap.of(
+                    "key1", "7",
+                    "key2", "8",
+                    "key3", "9"),
+            "config3",
+                ImmutableMap.of(
+                    "key2", "8",
+                    "key3", "9",
+                    "key0", "6")));
+
+    // Create a second unsorted raw config
+    RawConfig.Builder rawConfig2 = new RawConfig.Builder();
+
+    rawConfig2.putAll(
+        ImmutableMap.of(
+            "config1",
+                ImmutableMap.of(
+                    "key3", "9",
+                    "key1", "7",
+                    "key2", "8"),
+            "config2",
+                ImmutableMap.of(
+                    "key3", "9",
+                    "key1", "7",
+                    "key2", "8"),
+            "config3",
+                ImmutableMap.of(
+                    "key3", "9",
+                    "key1", "7",
+                    "key2", "8")));
+
+    Config config1 = new Config(rawConfig1.build());
+    Config config2 = new Config(rawConfig2.build());
+
+    Config overwrittenConfig = config1.overrideWith(config2);
+    assertEquals(config2.getRawConfig(), overwrittenConfig.getCliOverridesConfig());
+  }
 }

@@ -65,6 +65,8 @@ public class Config {
   // rawConfig is the flattened configuration relevant to the current cell
   private final RawConfig rawConfig;
 
+  /** The RawConfig override configuration provided via the CLI. ie: -c some_config.value * */
+  private RawConfig cliOverridesConfig = null;
   /**
    * Because rawConfig is a merge of other RawConfigs, the source of each field-value is lost. As
    * that information is useful for diagnosis, this map stores each merged rawConfig with it's path
@@ -99,7 +101,13 @@ public class Config {
   }
 
   public Config(RawConfig rawConfig, ImmutableMap<Path, RawConfig> configsMap) {
+    this(rawConfig, null, configsMap);
+  }
+
+  public Config(
+      RawConfig rawConfig, RawConfig cliOverridesConfig, ImmutableMap<Path, RawConfig> configsMap) {
     this.rawConfig = rawConfig;
+    this.cliOverridesConfig = cliOverridesConfig;
     this.configsMap = configsMap;
   }
 
@@ -536,11 +544,17 @@ public class Config {
     return listBuilder.build();
   }
 
-  public Config overrideWith(Config other) {
+  /**
+   * Returns a copy of the current config with the values overwritten by the provided config
+   *
+   * @param cliOverrideConfig the string to decode the digits from
+   * @return the new config
+   */
+  public Config overrideWith(Config cliOverrideConfig) {
     RawConfig.Builder builder = RawConfig.builder();
     builder.putAll(this.rawConfig);
-    builder.putAll(other.rawConfig);
-    return new Config(builder.build(), this.configsMap);
+    builder.putAll(cliOverrideConfig.rawConfig);
+    return new Config(builder.build(), cliOverrideConfig.rawConfig, this.configsMap);
   }
 
   /**
@@ -595,6 +609,10 @@ public class Config {
 
   public RawConfig getRawConfig() {
     return rawConfig;
+  }
+
+  public RawConfig getCliOverridesConfig() {
+    return cliOverridesConfig;
   }
 
   /**

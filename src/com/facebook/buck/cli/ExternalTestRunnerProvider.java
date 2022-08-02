@@ -80,10 +80,11 @@ public class ExternalTestRunnerProvider {
 
     boolean allTargetsWithinAllowedPrefixes =
         areAllTargetsWithinAllowedPrefixes(testRules, allowedPathsPrefixes.get());
-    boolean userOverriddenExternalRunner = hasUserOverriddenExternalRunner(buckConfig);
+    boolean userOverriddenExternalRunner = hasUserExplicitlyDefinedAnExternalRunner(buckConfig);
+    boolean hasConfigChanged = isFinalConfigDifferentFromInitialBuckConfig(buckConfig);
 
     if (allTargetsWithinAllowedPrefixes) {
-      if (userOverriddenExternalRunner) {
+      if (hasConfigChanged) {
         console.warn(
             String.format(EXTERNAL_RUNNER_OVERRIDDEN_IN_ALLOWED_PATH, allowedPathsPrefixes.get()));
         postOverrideEvent(testRules, allTargetsWithinAllowedPrefixes, externalTestRunner);
@@ -121,14 +122,39 @@ public class ExternalTestRunnerProvider {
   }
 
   /**
+   * Check if the user is overriding the external test runner, either in .buckconfig.local or CLI
+   * parameters
+   *
+   * @param buckConfig the main BuckConfig
+   * @return if .buckconfig.local and/or -c test.external_runner have an external test runner
+   *     defined
+   */
+  private boolean hasUserExplicitlyDefinedAnExternalRunner(BuckConfig buckConfig) {
+    RawConfig overrides = buckConfig.getConfig().getCliOverridesConfig();
+    ImmutableMap<Path, RawConfig> configsMap = buckConfig.getConfig().getConfigsMap();
+    Path localBuckConfigPath = buckConfig.getFilesystem().resolve(".buckconfig.local").getPath();
+
+    Optional<String> userDefinedRunner =
+        Optional.ofNullable(overrides)
+            .flatMap(o -> o.getValue("test", "external_runner"))
+            .or(
+                () ->
+                    Optional.ofNullable(configsMap.get(localBuckConfigPath))
+                        .flatMap(
+                            repoRawConfig -> repoRawConfig.getValue("test", "external_runner")));
+
+    return userDefinedRunner.isPresent();
+  }
+
+  /**
    * Check if resolved Config value is the same as defined in the project's .buckConfig file. If
-   * they differ, the user has defined an override either in .buckconfig.local or CLI parameters.
-   * Config sources with lower precedence than the project's .buckConfig file are ignored.
+   * they differ, the user has defined a different external test runner either in .buckconfig.local
+   * or CLI parameters. If they differ, we want to inform the user.
    *
    * @see <a href="https://buck.build/files-and-dirs/buckconfig.html#config-precedence">Buck Config
    *     precedence</a>
    */
-  private boolean hasUserOverriddenExternalRunner(BuckConfig buckConfig) {
+  private boolean isFinalConfigDifferentFromInitialBuckConfig(BuckConfig buckConfig) {
     ImmutableMap<Path, RawConfig> configsMap = buckConfig.getConfig().getConfigsMap();
     Path rootBuckConfigPath = buckConfig.getFilesystem().resolve(".buckconfig").getPath();
 

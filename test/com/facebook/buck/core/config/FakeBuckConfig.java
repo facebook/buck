@@ -112,6 +112,12 @@ public class FakeBuckConfig {
       return this;
     }
 
+    public Builder setSections(RawConfig sections, ImmutableMap<Path, RawConfig> configsMap) {
+      this.sections = sections;
+      this.configsMap = configsMap;
+      return this;
+    }
+
     public Builder setOverrides(RawConfig overrides) {
       this.rawOverrides = Optional.of(overrides);
       return this;
