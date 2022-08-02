@@ -44,6 +44,7 @@ import javax.lang.model.util.Elements;
  * {@link javax.lang.model.util.Elements}.
  */
 public final class MoreElements {
+
   private static Method getAllPackageElementsMethod;
 
   static {

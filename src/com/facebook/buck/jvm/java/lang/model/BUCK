@@ -1,7 +1,12 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 buck_java_library(
     name = "model",
     srcs = glob(["*.java"]),
+    extra_arguments = [
+        "--add-exports",
+        "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+    ],
     visibility = [
         "PUBLIC",
     ],

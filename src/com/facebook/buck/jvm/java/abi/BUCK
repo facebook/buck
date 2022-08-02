@@ -27,6 +27,7 @@ buck_java_library(
         "//src/com/facebook/buck/jvm/java/abi/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/lang/model:model",
+        "//src/com/facebook/buck/jvm/java/lang/extra:extra",
         "//src/com/facebook/buck/jvm/java/plugin/api:api",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/function:function",
@@ -55,18 +56,18 @@ buck_java_binary(
 )
 
 [
-  export_file(
-      name = "api-stubber_prebuilt_jar",
-      src = "api-stubber_prebuilt.jar",
-  ),
-  command_alias(
-      name = "api-stubber_prebuilt",
-      exe = "fbsource//third-party/toolchains/jdk:java",
-      args = [
-        "-jar",
-        "$(location :api-stubber_prebuilt_jar)",
-      ],
-  )
+    export_file(
+        name = "api-stubber_prebuilt_jar",
+        src = "api-stubber_prebuilt.jar",
+    ),
+    command_alias(
+        name = "api-stubber_prebuilt",
+        args = [
+            "-jar",
+            "$(location :api-stubber_prebuilt_jar)",
+        ],
+        exe = "fbsource//third-party/toolchains/jdk:java",
+    ),
 ] if enable_buck2_bootstrap_prebuilts() else []
 
 buck_java_library(

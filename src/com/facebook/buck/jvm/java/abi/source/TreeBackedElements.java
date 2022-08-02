@@ -47,6 +47,7 @@ import javax.lang.model.util.Types;
  * and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedElements extends ElementsExtendedImpl {
+
   private final Elements javacElements;
   private final Map<Element, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<Name, ArtificialTypeElement> knownTypes = new HashMap<>();
@@ -342,6 +343,17 @@ class TreeBackedElements extends ElementsExtendedImpl {
   @Override
   public boolean isFunctionalInterface(TypeElement type) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public List<? extends AnnotationMirror> getAllTypeAnnotations(Element element) {
+    // NOTE: we need to fetch type annotations from the underlying element since otherwise type
+    // annotation position may not be available.
+    if (element instanceof TreeBackedElement) {
+      element = ((TreeBackedElement) element).getUnderlyingElement();
+    }
+
+    return super.getAllTypeAnnotations(element);
   }
 
   private Name getFullyQualifiedName(

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.lang.model;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.util.List;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -28,6 +29,7 @@ import javax.lang.model.util.Elements;
  * pure extension methods on {@link MoreElements} because they require per-instance state.
  */
 public interface ElementsExtended extends Elements {
+
   List<ExecutableElement> getDeclaredMethods(TypeElement owner, CharSequence name);
 
   List<ExecutableElement> getAllMethods(TypeElement owner, CharSequence name);
@@ -43,4 +45,18 @@ public interface ElementsExtended extends Elements {
   TypeElement getBinaryImplementationOwner(ExecutableElement method, TypeElement inType);
 
   boolean isCompiledInCurrentRun(Element element);
+
+  /**
+   * Return type annotations present on an element.
+   *
+   * <p>Examples:
+   *
+   * <ul>
+   *   <li>For methods this means type annotations present on method's type parameters and types of
+   *       formal parameters.
+   *   <li>For classes it's type annotations on a class and its superclasses and superinterfaces.
+   *   <li>For fields it's type annotations on a field's type.
+   * </ul>
+   */
+  List<? extends AnnotationMirror> getAllTypeAnnotations(Element element);
 }

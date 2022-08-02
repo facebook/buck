@@ -621,6 +621,9 @@
         <!--  Support of sun.security modules in java 9+ -->
         <compilerarg line="--add-exports java.base/sun.security.pkcs=ALL-UNNAMED" />
         <compilerarg line="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+        <!--  Unlock internal compiler APIs for Jasabi in java 9+  -->
+        <compilerarg line="--add-exports jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED" />
+        <compilerarg line="--add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED" />
         <compilerarg value="-time"  />
         <compilerclasspath>
             <pathelement location="${buck.build.compiler.jar.path}" />
@@ -1326,6 +1329,7 @@
                source="11"
                >
         <arg value="-notimestamp"/>
+        <arg value="--add-exports jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"/>
         <fileset dir="${src.dir}">
           <include name="**/*.java" />
           <exclude name="com/facebook/buck/android/support/exopackage/**" />

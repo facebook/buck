@@ -1,0 +1,21 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
+# This target is for code that needs access to internal Java compiler APIs. We should keep it
+# as small as possible to have good compatibility with different versions of the compiler.
+buck_java_library(
+    name = "extra",
+    srcs = glob(["*.java"]),
+    extra_arguments = [
+        "--add-exports",
+        "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+        "--add-exports",
+        "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/asm:asm",
+    ],
+)

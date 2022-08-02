@@ -2944,14 +2944,8 @@ public class StubJarTest {
 
   @Test
   public void preservesTypeAnnotationsInClasses() throws IOException {
-    // TODO(jkeljo): It looks like annotated types are not accessible via Elements. The annotated
-    // type gets put on the Tree object but doesn't make it to the corresponding Element. We can
-    // work around this using Trees.getTypeMirror, but that brings in a lot of classpath challenges
-    // that I don't want to deal with right now.
-    notYetImplementedForSource();
-
     createAnnotationFullJar()
-        .addFullJarToClasspath()
+        .addFullJarToClasspathAlways()
         .setSourceFile(
             "A.java", "package com.example.buck;", "public class A<@Foo.TypeAnnotation T> { }")
         .addExpectedStub(
@@ -2976,19 +2970,15 @@ public class StubJarTest {
 
   @Test
   public void preservesTypeAnnotationsInMethods() throws IOException {
-    // TODO(jkeljo): It looks like annotated types are not accessible via Elements. The annotated
-    // type gets put on the Tree object but doesn't make it to the corresponding Element. We can
-    // work around this using Trees.getTypeMirror, but that brings in a lot of classpath challenges
-    // that I don't want to deal with right now.
-    notYetImplementedForSource();
-
     createAnnotationFullJar()
-        .addFullJarToClasspath()
+        .addFullJarToClasspathAlways()
         .setSourceFile(
             "A.java",
             "package com.example.buck;",
+            "import java.util.List;",
             "public class A {",
             "  <@Foo.TypeAnnotation T> void foo(@Foo.TypeAnnotation String s) { }",
+            "  @Foo.TypeAnnotation List<String> bar(@Foo.TypeAnnotation Integer i, List<List<@Foo.TypeAnnotation String>> s) { return null; }",
             "}")
         .addExpectedStub(
             "com/example/buck/A",
@@ -3009,16 +2999,22 @@ public class StubJarTest {
             "  foo(Ljava/lang/String;)V",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_TYPE_PARAMETER 0, null // invisible",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_FORMAL_PARAMETER 0, null // invisible",
+            "",
+            "  // access flags 0x0",
+            "  // signature (Ljava/lang/Integer;Ljava/util/List<Ljava/util/List<Ljava/lang/String;>;>;)Ljava/util/List<Ljava/lang/String;>;",
+            "  // declaration: java.util.List<java.lang.String> bar(java.lang.Integer, java.util.List<java.util.List<java.lang.String>>)",
+            "  bar(Ljava/lang/Integer;Ljava/util/List;)Ljava/util/List;",
+            "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_RETURN, null // invisible",
+            "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_FORMAL_PARAMETER 0, null // invisible",
+            "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_FORMAL_PARAMETER 1, 0;0; // invisible",
             "}")
         .createAndCheckStubJar();
   }
 
   @Test
   public void preservesTypeAnnotationsInFields() throws IOException {
-    // TODO(jkeljo): It looks like annotated types are not accessible via Elements. The annotated
-    // type gets put on the Tree object but doesn't make it to the corresponding Element. We can
-    // work around this using Trees.getTypeMirror, but that brings in a lot of classpath challenges
-    // that I don't want to deal with right now.
+    // TODO(arr): currently, source-abi stubber does emit type annotations, but doesn't emit an
+    // INNERCLASS entry for the annotation class used to annotate the field.
     notYetImplementedForSource();
 
     createAnnotationFullJar()

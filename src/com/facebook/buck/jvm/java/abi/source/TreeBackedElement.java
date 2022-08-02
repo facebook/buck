@@ -35,7 +35,8 @@ import javax.lang.model.type.TypeMirror;
  * com.sun.source.tree.Tree}. This results in an incomplete implementation; see documentation for
  * individual methods and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
-abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements ArtificialElement {
+public abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct
+    implements ArtificialElement {
   private final Element underlyingElement;
   @Nullable private final TreeBackedElement enclosingElement;
   private final List<Element> enclosedElements = new ArrayList<>();
@@ -57,7 +58,7 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
     this.canonicalizer = canonicalizer;
   }
 
-  /* package */ Element getUnderlyingElement() {
+  public Element getUnderlyingElement() {
     return underlyingElement;
   }
 

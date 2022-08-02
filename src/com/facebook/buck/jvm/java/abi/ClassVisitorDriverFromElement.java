@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
+import com.facebook.buck.jvm.java.lang.extra.MoreTypeAnnotations;
 import com.facebook.buck.jvm.java.lang.model.BridgeMethod;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
@@ -50,8 +51,11 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.TypePath;
+import org.objectweb.asm.TypeReference;
 
 class ClassVisitorDriverFromElement {
+
   private final DescriptorFactory descriptorFactory;
   private final Messager messager;
   private final SignatureFactory signatureFactory;
@@ -64,9 +68,6 @@ class ClassVisitorDriverFromElement {
   /**
    * @param targetVersion the class file version to target, expressed as the corresponding Java
    *     source version
-   * @param messager
-   * @param types
-   * @param includeParameterMetadata
    */
   ClassVisitorDriverFromElement(
       SourceVersion targetVersion,
@@ -92,10 +93,18 @@ class ClassVisitorDriverFromElement {
   }
 
   private interface VisitorWithAnnotations {
+
     AnnotationVisitor visitAnnotation(String desc, boolean visible);
   }
 
+  private interface VisitorWithTypeAnnotations {
+
+    AnnotationVisitor visitTypeAnnotation(
+        final int typeRef, final TypePath typePath, final String descriptor, final boolean visible);
+  }
+
   private class ElementVisitorAdapter extends ElementScanner8<Void, ClassVisitor> {
+
     boolean classVisitorStarted = false;
 
     @Override
@@ -154,6 +163,7 @@ class ClassVisitorDriverFromElement {
       }
 
       visitAnnotations(e, visitor::visitAnnotation);
+      visitTypeAnnotations(e, visitor::visitTypeAnnotation);
 
       super.visitType(e, visitor);
 
@@ -200,6 +210,7 @@ class ClassVisitorDriverFromElement {
 
     /** Creates bridge methods in a given subclass as needed. */
     private class BridgeBuilder {
+
       private final TypeElement subclass;
       private final ClassVisitor visitor;
       private final InnerClassesTable innerClassesTable;
@@ -293,6 +304,7 @@ class ClassVisitorDriverFromElement {
         visitParameters(e.getParameters(), methodVisitor, MoreElements.isInnerClassConstructor(e));
         visitDefaultValue(e, methodVisitor);
         visitAnnotations(e, methodVisitor::visitAnnotation);
+        visitTypeAnnotations(e, methodVisitor::visitTypeAnnotation);
         methodVisitor.visitEnd();
       }
 
@@ -402,6 +414,7 @@ class ClassVisitorDriverFromElement {
               signatureFactory.getSignature(e),
               e.getConstantValue());
       visitAnnotations(e, fieldVisitor::visitAnnotation);
+      visitTypeAnnotations(e, fieldVisitor::visitTypeAnnotation);
       fieldVisitor.visitEnd();
 
       return null;
@@ -430,6 +443,38 @@ class ClassVisitorDriverFromElement {
       }
     }
 
+    private void visitTypeAnnotations(Element element, VisitorWithTypeAnnotations visitor) {
+      List<? extends AnnotationMirror> typeAnnotations = elements.getAllTypeAnnotations(element);
+
+      for (AnnotationMirror annotation : typeAnnotations) {
+        visitTypeAnnotation(element, annotation, visitor);
+      }
+    }
+
+    private void visitTypeAnnotation(
+        Element enclosingElement, AnnotationMirror annotation, VisitorWithTypeAnnotations visitor) {
+      try {
+        if (MoreElements.isSourceRetention(annotation)) {
+          return;
+        }
+        TypeReference typeRef = MoreTypeAnnotations.getAnnotationTypeReference(annotation);
+        if (typeRef == null) {
+          return;
+        }
+
+        AnnotationVisitor annotationVisitor =
+            visitor.visitTypeAnnotation(
+                typeRef.getValue(),
+                MoreTypeAnnotations.getAnnotationTypePath(annotation),
+                descriptorFactory.getDescriptor(annotation.getAnnotationType()),
+                MoreElements.isRuntimeRetention(annotation));
+        visitAnnotationValues(annotation, annotationVisitor);
+        annotationVisitor.visitEnd();
+      } catch (CannotInferException e) {
+        reportMissingAnnotationType(enclosingElement, annotation);
+      }
+    }
+
     private void visitAnnotationValues(
         AnnotationMirror annotation, AnnotationVisitor annotationVisitor) {
       visitAnnotationValues(annotation.getElementValues(), annotationVisitor);
@@ -448,6 +493,7 @@ class ClassVisitorDriverFromElement {
     }
 
     private class AnnotationVisitorAdapter extends SimpleAnnotationValueVisitor8<Void, Void> {
+
       @Nullable private final String name;
       private final AnnotationVisitor visitor;
 

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.plugin.adapter;
 
 import com.facebook.buck.jvm.java.lang.model.BridgeMethod;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
+import com.facebook.buck.jvm.java.lang.model.MoreAnnotations;
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.util.Trees;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
@@ -41,6 +43,7 @@ import javax.lang.model.util.Types;
  * pure extension methods on {@link MoreElements} because they require per-instance state.
  */
 public class ElementsExtendedImpl extends DelegatingElements implements ElementsExtended {
+
   private final Map<TypeElement, Map<Name, List<ExecutableElement>>> declaredMethodsMaps =
       new HashMap<>();
   private final Map<TypeElement, Map<Name, List<ExecutableElement>>> allMethodsMaps =
@@ -150,6 +153,11 @@ public class ElementsExtendedImpl extends DelegatingElements implements Elements
   @Override
   public boolean isCompiledInCurrentRun(Element element) {
     return trees.getTree(element) != null;
+  }
+
+  @Override
+  public List<? extends AnnotationMirror> getAllTypeAnnotations(Element element) {
+    return MoreAnnotations.getAllTypeAnnotations(element);
   }
 
   private static Map<Name, List<ExecutableElement>> buildMethodsMap(
