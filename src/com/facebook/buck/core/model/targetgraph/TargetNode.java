@@ -47,7 +47,7 @@ import java.util.Set;
 public interface TargetNode<T extends ConstructorArg>
     extends Comparable<TargetNode<?>>,
         ObeysVisibility,
-        HasBuildTarget,
+        HasBuildTarget<BuildTarget>,
         ComputeResult,
         DependencyStack.ProvidesElement {
 

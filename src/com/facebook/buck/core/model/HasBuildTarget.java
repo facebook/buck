@@ -17,6 +17,6 @@
 package com.facebook.buck.core.model;
 
 /** Some object that has a build target. */
-public interface HasBuildTarget {
+public interface HasBuildTarget<BuildTarget> {
   BuildTarget getBuildTarget();
 }
