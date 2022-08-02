@@ -29,7 +29,7 @@
 
 <p>
 A <em>build file</em> is a file, typically named <code>BUCK</code>, that
-defines one or more {call buck.build_rule /}s. 
+defines one or more {call buck.build_rule /}s.
 </p>
 
 <p>
@@ -106,7 +106,7 @@ java_library(
 
 whereas the following <strong>would be invalid</strong> because
 {sp}<code>java/com/facebook/common/collect/</code> has its own build file,
-so <code>//java/com/facebook/common/collect:concurrent</code> cannot list
+so <code>//java/com/facebook/common:concurrent</code> cannot list
 {sp}<code>java/com/facebook/common/collect&#x2F*.java</code> in its <code>srcs</code>.
 
 {literal}<pre class="prettyprint lang-py">
