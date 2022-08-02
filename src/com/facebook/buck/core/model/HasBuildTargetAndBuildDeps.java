@@ -16,7 +16,11 @@
 
 package com.facebook.buck.core.model;
 
+import java.util.Set;
+
 /** Some object that has a build target. */
-public interface HasBuildTarget<BuildTarget> {
+public interface HasBuildTargetAndBuildDeps<BuildTarget> {
   BuildTarget getBuildTarget();
+
+  Set<BuildTarget> getBuildDeps();
 }

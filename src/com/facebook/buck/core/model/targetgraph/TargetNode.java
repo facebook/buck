@@ -24,7 +24,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorSet;
-import com.facebook.buck.core.model.HasBuildTarget;
+import com.facebook.buck.core.model.HasBuildTargetAndBuildDeps;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
@@ -47,7 +47,7 @@ import java.util.Set;
 public interface TargetNode<T extends ConstructorArg>
     extends Comparable<TargetNode<?>>,
         ObeysVisibility,
-        HasBuildTarget<BuildTarget>,
+        HasBuildTargetAndBuildDeps<BuildTarget>,
         ComputeResult,
         DependencyStack.ProvidesElement {
 
@@ -98,6 +98,7 @@ public interface TargetNode<T extends ConstructorArg>
   Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions();
 
   /** @return all targets which must be built before this one can be. */
+  @Override
   Set<BuildTarget> getBuildDeps();
 
   Iterable<BuildTarget> getBuildDepsFastWithDuplicates();
