@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.targetgraph;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetGraphInterface;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.rules.visibility.VisibilityError;
@@ -34,7 +35,8 @@ import java.util.OptionalInt;
 import javax.annotation.Nullable;
 
 /** Represents the graph of {@link TargetNode}s constructed by parsing the build files. */
-public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
+public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>>
+    implements TargetGraphInterface<BuildTarget> {
 
   public static final TargetGraph EMPTY =
       new TargetGraph(
@@ -86,10 +88,16 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
     return Optional.ofNullable(getInternal(target));
   }
 
+  @Override
+  public boolean isEmpty() {
+    return this.equals(EMPTY);
+  }
+
   /**
    * Get a target from graph. Use of {@link #get(BuildTarget, DependencyStack)} is encouraged
    * because it provides better diagnostics
    */
+  @Override
   public TargetNode<?> get(BuildTarget target) {
     return get(target, DependencyStack.root());
   }
