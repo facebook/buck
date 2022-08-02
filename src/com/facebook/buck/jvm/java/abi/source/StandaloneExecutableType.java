@@ -30,6 +30,7 @@ import javax.lang.model.type.TypeVariable;
  * objects, but does not depend on any particular implementation of them (beyond the spec).
  */
 class StandaloneExecutableType extends StandaloneTypeMirror implements ExecutableType {
+
   private final TypeMirror returnType;
   private final List<? extends TypeVariable> typeVariables;
   private final List<? extends TypeMirror> parameterTypes;
@@ -73,5 +74,11 @@ class StandaloneExecutableType extends StandaloneTypeMirror implements Executabl
   @Override
   public List<? extends TypeMirror> getThrownTypes() {
     return thrownTypes;
+  }
+
+  @Override
+  public StandaloneExecutableType cloneWithAnnotationMirrors(
+      List<? extends AnnotationMirror> annotations) {
+    throw new UnsupportedOperationException("Cannot add annotations to a method type");
   }
 }

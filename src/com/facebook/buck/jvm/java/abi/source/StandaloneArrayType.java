@@ -29,6 +29,7 @@ import javax.lang.model.type.TypeMirror;
  * implementation of it (beyond the spec).
  */
 class StandaloneArrayType extends StandaloneTypeMirror implements ArrayType {
+
   private final TypeMirror componentType;
 
   public StandaloneArrayType(TypeMirror componentType) {
@@ -49,5 +50,11 @@ class StandaloneArrayType extends StandaloneTypeMirror implements ArrayType {
   @Override
   public String toString() {
     return String.format("%s[]", componentType.toString());
+  }
+
+  @Override
+  public StandaloneArrayType cloneWithAnnotationMirrors(
+      List<? extends AnnotationMirror> newAnnotations) {
+    return new StandaloneArrayType(this.componentType, newAnnotations);
   }
 }

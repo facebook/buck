@@ -42,6 +42,7 @@ import javax.lang.model.type.WildcardType;
  * (beyond the spec).
  */
 abstract class StandaloneTypeMirror implements TypeMirror {
+
   private final TypeKind kind;
   private final List<? extends AnnotationMirror> annotations;
 
@@ -105,6 +106,9 @@ abstract class StandaloneTypeMirror implements TypeMirror {
   public List<? extends AnnotationMirror> getAnnotationMirrors() {
     return this.annotations;
   }
+
+  public abstract StandaloneTypeMirror cloneWithAnnotationMirrors(
+      List<? extends AnnotationMirror> annotations);
 
   @Override
   public <A extends Annotation> A getAnnotation(Class<A> annotationType) {

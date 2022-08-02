@@ -16,11 +16,20 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import java.util.List;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 
 public class StandalonePackageType extends StandaloneTypeMirror implements NoType {
+
   private final ArtificialPackageElement packageElement;
+
+  public StandalonePackageType(
+      ArtificialPackageElement packageElement, List<? extends AnnotationMirror> annotations) {
+    super(TypeKind.PACKAGE, annotations);
+    this.packageElement = packageElement;
+  }
 
   public StandalonePackageType(ArtificialPackageElement packageElement) {
     super(TypeKind.PACKAGE);
@@ -34,5 +43,11 @@ public class StandalonePackageType extends StandaloneTypeMirror implements NoTyp
   @Override
   public String toString() {
     return packageElement.getQualifiedName().toString();
+  }
+
+  @Override
+  public StandalonePackageType cloneWithAnnotationMirrors(
+      List<? extends AnnotationMirror> annotations) {
+    return new StandalonePackageType(this.packageElement, annotations);
   }
 }

@@ -41,6 +41,7 @@ import javax.lang.model.util.Types;
  * and {@link com.facebook.buck.jvm.java.abi.source} for more information.
  */
 class TreeBackedTypes implements Types {
+
   private final Types javacTypes;
 
   TreeBackedTypes(Types javacTypes) {
@@ -300,7 +301,7 @@ class TreeBackedTypes implements Types {
     return element instanceof ArtificialElement;
   }
 
-  private boolean isArtificialType(@Nullable TypeMirror typeMirror) {
+  public boolean isArtificialType(@Nullable TypeMirror typeMirror) {
     return typeMirror instanceof StandaloneTypeMirror;
   }
 

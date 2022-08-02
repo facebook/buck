@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import java.util.List;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
@@ -27,12 +29,22 @@ import javax.lang.model.type.WildcardType;
  * implementation of it (beyond the spec).
  */
 class StandaloneWildcardType extends StandaloneTypeMirror implements WildcardType {
+
   @Nullable private final TypeMirror extendsBound;
   @Nullable private final TypeMirror superBound;
 
   public StandaloneWildcardType(
       @Nullable TypeMirror extendsBound, @Nullable TypeMirror superBound) {
     super(TypeKind.WILDCARD);
+    this.extendsBound = extendsBound;
+    this.superBound = superBound;
+  }
+
+  public StandaloneWildcardType(
+      @Nullable TypeMirror extendsBound,
+      @Nullable TypeMirror superBound,
+      List<? extends AnnotationMirror> annotations) {
+    super(TypeKind.WILDCARD, annotations);
     this.extendsBound = extendsBound;
     this.superBound = superBound;
   }
@@ -63,5 +75,11 @@ class StandaloneWildcardType extends StandaloneTypeMirror implements WildcardTyp
     }
 
     return builder.toString();
+  }
+
+  @Override
+  public StandaloneTypeMirror cloneWithAnnotationMirrors(
+      List<? extends AnnotationMirror> newAnnotations) {
+    return new StandaloneWildcardType(this.extendsBound, this.superBound, newAnnotations);
   }
 }

@@ -50,6 +50,7 @@ import javax.tools.JavaFileObject;
  * the compiler. This is analogous to the "Enter" phase of javac.
  */
 class TreeBackedEnter {
+
   private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeBackedEnter");
   private final TreeBackedElements elements;
   private final TreeBackedTypes types;
@@ -71,6 +72,7 @@ class TreeBackedEnter {
   }
 
   private class EnteringElementScanner extends ElementScanner8<Void, Void> {
+
     private final Deque<TreeBackedElement> contextStack = new ArrayDeque<>();
     @Nullable private TreePath currentPath;
     @Nullable private Tree currentTree;
@@ -334,6 +336,7 @@ class TreeBackedEnter {
     }
 
     private class ElementContext implements AutoCloseable {
+
       public ElementContext(TreeBackedElement newContext) {
         contextStack.push(newContext);
       }

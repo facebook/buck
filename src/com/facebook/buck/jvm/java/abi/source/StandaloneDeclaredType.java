@@ -32,6 +32,7 @@ import javax.lang.model.util.Types;
  * objects, but does not depend on any particular implementation of them (beyond the spec).
  */
 class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredType {
+
   private final TypeElement typeElement;
   private final TypeMirror enclosingType;
   private final List<? extends TypeMirror> typeArguments;
@@ -99,5 +100,12 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
       builder.append('>');
     }
     return builder.toString();
+  }
+
+  @Override
+  public StandaloneDeclaredType cloneWithAnnotationMirrors(
+      List<? extends AnnotationMirror> newAnnotations) {
+    return new StandaloneDeclaredType(
+        this.typeElement, this.typeArguments, this.enclosingType, newAnnotations);
   }
 }

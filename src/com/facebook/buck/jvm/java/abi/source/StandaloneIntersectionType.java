@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import java.util.List;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -27,6 +28,7 @@ import javax.lang.model.type.TypeMirror;
  * implementation of it (beyond the spec).
  */
 class StandaloneIntersectionType extends StandaloneTypeMirror implements IntersectionType {
+
   private final List<TypeMirror> bounds;
 
   public StandaloneIntersectionType(List<? extends TypeMirror> bounds) {
@@ -51,5 +53,11 @@ class StandaloneIntersectionType extends StandaloneTypeMirror implements Interse
     }
 
     return builder.toString();
+  }
+
+  @Override
+  public StandaloneIntersectionType cloneWithAnnotationMirrors(
+      List<? extends AnnotationMirror> annotations) {
+    throw new UnsupportedOperationException("Cannot add annotations to an intersection type");
   }
 }

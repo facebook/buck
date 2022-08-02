@@ -61,6 +61,7 @@ import javax.tools.Diagnostic.Kind;
  * versions of these are the artificial ones if they exist, otherwise the javac one.
  */
 class PostEnterCanonicalizer {
+
   private final TreeBackedElements elements;
   private final TreeBackedTypes types;
   private final Trees javacTrees;
@@ -113,28 +114,34 @@ class PostEnterCanonicalizer {
     }
 
     Tree tree = treePath == null ? null : treePath.getLeaf();
+    TypeMirror canonicalType;
     switch (typeMirror.getKind()) {
       case ARRAY:
         {
           ArrayType arrayType = (ArrayType) typeMirror;
-          return types.getArrayType(
-              getCanonicalType(
-                  arrayType.getComponentType(),
-                  treePath,
-                  tree == null ? null : ((ArrayTypeTree) tree).getType()));
+          canonicalType =
+              types.getArrayType(
+                  getCanonicalType(
+                      arrayType.getComponentType(),
+                      treePath,
+                      tree == null ? null : ((ArrayTypeTree) tree).getType()));
+          break;
         }
       case TYPEVAR:
         {
           TypeVariable typeVar = (TypeVariable) typeMirror;
-          return elements.getCanonicalElement(typeVar.asElement()).asType();
+          canonicalType = elements.getCanonicalElement(typeVar.asElement()).asType();
+          break;
         }
       case WILDCARD:
         {
           WildcardType wildcardType = (WildcardType) typeMirror;
           Tree boundTree = tree == null ? null : ((WildcardTree) tree).getBound();
-          return types.getWildcardType(
-              getCanonicalType(wildcardType.getExtendsBound(), treePath, boundTree),
-              getCanonicalType(wildcardType.getSuperBound(), treePath, boundTree));
+          canonicalType =
+              types.getWildcardType(
+                  getCanonicalType(wildcardType.getExtendsBound(), treePath, boundTree),
+                  getCanonicalType(wildcardType.getSuperBound(), treePath, boundTree));
+          break;
         }
       case DECLARED:
         {
@@ -200,7 +207,9 @@ class PostEnterCanonicalizer {
             }
           }
 
-          return types.getDeclaredType(canonicalEnclosingType, canonicalElement, canonicalTypeArgs);
+          canonicalType =
+              types.getDeclaredType(canonicalEnclosingType, canonicalElement, canonicalTypeArgs);
+          break;
         }
       case PACKAGE:
       case ERROR:
@@ -210,12 +219,13 @@ class PostEnterCanonicalizer {
           }
 
           try {
-            return getInferredType(treePath);
+            canonicalType = getInferredType(treePath);
           } catch (CompilerErrorException e) {
             javacTrees.printMessage(
                 Kind.ERROR, e.getMessage(), treePath.getLeaf(), treePath.getCompilationUnit());
-            return typeMirror;
+            canonicalType = typeMirror;
           }
+          break;
         }
       case BOOLEAN:
       case BYTE:
@@ -228,7 +238,8 @@ class PostEnterCanonicalizer {
       case VOID:
       case NONE:
       case NULL:
-        return typeMirror;
+        canonicalType = typeMirror;
+        break;
       case EXECUTABLE:
       case OTHER:
       case UNION:
@@ -237,6 +248,15 @@ class PostEnterCanonicalizer {
         // $CASES-OMITTED$
       default:
         throw new UnsupportedOperationException();
+    }
+
+    if (types.isArtificialType(canonicalType)) {
+      StandaloneTypeMirror standaloneCanonicalType = (StandaloneTypeMirror) canonicalType;
+      return standaloneCanonicalType.cloneWithAnnotationMirrors(typeMirror.getAnnotationMirrors());
+    } else {
+      // To preserve type annotations, return the original type when we would return real java type
+      // anyway
+      return typeMirror;
     }
   }
 
@@ -331,7 +351,9 @@ class PostEnterCanonicalizer {
         {
           // If it's imported, then it must be a class; look it up
           TypeMirror importedType = getImportedType(treePath);
-          if (importedType != null) return importedType;
+          if (importedType != null) {
+            return importedType;
+          }
 
           // Infer the type by heuristic
           IdentifierTree identifierTree = (IdentifierTree) tree;

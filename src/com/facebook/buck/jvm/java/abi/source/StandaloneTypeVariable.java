@@ -50,6 +50,15 @@ class StandaloneTypeVariable extends StandaloneTypeMirror implements TypeVariabl
     lowerBound = types.getNullType();
   }
 
+  private StandaloneTypeVariable(
+      TypeParameterElement element,
+      NullType lowerBound,
+      List<? extends AnnotationMirror> annotations) {
+    super(TypeKind.TYPEVAR, annotations);
+    this.element = element;
+    this.lowerBound = lowerBound;
+  }
+
   @Override
   public Element asElement() {
     return element;
@@ -78,5 +87,11 @@ class StandaloneTypeVariable extends StandaloneTypeMirror implements TypeVariabl
   @Override
   public String toString() {
     return element.toString();
+  }
+
+  @Override
+  public StandaloneTypeVariable cloneWithAnnotationMirrors(
+      List<? extends AnnotationMirror> newAnnotations) {
+    return new StandaloneTypeVariable(this.element, this.lowerBound, newAnnotations);
   }
 }
