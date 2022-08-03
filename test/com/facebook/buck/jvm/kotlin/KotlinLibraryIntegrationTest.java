@@ -450,6 +450,34 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  public void shouldNotGenerateClassUsageFileForKaptTargetIfBlocklisted() throws IOException {
+    String bizTargetFqn = "//com/example/classusage:biz_with_kapt";
+    workspace.addBuckConfigLocalOption("kotlin", "track_class_usage_for_kapt_targets", true);
+    workspace.addBuckConfigLocalOption(
+        "kotlin",
+        "track_class_usage_processor_blocklist",
+        "com.example.ap.kotlinap_kapt.AnnotationProcessorKotlin,otherProvider");
+    ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
+    buildResult.assertSuccess("Build should have succeeded.");
+
+    assertFalse(
+        "Should not generate kotlin-used-classes-tmp.json",
+        Files.exists(
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+    assertFalse(
+        "Should not generate kapt-used-classes-tmp.txt",
+        Files.exists(
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
+    assertFalse(
+        "Should not generate used-classes.json",
+        Files.exists(workspace.getPath(getOutputFilePath(bizTargetFqn, "used-classes.json"))));
+    assertFalse(
+        "Should not generate kotlin-used-classes.json",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes.json"))));
+  }
+
+  @Test
   public void shouldNotGenerateClassUsageFileForKspTarget() throws IOException {
     String bizTargetFqn = "//com/example/classusage:biz_with_ksp";
     ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
@@ -522,6 +550,34 @@ public class KotlinLibraryIntegrationTest {
         ObjectMappers.READER.readValue(
             ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
             new TypeReference<Map<String, Map<String, Integer>>>() {}));
+  }
+
+  @Test
+  public void shouldNotGenerateClassUsageFileForKspTargetIfBlocklisted() throws IOException {
+    String bizTargetFqn = "//com/example/classusage:biz_with_ksp";
+    workspace.addBuckConfigLocalOption("kotlin", "track_class_usage_for_ksp_targets", true);
+    workspace.addBuckConfigLocalOption(
+        "kotlin",
+        "track_class_usage_processor_blocklist",
+        "KSP:com.example.ap.kotlinap_ksp_dump_file_usage.AnnotationProcessorKotlinKspProvider,KSP:otherProvider");
+    ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
+    buildResult.assertSuccess("Build should have succeeded.");
+
+    assertFalse(
+        "Should not generate kotlin-used-classes-tmp.json",
+        Files.exists(
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+    assertFalse(
+        "Should not generate ksp-used-classes-tmp.txt",
+        Files.exists(
+            workspace.getPath(getReportFilePath(bizTargetFqn, "ksp-used-classes-tmp.txt"))));
+    assertFalse(
+        "Should not generate used-classes.json",
+        Files.exists(workspace.getPath(getOutputFilePath(bizTargetFqn, "used-classes.json"))));
+    assertFalse(
+        "Should not generate kotlin-used-classes.json",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes.json"))));
   }
 
   private Path getOutputJarPath(String targetFqn) throws IOException {

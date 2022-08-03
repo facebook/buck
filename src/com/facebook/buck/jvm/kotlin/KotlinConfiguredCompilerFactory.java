@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import static com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory.getAnnotationProcessors;
 import static com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory.getKaptAnnotationProcessors;
 import static com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory.getKspAnnotationProcessors;
 
@@ -37,6 +38,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
 import com.google.common.collect.ImmutableList;
@@ -167,11 +169,16 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Override
   public boolean trackClassUsage(JavacOptions javacOptions) {
     JavacPluginParams annotationProcessorParams = javacOptions.getJavaAnnotationProcessorParams();
+    ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
+        getAnnotationProcessors(annotationProcessorParams);
     return kotlinBuckConfig.trackClassUsage()
         && (kotlinBuckConfig.trackClassUsageForKaptTargets()
-            || getKaptAnnotationProcessors(annotationProcessorParams).isEmpty())
+            || getKaptAnnotationProcessors(annotationProcessors).isEmpty())
         && (kotlinBuckConfig.trackClassUsageForKspTargets()
-            || getKspAnnotationProcessors(annotationProcessorParams).isEmpty());
+            || getKspAnnotationProcessors(annotationProcessors).isEmpty())
+        && annotationProcessors.stream()
+            .flatMap(prop -> prop.getProcessorNames().stream())
+            .noneMatch(name -> kotlinBuckConfig.trackClassUsageProcessorBlocklist().contains(name));
   }
 
   @Override

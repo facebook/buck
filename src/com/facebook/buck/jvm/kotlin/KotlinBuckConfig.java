@@ -30,6 +30,7 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -289,6 +290,15 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    */
   boolean trackClassUsageForKspTargets() {
     return delegate.getBoolean(SECTION, "track_class_usage_for_ksp_targets").orElse(false);
+  }
+
+  /**
+   * Disable dep-based rule keys for targets with certain processors
+   *
+   * @return true to use dep-based rule keys, false otherwise
+   */
+  ImmutableList<String> trackClassUsageProcessorBlocklist() {
+    return delegate.getListWithoutComments(SECTION, "track_class_usage_processor_blocklist");
   }
 
   /**

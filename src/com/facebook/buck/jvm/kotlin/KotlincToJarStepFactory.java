@@ -467,7 +467,7 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory<KotlinE
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kaptAnnotationGenFolder));
 
     ImmutableList<ResolvedJavacPluginProperties> kaptAnnotationProcessors =
-        getKaptAnnotationProcessors(javaAnnotationProcessorParams);
+        getKaptAnnotationProcessors(getAnnotationProcessors(javaAnnotationProcessorParams));
 
     // No annotation processors for KAPT
     if (kaptAnnotationProcessors.isEmpty()) {
@@ -629,7 +629,7 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory<KotlinE
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kspAnnotationGenFolder));
 
     ImmutableList<ResolvedJavacPluginProperties> kspAnnotationProcessors =
-        getKspAnnotationProcessors(annotationProcessorParams);
+        getKspAnnotationProcessors(getAnnotationProcessors(annotationProcessorParams));
 
     if (kspAnnotationProcessors.isEmpty()) {
       return;
@@ -1033,22 +1033,25 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory<KotlinE
     return !isKspPlugin(sourcePath);
   }
 
-  static ImmutableList<ResolvedJavacPluginProperties> getKaptAnnotationProcessors(
-      JavacPluginParams javaAnnotationProcessorParams) {
-    return javaAnnotationProcessorParams.isEmpty()
-        ? ImmutableList.of()
-        : javaAnnotationProcessorParams.getPluginProperties().stream()
-            .filter(prop -> !isKSPProcessor(prop))
-            .collect(ImmutableList.toImmutableList());
-  }
-
-  static ImmutableList<ResolvedJavacPluginProperties> getKspAnnotationProcessors(
+  static ImmutableList<ResolvedJavacPluginProperties> getAnnotationProcessors(
       JavacPluginParams annotationProcessorParams) {
     return annotationProcessorParams.isEmpty()
         ? ImmutableList.of()
-        : annotationProcessorParams.getPluginProperties().stream()
-            .filter(KotlincToJarStepFactory::isKSPProcessor)
-            .collect(ImmutableList.toImmutableList());
+        : annotationProcessorParams.getPluginProperties().asList();
+  }
+
+  static ImmutableList<ResolvedJavacPluginProperties> getKaptAnnotationProcessors(
+      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors) {
+    return annotationProcessors.stream()
+        .filter(prop -> !isKSPProcessor(prop))
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  static ImmutableList<ResolvedJavacPluginProperties> getKspAnnotationProcessors(
+      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors) {
+    return annotationProcessors.stream()
+        .filter(KotlincToJarStepFactory::isKSPProcessor)
+        .collect(ImmutableList.toImmutableList());
   }
 
   /**
