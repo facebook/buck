@@ -332,6 +332,14 @@ class CxxPreprocessAndCompileStep implements Step {
     var rootPath = filesystem.getRootPath().toString() + File.separatorChar;
 
     if (Platform.detect() == Platform.WINDOWS) {
+      // String long path prefix in case we have it
+      depFileContent = depFileContent.replace("\\\\?\\", "");
+      rootPath = rootPath.replace("\\\\?\\", "");
+
+      // clang might use '\\' as a separator on windows. Make sure to replace with a single '\'
+      depFileContent = depFileContent.replace("\\\\", String.valueOf(File.separatorChar));
+      rootPath = rootPath.replace("\\\\", String.valueOf(File.separatorChar));
+
       // On Windows some compilers (e.g. msvc) might return paths with different case
       // (i.e. lowercase or uppercase). Let's make sure we strip the root path while preserving
       // case of all other symbols in the dep file.
