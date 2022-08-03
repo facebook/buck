@@ -51,7 +51,7 @@ import org.junit.Test;
 public class APKModuleTest {
 
   private void verifyDependencies(
-      APKModuleGraph graph, APKModule module, ImmutableSet<String> names) {
+      APKModuleGraph<BuildTarget> graph, APKModule module, ImmutableSet<String> names) {
     ImmutableSet<APKModule> deps = graph.getGraph().getOutgoingNodesFor(module);
     assertThat(deps.size(), is(names.size()));
     for (APKModule dep : deps) {
@@ -139,8 +139,8 @@ public class APKModuleTest {
     seedConfigMap.put("android", ImmutableList.of(androidLibraryTarget));
     seedConfigMap.put("java", ImmutableList.of(javaLibraryTarget));
 
-    APKModuleGraph dag =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> dag =
+        new APKModuleGraph<>(
             graph,
             androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
@@ -254,8 +254,8 @@ public class APKModuleTest {
     seedConfigMap.put("test.android.library", ImmutableList.of(androidLibraryTarget));
     seedConfigMap.put("test.java.library", ImmutableList.of(javaLibraryTarget));
 
-    APKModuleGraph dag =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> dag =
+        new APKModuleGraph<>(
             graph,
             androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
@@ -370,8 +370,8 @@ public class APKModuleTest {
         ImmutableMap.builder();
     appModuleDependencies.put("android", ImmutableList.of("java"));
 
-    APKModuleGraph dag =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> dag =
+        new APKModuleGraph<>(
             graph,
             androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
@@ -508,8 +508,8 @@ public class APKModuleTest {
         ImmutableMap.builder();
     appModuleDependencies.put("android", ImmutableList.of("java"));
 
-    APKModuleGraph dag =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> dag =
+        new APKModuleGraph<>(
             graph,
             androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
@@ -606,8 +606,8 @@ public class APKModuleTest {
     seedConfigMap.put("android", ImmutableList.of(androidLibraryTarget));
     seedConfigMap.put("java", ImmutableList.of(javaLibraryTarget));
 
-    APKModuleGraph dag =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> dag =
+        new APKModuleGraph<>(
             graph,
             androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
@@ -708,8 +708,8 @@ public class APKModuleTest {
     seedConfigMap.put("java", ImmutableList.of(javaLibraryTarget));
     seedConfigMap.put("java-dep", ImmutableList.of(javaDepLibraryTarget));
 
-    APKModuleGraph dag =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> dag =
+        new APKModuleGraph<>(
             graph,
             androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
@@ -854,8 +854,8 @@ public class APKModuleTest {
     appModuleDependencies.put("android", ImmutableList.of("java", "java2"));
     appModuleDependencies.put("java", ImmutableList.of("java2"));
 
-    APKModuleGraph dag =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> dag =
+        new APKModuleGraph<>(
             graph,
             androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
@@ -1009,8 +1009,8 @@ public class APKModuleTest {
     appModuleDependencies.put("android", ImmutableList.of("java", "java2"));
     appModuleDependencies.put("java", ImmutableList.of("java2"));
 
-    APKModuleGraph dag =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> dag =
+        new APKModuleGraph<>(
             graph,
             androidBinaryTarget,
             Optional.of(seedConfigMap.build()),
@@ -1137,8 +1137,8 @@ public class APKModuleTest {
         ImmutableMap.builder();
     appModuleDependencies.put("android", ImmutableList.of("java"));
 
-    APKModuleGraph dag =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> dag =
+        new APKModuleGraph<>(
             graph,
             androidBinaryTarget,
             Optional.of(seedConfigMap.build()),

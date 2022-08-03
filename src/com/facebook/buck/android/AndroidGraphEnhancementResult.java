@@ -20,6 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
@@ -55,7 +56,7 @@ interface AndroidGraphEnhancementResult {
 
   SourcePath getAndroidManifestPath();
 
-  APKModuleGraph getAPKModuleGraph();
+  APKModuleGraph<BuildTarget> getAPKModuleGraph();
 
   Optional<CopyNativeLibraries> getCopyNativeLibrariesForSystemLibraryLoader();
 

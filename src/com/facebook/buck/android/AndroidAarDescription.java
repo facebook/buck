@@ -168,7 +168,8 @@ public class AndroidAarDescription
             args.getManifestSkeleton());
     aarExtraDepsBuilder.add(graphBuilder.addToIndex(manifest));
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(context.getTargetGraph(), buildTarget);
+    APKModuleGraph<BuildTarget> apkModuleGraph =
+        new APKModuleGraph<>(context.getTargetGraph(), buildTarget);
 
     /* assemble dirs */
     AndroidPackageableCollector collector =

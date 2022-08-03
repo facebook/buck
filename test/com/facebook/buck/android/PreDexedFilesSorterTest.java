@@ -53,13 +53,13 @@ public class PreDexedFilesSorterTest {
   private static final long DEX_WEIGHT_LIMIT = 10 * 1024 * 1024;
   private static final int STANDARD_DEX_FILE_ESTIMATE = (int) DEX_WEIGHT_LIMIT / 10 - 1;
 
-  private APKModuleGraph moduleGraph;
+  private APKModuleGraph<BuildTarget> moduleGraph;
   private APKModule extraModule;
 
   @Before
   public void setUp() {
     moduleGraph =
-        new APKModuleGraph(TargetGraph.EMPTY, BuildTargetFactory.newInstance("//fakeTarget:yes"));
+        new APKModuleGraph<>(TargetGraph.EMPTY, BuildTargetFactory.newInstance("//fakeTarget:yes"));
     extraModule = APKModule.of("extra");
   }
 

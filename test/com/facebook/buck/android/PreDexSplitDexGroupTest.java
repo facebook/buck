@@ -54,12 +54,12 @@ import org.junit.Test;
 
 public class PreDexSplitDexGroupTest {
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
-  private APKModuleGraph moduleGraph;
+  private APKModuleGraph<BuildTarget> moduleGraph;
 
   @Before
   public void setUp() {
     moduleGraph =
-        new APKModuleGraph(TargetGraph.EMPTY, BuildTargetFactory.newInstance("//fakeTarget:yes"));
+        new APKModuleGraph<>(TargetGraph.EMPTY, BuildTargetFactory.newInstance("//fakeTarget:yes"));
   }
 
   @Test

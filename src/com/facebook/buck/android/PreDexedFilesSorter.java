@@ -65,7 +65,7 @@ public class PreDexedFilesSorter {
   private final Collection<DexWithClasses> dexFilesToMerge;
   private final ClassNameFilter primaryDexFilter;
   private final APKModule module;
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModuleGraph<BuildTarget> apkModuleGraph;
   private final long dexWeightLimit;
   private final DexStore dexStore;
   private final Path secondaryDexJarFilesDir;
@@ -80,7 +80,7 @@ public class PreDexedFilesSorter {
   public PreDexedFilesSorter(
       Collection<DexWithClasses> dexFilesToMerge,
       ImmutableSet<String> primaryDexPatterns,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       APKModule module,
       Path canaryDirectory,
       long dexWeightLimit,

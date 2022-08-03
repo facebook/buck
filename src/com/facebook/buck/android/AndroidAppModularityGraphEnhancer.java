@@ -51,7 +51,7 @@ public class AndroidAppModularityGraphEnhancer {
   private final ToolchainProvider toolchainProvider;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final boolean shouldIncludeLibraries;
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModuleGraph<BuildTarget> apkModuleGraph;
   private final ConfigurationRuleRegistry configurationRuleRegistry;
 
   AndroidAppModularityGraphEnhancer(
@@ -61,7 +61,7 @@ public class AndroidAppModularityGraphEnhancer {
       ToolchainProvider toolchainProvider,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       boolean shouldIncludeLibraries,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       ConfigurationRuleRegistry configurationRuleRegistry) {
     this.originalBuildTarget = buildTarget;
     this.originalDeps = originalParams.getBuildDeps();

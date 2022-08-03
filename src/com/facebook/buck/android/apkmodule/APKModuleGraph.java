@@ -17,8 +17,8 @@
 package com.facebook.buck.android.apkmodule;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.HasBuildTargetAndBuildDeps;
+import com.facebook.buck.core.model.TargetGraphInterface;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -71,36 +71,38 @@ import java.util.function.Supplier;
  * minimal cover contains more than one APKModule, the target will belong to a new shared APKModule
  * that is a dependency of all APKModules in the minimal cover.
  */
-public class APKModuleGraph implements AddsToRuleKey {
+public class APKModuleGraph<BuildTargetType extends Comparable<BuildTargetType>>
+    implements AddsToRuleKey {
 
-  private final TargetGraph targetGraph;
-  @AddToRuleKey private final BuildTarget target;
+  private final TargetGraphInterface<BuildTargetType> targetGraph;
+  @AddToRuleKey private final BuildTargetType target;
 
   @AddToRuleKey
-  private final Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> suppliedSeedConfigMap;
+  private final Optional<ImmutableMap<String, ImmutableList<BuildTargetType>>>
+      suppliedSeedConfigMap;
 
   @AddToRuleKey
   private final Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies;
 
-  @AddToRuleKey private final Optional<List<BuildTarget>> denylistModules;
+  @AddToRuleKey private final Optional<List<BuildTargetType>> denylistModules;
 
   /**
    * This is the computed in the constructor - this is the global view of how every module is laid
    * out
    */
   @AddToRuleKey
-  private final ImmutableSortedMap<APKModule, ImmutableSet<BuildTarget>> moduleToTarget;
+  private final ImmutableSortedMap<APKModule, ImmutableSet<BuildTargetType>> moduleToTarget;
 
   private final Set<UndeclaredDependency> undeclaredDependencies = new HashSet<>();
 
   /** This is the set of targets reachable by the root that does NOT pass through a seed. */
-  private final Supplier<ImmutableSet<BuildTarget>> rootTargetsSupplier =
+  private final Supplier<ImmutableSet<BuildTargetType>> rootTargetsSupplier =
       MoreSuppliers.memoize(this::generateRootTargets);
 
-  private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
+  private final Supplier<ImmutableMap<BuildTargetType, APKModule>> targetToModuleMapSupplier =
       MoreSuppliers.memoize(
           () -> {
-            Builder<BuildTarget, APKModule> mapBuilder = ImmutableMap.builder();
+            Builder<BuildTargetType, APKModule> mapBuilder = ImmutableMap.builder();
             new AbstractBreadthFirstTraversal<APKModule>(getGraph().getNodesWithNoIncomingEdges()) {
               @Override
               public ImmutableSet<APKModule> visit(APKModule node) {
@@ -138,20 +140,20 @@ public class APKModuleGraph implements AddsToRuleKey {
             return moduleBuilder.build();
           });
 
-  private final Supplier<ImmutableMultimap<BuildTarget, String>> sharedSeedsSupplier =
+  private final Supplier<ImmutableMultimap<BuildTargetType, String>> sharedSeedsSupplier =
       MoreSuppliers.memoize(this::generateSharedSeeds);
 
-  private final Supplier<Optional<ImmutableMap<String, ImmutableList<BuildTarget>>>>
+  private final Supplier<Optional<ImmutableMap<String, ImmutableList<BuildTargetType>>>>
       configMapSupplier = MoreSuppliers.memoize(this::generateSeedConfigMap);
 
-  private final Supplier<Optional<ImmutableMap<BuildTarget, String>>> seedTargetMapSupplier =
+  private final Supplier<Optional<ImmutableMap<BuildTargetType, String>>> seedTargetMapSupplier =
       MoreSuppliers.memoize(this::generateSeedTargetMap);
 
   /**
    * Constructor for the {@code APKModule} graph generator object that produces a graph with only a
    * root module.
    */
-  public APKModuleGraph(TargetGraph targetGraph, BuildTarget target) {
+  public APKModuleGraph(TargetGraphInterface<BuildTargetType> targetGraph, BuildTargetType target) {
     this(targetGraph, target, Optional.empty(), Optional.empty(), Optional.empty());
   }
   /**
@@ -172,24 +174,24 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @param denylistModules A list of targets that will NOT be included in any module.
    */
   public APKModuleGraph(
-      TargetGraph targetGraph,
-      BuildTarget target,
-      Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> suppliedSeedConfigMap,
+      TargetGraphInterface<BuildTargetType> targetGraph,
+      BuildTargetType target,
+      Optional<ImmutableMap<String, ImmutableList<BuildTargetType>>> suppliedSeedConfigMap,
       Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies,
-      Optional<List<BuildTarget>> denylistModules) {
+      Optional<List<BuildTargetType>> denylistModules) {
     this.targetGraph = targetGraph;
     this.target = target;
     this.suppliedSeedConfigMap = suppliedSeedConfigMap;
     this.appModuleDependencies = appModuleDependencies;
     this.denylistModules = denylistModules;
 
-    Map<APKModule, ImmutableSet.Builder<BuildTarget>> builder = new HashMap<>();
+    Map<APKModule, ImmutableSet.Builder<BuildTargetType>> builder = new HashMap<>();
     graph = generateGraph(builder);
 
-    ImmutableSortedMap.Builder<APKModule, ImmutableSet<BuildTarget>> mapBuilder =
+    ImmutableSortedMap.Builder<APKModule, ImmutableSet<BuildTargetType>> mapBuilder =
         ImmutableSortedMap.naturalOrder();
     mapBuilder.put(getRootAPKModule(), ImmutableSortedSet.copyOf(rootTargetsSupplier.get()));
-    for (Map.Entry<APKModule, ImmutableSet.Builder<BuildTarget>> entry : builder.entrySet()) {
+    for (Map.Entry<APKModule, ImmutableSet.Builder<BuildTargetType>> entry : builder.entrySet()) {
       mapBuilder.put(entry.getKey(), ImmutableSortedSet.copyOf(entry.getValue().build()));
     }
     moduleToTarget = mapBuilder.build();
@@ -227,16 +229,16 @@ public class APKModuleGraph implements AddsToRuleKey {
     return Optional.of(targets);
   }
 
-  private Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> generateSeedConfigMap() {
+  private Optional<ImmutableMap<String, ImmutableList<BuildTargetType>>> generateSeedConfigMap() {
     return suppliedSeedConfigMap;
   }
 
-  private Optional<ImmutableMap<BuildTarget, String>> generateSeedTargetMap() {
+  private Optional<ImmutableMap<BuildTargetType, String>> generateSeedTargetMap() {
     if (suppliedSeedConfigMap.isPresent()) {
-      final Map<BuildTarget, String> seedTargetMap = new HashMap<>();
-      for (final ImmutableMap.Entry<String, ImmutableList<BuildTarget>> suppliedSeedConfig :
+      final Map<BuildTargetType, String> seedTargetMap = new HashMap<>();
+      for (final ImmutableMap.Entry<String, ImmutableList<BuildTargetType>> suppliedSeedConfig :
           suppliedSeedConfigMap.get().entrySet()) {
-        for (final BuildTarget seedTarget : suppliedSeedConfig.getValue()) {
+        for (final BuildTargetType seedTarget : suppliedSeedConfig.getValue()) {
           seedTargetMap.put(seedTarget, suppliedSeedConfig.getKey());
         }
       }
@@ -289,12 +291,12 @@ public class APKModuleGraph implements AddsToRuleKey {
     return modulesSupplier.get();
   }
 
-  public Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> getSeedConfigMap() {
+  public Optional<ImmutableMap<String, ImmutableList<BuildTargetType>>> getSeedConfigMap() {
     verifyNoSharedSeeds();
     return configMapSupplier.get();
   }
 
-  public Optional<ImmutableMap<BuildTarget, String>> getSeedTargetMap() {
+  public Optional<ImmutableMap<BuildTargetType, String>> getSeedTargetMap() {
     return seedTargetMapSupplier.get();
   }
 
@@ -304,12 +306,12 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @param target target to serach for in modules
    * @return the module that contains the target
    */
-  public APKModule findModuleForTarget(BuildTarget target) {
+  public APKModule findModuleForTarget(BuildTargetType target) {
     APKModule module = targetToModuleMapSupplier.get().get(target);
     return (module == null ? getRootAPKModule() : module);
   }
 
-  public Optional<List<BuildTarget>> getDenyListModules() {
+  public Optional<List<BuildTargetType>> getDenyListModules() {
     return denylistModules;
   }
 
@@ -364,13 +366,13 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @return The graph of APKModules with edges representing dependencies between modules
    */
   private DirectedAcyclicGraph<APKModule> generateGraph(
-      Map<APKModule, ImmutableSet.Builder<BuildTarget>> builder) {
+      Map<APKModule, ImmutableSet.Builder<BuildTargetType>> builder) {
     MutableDirectedGraph<APKModule> apkModuleGraph = new MutableDirectedGraph<>();
 
     apkModuleGraph.addNode(getRootAPKModule());
 
     if (getSeedConfigMap().isPresent()) {
-      Multimap<BuildTarget, String> targetToContainingApkModulesMap =
+      Multimap<BuildTargetType, String> targetToContainingApkModulesMap =
           mapTargetsToContainingModules();
       generateSharedModules(apkModuleGraph, targetToContainingApkModulesMap, builder);
       // add declared dependencies as well.
@@ -445,23 +447,25 @@ public class APKModuleGraph implements AddsToRuleKey {
    *
    * @return all reachable targets that are not seed targets to the root module
    */
-  private ImmutableSet<BuildTarget> generateRootTargets() {
-    ImmutableSet.Builder<BuildTarget> rootTargetsBuilder = new ImmutableSet.Builder<>();
-    if (targetGraph != TargetGraph.EMPTY) {
-      Set<TargetNode<?>> rootNodes = new HashSet<>();
+  private ImmutableSet<BuildTargetType> generateRootTargets() {
+    ImmutableSet.Builder<BuildTargetType> rootTargetsBuilder = new ImmutableSet.Builder<>();
+    if (!targetGraph.isEmpty()) {
+      Set<HasBuildTargetAndBuildDeps<BuildTargetType>> rootNodes = new HashSet<>();
       rootNodes.add(targetGraph.get(target));
       if (denylistModules.isPresent()) {
-        for (BuildTarget targetModule : denylistModules.get()) {
+        for (BuildTargetType targetModule : denylistModules.get()) {
           rootNodes.add(targetGraph.get(targetModule));
           rootTargetsBuilder.add(targetModule);
         }
       }
-      new AbstractBreadthFirstTraversal<TargetNode<?>>(rootNodes) {
+      new AbstractBreadthFirstTraversal<HasBuildTargetAndBuildDeps<BuildTargetType>>(rootNodes) {
         @Override
-        public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
+        public Iterable<HasBuildTargetAndBuildDeps<BuildTargetType>> visit(
+            HasBuildTargetAndBuildDeps<BuildTargetType> node) {
 
-          ImmutableSet.Builder<TargetNode<?>> depsBuilder = ImmutableSet.builder();
-          for (BuildTarget depTarget : node.getBuildDeps()) {
+          ImmutableSet.Builder<HasBuildTargetAndBuildDeps<BuildTargetType>> depsBuilder =
+              ImmutableSet.builder();
+          for (BuildTargetType depTarget : node.getBuildDeps()) {
             if (!isSeedTarget(depTarget)) {
               depsBuilder.add(targetGraph.get(depTarget));
               rootTargetsBuilder.add(depTarget);
@@ -480,22 +484,25 @@ public class APKModuleGraph implements AddsToRuleKey {
    *
    * @return the Multimap containing targets and the seed modules that contain them
    */
-  private Multimap<BuildTarget, String> mapTargetsToContainingModules() {
+  private Multimap<BuildTargetType, String> mapTargetsToContainingModules() {
     final DirectedAcyclicGraph<String> declaredDependencies = getDeclaredDependencyGraph();
     final DirectedAcyclicGraph.Builder<String> moduleGraph = DirectedAcyclicGraph.serialBuilder();
-    Multimap<BuildTarget, String> targetToContainingApkModuleNameMap =
+    Multimap<BuildTargetType, String> targetToContainingApkModuleNameMap =
         MultimapBuilder.treeKeys().treeSetValues().build();
-    for (Map.Entry<String, ImmutableList<BuildTarget>> seedConfig :
+    for (Map.Entry<String, ImmutableList<BuildTargetType>> seedConfig :
         getSeedConfigMap().get().entrySet()) {
       final String seedModuleName = seedConfig.getKey();
-      for (BuildTarget seedTarget : seedConfig.getValue()) {
-        final Set<BuildTarget> seedBuildDeps = targetGraph.get(seedTarget).getBuildDeps();
+      for (BuildTargetType seedTarget : seedConfig.getValue()) {
+        final Set<BuildTargetType> seedBuildDeps = targetGraph.get(seedTarget).getBuildDeps();
         targetToContainingApkModuleNameMap.put(seedTarget, seedModuleName);
-        new AbstractBreadthFirstTraversal<TargetNode<?>>(targetGraph.get(seedTarget)) {
+        new AbstractBreadthFirstTraversal<HasBuildTargetAndBuildDeps<BuildTargetType>>(
+            targetGraph.get(seedTarget)) {
           @Override
-          public ImmutableSet<TargetNode<?>> visit(TargetNode<?> node) {
-            ImmutableSet.Builder<TargetNode<?>> depsBuilder = ImmutableSet.builder();
-            for (final BuildTarget depTarget : node.getBuildDeps()) {
+          public ImmutableSet<HasBuildTargetAndBuildDeps<BuildTargetType>> visit(
+              HasBuildTargetAndBuildDeps<BuildTargetType> node) {
+            ImmutableSet.Builder<HasBuildTargetAndBuildDeps<BuildTargetType>> depsBuilder =
+                ImmutableSet.builder();
+            for (final BuildTargetType depTarget : node.getBuildDeps()) {
               final String depTargetModuleName = getSeedModule(depTarget);
               if (depTargetModuleName != null) {
                 moduleGraph.addNode(depTargetModuleName);
@@ -523,9 +530,9 @@ public class APKModuleGraph implements AddsToRuleKey {
 
     // Now to generate the minimal covers of APKModules for each set of APKModules that contain
     // a buildTarget
-    Multimap<BuildTarget, String> targetModuleEntriesToRemove =
+    Multimap<BuildTargetType, String> targetModuleEntriesToRemove =
         MultimapBuilder.treeKeys().treeSetValues().build();
-    for (BuildTarget key : targetToContainingApkModuleNameMap.keySet()) {
+    for (BuildTargetType key : targetToContainingApkModuleNameMap.keySet()) {
       Collection<String> modulesForTarget = targetToContainingApkModuleNameMap.get(key);
       new AbstractBreadthFirstTraversal<String>(modulesForTarget) {
         @Override
@@ -541,7 +548,7 @@ public class APKModuleGraph implements AddsToRuleKey {
         }
       }.start();
     }
-    for (Map.Entry<BuildTarget, String> entryToRemove : targetModuleEntriesToRemove.entries()) {
+    for (Map.Entry<BuildTargetType, String> entryToRemove : targetModuleEntriesToRemove.entries()) {
       targetToContainingApkModuleNameMap.remove(entryToRemove.getKey(), entryToRemove.getValue());
     }
     return targetToContainingApkModuleNameMap;
@@ -590,8 +597,8 @@ public class APKModuleGraph implements AddsToRuleKey {
    */
   private void generateSharedModules(
       MutableDirectedGraph<APKModule> apkModuleGraph,
-      Multimap<BuildTarget, String> targetToContainingApkModulesMap,
-      Map<APKModule, ImmutableSet.Builder<BuildTarget>> builder) {
+      Multimap<BuildTargetType, String> targetToContainingApkModulesMap,
+      Map<APKModule, ImmutableSet.Builder<BuildTargetType>> builder) {
 
     // Sort the module-covers of all targets to determine shared module names.
     TreeSet<TreeSet<String>> sortedContainingModuleSets =
@@ -616,7 +623,7 @@ public class APKModuleGraph implements AddsToRuleKey {
                 return 0;
               }
             });
-    for (Map.Entry<BuildTarget, Collection<String>> entry :
+    for (Map.Entry<BuildTargetType, Collection<String>> entry :
         targetToContainingApkModulesMap.asMap().entrySet()) {
       TreeSet<String> containingModuleSet = new TreeSet<>(entry.getValue());
       sortedContainingModuleSets.add(containingModuleSet);
@@ -644,7 +651,7 @@ public class APKModuleGraph implements AddsToRuleKey {
     }
 
     // add Targets per module;
-    for (Map.Entry<BuildTarget, Collection<String>> entry :
+    for (Map.Entry<BuildTargetType, Collection<String>> entry :
         targetToContainingApkModulesMap.asMap().entrySet()) {
       ImmutableSet<String> containingModuleSet = ImmutableSet.copyOf(entry.getValue());
       for (Map.Entry<ImmutableSet<String>, APKModule> existingEntry :
@@ -686,24 +693,24 @@ public class APKModuleGraph implements AddsToRuleKey {
     }
   }
 
-  private boolean isSeedTarget(BuildTarget depTarget) {
+  private boolean isSeedTarget(BuildTargetType depTarget) {
     if (!getSeedConfigMap().isPresent()) {
       return false;
     }
     return getSeedModule(depTarget) != null;
   }
 
-  private String getSeedModule(final BuildTarget seedTarget) {
+  private String getSeedModule(final BuildTargetType seedTarget) {
     return getSeedTargetMap().get().get(seedTarget);
   }
 
   private void verifyNoSharedSeeds() {
-    ImmutableMultimap<BuildTarget, String> sharedSeeds = sharedSeedsSupplier.get();
+    ImmutableMultimap<BuildTargetType, String> sharedSeeds = sharedSeedsSupplier.get();
     if (!sharedSeeds.isEmpty()) {
       StringBuilder errorMessage = new StringBuilder();
-      for (BuildTarget seed : sharedSeeds.keySet()) {
+      for (BuildTargetType seed : sharedSeeds.keySet()) {
         errorMessage
-            .append("BuildTarget: ")
+            .append("BuildTargetType: ")
             .append(seed)
             .append(" is used as seed in multiple modules: ");
         for (String module : sharedSeeds.get(seed)) {
@@ -715,33 +722,33 @@ public class APKModuleGraph implements AddsToRuleKey {
     }
   }
 
-  private ImmutableMultimap<BuildTarget, String> generateSharedSeeds() {
-    Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> seedConfigMap =
+  private ImmutableMultimap<BuildTargetType, String> generateSharedSeeds() {
+    Optional<ImmutableMap<String, ImmutableList<BuildTargetType>>> seedConfigMap =
         configMapSupplier.get();
-    HashMultimap<BuildTarget, String> sharedSeedMapBuilder = HashMultimap.create();
+    HashMultimap<BuildTargetType, String> sharedSeedMapBuilder = HashMultimap.create();
     if (!seedConfigMap.isPresent()) {
       return ImmutableMultimap.copyOf(sharedSeedMapBuilder);
     }
-    // first: invert the seedConfigMap to get BuildTarget -> Seeds
-    for (Map.Entry<String, ImmutableList<BuildTarget>> entry : seedConfigMap.get().entrySet()) {
-      for (BuildTarget buildTarget : entry.getValue()) {
+    // first: invert the seedConfigMap to get BuildTargetType -> Seeds
+    for (Map.Entry<String, ImmutableList<BuildTargetType>> entry : seedConfigMap.get().entrySet()) {
+      for (BuildTargetType buildTarget : entry.getValue()) {
         sharedSeedMapBuilder.put(buildTarget, entry.getKey());
       }
     }
     // second: remove keys that have only one value.
-    Set<BuildTarget> nonSharedSeeds = new HashSet<>();
-    for (BuildTarget buildTarget : sharedSeedMapBuilder.keySet()) {
+    Set<BuildTargetType> nonSharedSeeds = new HashSet<>();
+    for (BuildTargetType buildTarget : sharedSeedMapBuilder.keySet()) {
       if (sharedSeedMapBuilder.get(buildTarget).size() <= 1) {
         nonSharedSeeds.add(buildTarget);
       }
     }
-    for (BuildTarget targetToRemove : nonSharedSeeds) {
+    for (BuildTargetType targetToRemove : nonSharedSeeds) {
       sharedSeedMapBuilder.removeAll(targetToRemove);
     }
     return ImmutableMultimap.copyOf(sharedSeedMapBuilder);
   }
 
-  public ImmutableSet<BuildTarget> getBuildTargets(APKModule module) {
+  public ImmutableSet<BuildTargetType> getBuildTargets(APKModule module) {
     if (moduleToTarget.containsKey(module)) {
       return moduleToTarget.get(module);
     } else {

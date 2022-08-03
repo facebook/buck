@@ -44,14 +44,14 @@ public class AndroidAppModularity extends AbstractBuildRule {
 
   @AddToRuleKey private final AndroidAppModularityGraphEnhancementResult result;
   @AddToRuleKey private final boolean shouldIncludeClasses;
-  @AddToRuleKey private final APKModuleGraph apkModuleGraph;
+  @AddToRuleKey private final APKModuleGraph<BuildTarget> apkModuleGraph;
 
   AndroidAppModularity(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidAppModularityGraphEnhancementResult result,
       boolean shouldIncludeClasses,
-      APKModuleGraph apkModuleGraph) {
+      APKModuleGraph<BuildTarget> apkModuleGraph) {
     super(buildTarget, projectFilesystem);
     this.result = result;
     this.shouldIncludeClasses = shouldIncludeClasses;

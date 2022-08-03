@@ -58,7 +58,7 @@ public class AndroidApkFilesInfoTest {
   public void setUp() {
     EnumSet<ExopackageMode> exopackageModes = EnumSet.of(ExopackageMode.MODULES);
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//app:app");
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, apkTarget);
+    APKModuleGraph<BuildTarget> apkModuleGraph = new APKModuleGraph<>(TargetGraph.EMPTY, apkTarget);
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(apkTarget, ImmutableSet.of(), apkModuleGraph).build();
 
@@ -100,7 +100,7 @@ public class AndroidApkFilesInfoTest {
     DexFilesInfo dexInfo;
     List<Pair<SourcePath, SourcePath>> moduleMetadataAndDexSources;
 
-    FakePreDexMerge(BuildTarget buildTarget, APKModuleGraph apkModuleGraph) {
+    FakePreDexMerge(BuildTarget buildTarget, APKModuleGraph<BuildTarget> apkModuleGraph) {
       super(
           buildTarget,
           new FakeProjectFilesystem(),

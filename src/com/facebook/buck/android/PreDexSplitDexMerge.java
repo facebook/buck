@@ -85,7 +85,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
 
   @AddToRuleKey private final DexSplitMode dexSplitMode;
 
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModuleGraph<BuildTarget> apkModuleGraph;
   private final ImmutableCollection<PreDexSplitDexGroup> preDexDeps;
   private final ListeningExecutorService dxExecutorService;
   private final int xzCompressionLevel;
@@ -96,7 +96,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
       BuildRuleParams params,
       AndroidPlatformTarget androidPlatformTarget,
       DexSplitMode dexSplitMode,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       ImmutableCollection<PreDexSplitDexGroup> preDexDeps,
       ListeningExecutorService dxExecutorService,
       int xzCompressionLevel) {

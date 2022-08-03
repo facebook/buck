@@ -97,7 +97,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean noVersionTransitionsResources;
   private final boolean noAutoAddOverlayResources;
   private final boolean noResourceRemoval;
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModuleGraph<BuildTarget> apkModuleGraph;
   private final boolean useProtoFormat;
   private final boolean useAapt2LocaleFiltering;
   private final boolean shouldAapt2KeepRawValues;
@@ -134,7 +134,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean noVersionTransitionsResources,
       boolean noAutoAddOverlayResources,
       boolean noResourceRemoval,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       boolean useProtoFormat,
       boolean useAapt2LocaleFiltering,
       boolean shouldAapt2KeepRawValues,

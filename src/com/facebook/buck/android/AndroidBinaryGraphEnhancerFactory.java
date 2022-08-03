@@ -110,12 +110,12 @@ public class AndroidBinaryGraphEnhancerFactory {
     int secondaryDexWeightLimit =
         args.getSecondaryDexWeightLimit().orElse(androidBuckConfig.getSecondaryDexWeightLimit());
 
-    APKModuleGraph apkModuleGraph;
+    APKModuleGraph<BuildTarget> apkModuleGraph;
     if (args.getApplicationModuleConfigs().isEmpty()) {
-      apkModuleGraph = new APKModuleGraph(targetGraph, buildTarget);
+      apkModuleGraph = new APKModuleGraph<>(targetGraph, buildTarget);
     } else {
       apkModuleGraph =
-          new APKModuleGraph(
+          new APKModuleGraph<>(
               targetGraph,
               buildTarget,
               Optional.of(args.getApplicationModuleConfigs()),

@@ -82,7 +82,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   @AddToRuleKey private final DexSplitMode dexSplitMode;
   @AddToRuleKey final int secondaryDexWeightLimit;
 
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModuleGraph<BuildTarget> apkModuleGraph;
   final APKModule apkModule;
   public final Collection<DexProducedFromJavaLibrary> preDexDeps;
   private final ListeningExecutorService dxExecutorService;
@@ -106,7 +106,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       BuildRuleParams params,
       AndroidPlatformTarget androidPlatformTarget,
       DexSplitMode dexSplitMode,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       APKModule apkModule,
       Collection<DexProducedFromJavaLibrary> preDexDeps,
       ListeningExecutorService dxExecutorService,

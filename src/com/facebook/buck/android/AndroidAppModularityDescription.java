@@ -49,8 +49,8 @@ public class AndroidAppModularityDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidAppModularityDescriptionArg args) {
-    APKModuleGraph apkModuleGraph =
-        new APKModuleGraph(
+    APKModuleGraph<BuildTarget> apkModuleGraph =
+        new APKModuleGraph<>(
             context.getTargetGraph(),
             buildTarget,
             Optional.of(args.getApplicationModuleConfigs()),

@@ -277,7 +277,7 @@ public class AndroidInstrumentationApkDescription
             dxExecutorService,
             apkUnderTest.getManifestEntries(),
             cxxBuckConfig,
-            new APKModuleGraph(context.getTargetGraph(), buildTarget),
+            new APKModuleGraph<>(context.getTargetGraph(), buildTarget),
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
             createRulesToExcludeFromDexSupplier(

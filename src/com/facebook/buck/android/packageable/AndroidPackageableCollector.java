@@ -69,20 +69,21 @@ public class AndroidPackageableCollector {
   private final ImmutableCollection<SourcePath> nativeLibsForSystemLoaderToExclude;
   private final ImmutableCollection<NativeLinkableGroup>
       nativeLinkablesUsedByWrapScriptToExcludeGroup;
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModuleGraph<BuildTarget> apkModuleGraph;
   private final AndroidPackageableFilter androidPackageableFilter;
   private final Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms;
 
   @VisibleForTesting
   public AndroidPackageableCollector(BuildTarget collectionRoot) {
-    this(collectionRoot, ImmutableSet.of(), new APKModuleGraph(TargetGraph.EMPTY, collectionRoot));
+    this(
+        collectionRoot, ImmutableSet.of(), new APKModuleGraph<>(TargetGraph.EMPTY, collectionRoot));
   }
 
   @VisibleForTesting
   public AndroidPackageableCollector(
       BuildTarget collectionRoot,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
-      APKModuleGraph apkModuleGraph) {
+      APKModuleGraph<BuildTarget> apkModuleGraph) {
     this(
         collectionRoot,
         buildTargetsToExcludeFromDex,
@@ -93,7 +94,7 @@ public class AndroidPackageableCollector {
   public AndroidPackageableCollector(
       BuildTarget collectionRoot,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     this(
         collectionRoot,
@@ -113,7 +114,7 @@ public class AndroidPackageableCollector {
   public AndroidPackageableCollector(
       BuildTarget collectionRoot,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       AndroidPackageableFilter androidPackageableFilter) {
     this(
         collectionRoot,
@@ -147,7 +148,7 @@ public class AndroidPackageableCollector {
       ImmutableCollection<NativeLinkableGroup> nativeLinkableGroupAssetsToExclude,
       ImmutableCollection<SourcePath> nativeLibsForSystemLoaderToExclude,
       ImmutableCollection<NativeLinkableGroup> nativeLinkablesUsedByWrapScriptToExcludeGroup,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       AndroidPackageableFilter androidPackageableFilter,
       Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     this.collectionRoot = collectionRoot;

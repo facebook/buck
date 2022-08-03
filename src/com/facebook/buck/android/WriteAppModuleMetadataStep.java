@@ -44,7 +44,7 @@ public class WriteAppModuleMetadataStep implements Step {
   private final Path metadataOutput;
   private final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap;
   private final Optional<ImmutableMultimap<APKModule, String>> apkModuleToNativeLibraryMap;
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModuleGraph<BuildTarget> apkModuleGraph;
   private final ProjectFilesystem filesystem;
   private final boolean shouldIncludeClasses;
 
@@ -60,7 +60,7 @@ public class WriteAppModuleMetadataStep implements Step {
       Path metadataOutput,
       ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
       Optional<ImmutableMultimap<APKModule, String>> apkModuleToNativeLibraryMap,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       ProjectFilesystem filesystem,
       boolean shouldIncludeClasses) {
     this.metadataOutput = metadataOutput;

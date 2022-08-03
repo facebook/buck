@@ -97,7 +97,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols;
   private final ImmutableList<Pattern> relinkerWhitelist;
   private final RelinkerMode relinkerMode;
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModuleGraph<BuildTarget> apkModuleGraph;
   private final AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher;
   private final CellPathResolver cellPathResolver;
 
@@ -117,7 +117,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       RelinkerMode relinkerMode,
       ImmutableList<Pattern> relinkerWhitelist,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher) {
     this.toolchainProvider = toolchainProvider;
     this.cellPathResolver = cellPathResolver;

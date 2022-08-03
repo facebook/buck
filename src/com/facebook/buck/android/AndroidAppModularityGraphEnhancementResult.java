@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -39,5 +40,5 @@ abstract class AndroidAppModularityGraphEnhancementResult implements AddsToRuleK
   public abstract ImmutableSortedSet<BuildRule> getFinalDeps();
 
   @AddToRuleKey
-  public abstract APKModuleGraph getAPKModuleGraph();
+  public abstract APKModuleGraph<BuildTarget> getAPKModuleGraph();
 }

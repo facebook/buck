@@ -144,7 +144,7 @@ public class AndroidBinaryGraphEnhancer {
   private final Optional<SourcePath> buildConfigValuesFile;
   private final int xzCompressionLevel;
   private final AndroidNativeLibsPackageableGraphEnhancer nativeLibsEnhancer;
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModuleGraph<BuildTarget> apkModuleGraph;
   private final ListeningExecutorService dxExecutorService;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
   private final NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
@@ -217,7 +217,7 @@ public class AndroidBinaryGraphEnhancer {
       ListeningExecutorService dxExecutorService,
       ManifestEntries manifestEntries,
       CxxBuckConfig cxxBuckConfig,
-      APKModuleGraph apkModuleGraph,
+      APKModuleGraph<BuildTarget> apkModuleGraph,
       Optional<Arg> postFilterResourcesCmd,
       NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
       Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,

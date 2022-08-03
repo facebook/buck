@@ -73,7 +73,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
+    APKModuleGraph<BuildTarget> apkModuleGraph = new APKModuleGraph<>(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -152,7 +152,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
+    APKModuleGraph<BuildTarget> apkModuleGraph = new APKModuleGraph<>(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -224,7 +224,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
+    APKModuleGraph<BuildTarget> apkModuleGraph = new APKModuleGraph<>(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -271,7 +271,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
+    APKModuleGraph<BuildTarget> apkModuleGraph = new APKModuleGraph<>(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -356,7 +356,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
+    APKModuleGraph<BuildTarget> apkModuleGraph = new APKModuleGraph<>(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
