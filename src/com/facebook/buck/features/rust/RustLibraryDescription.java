@@ -179,12 +179,7 @@ public class RustLibraryDescription
         getRustcArgsEnv =
             rustPlatform ->
                 RustCompileUtils.getRustcFlagsAndEnv(
-                    context,
-                    buildTarget,
-                    rustBuckConfig,
-                    rustPlatform,
-                    rustPlatform.getRustLibraryFlags(),
-                    args);
+                    context, buildTarget, rustPlatform, rustPlatform.getRustLibraryFlags(), args);
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 

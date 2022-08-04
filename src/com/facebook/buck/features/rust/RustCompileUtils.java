@@ -18,7 +18,6 @@ package com.facebook.buck.features.rust;
 
 import static com.facebook.buck.cxx.CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget;
 
-import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -64,11 +63,8 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -85,13 +81,11 @@ import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import javax.annotation.Nullable;
 
 /** Utilities to generate various kinds of Rust compilation. */
 public class RustCompileUtils {
@@ -172,7 +166,6 @@ public class RustCompileUtils {
   public static Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> getRustcFlagsAndEnv(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
-      RustBuckConfig rustBuckConfig,
       RustPlatform rustPlatform,
       ImmutableList<StringArg> ruleFlags,
       RustCommonArgs args) {
@@ -183,14 +176,11 @@ public class RustCompileUtils {
     ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
 
     RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
-    // T125799685: Temporary while we migrate from implicit to explicit target triples.
-    if (rustBuckConfig.getUseRustcTargetTriple()) {
-      rustPlatform
-          .getRustcTargetTriple()
-          .map(triple -> rustcArgs.add(StringArg.of("--target"), StringArg.of(triple)));
-    } else {
-      RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
-    }
+
+    rustPlatform
+        .getRustcTargetTriple()
+        .map(triple -> rustcArgs.add(StringArg.of("--target"), StringArg.of(triple)));
+
     rustcArgs.addAll(ruleFlags);
     args.getRustcFlags().forEach(arg -> rustcArgs.add(converter.convert(arg)));
 
@@ -974,85 +964,6 @@ public class RustCompileUtils {
     Hasher hasher = Hashing.md5().newHasher();
     HashCode hash = hasher.putString(name, StandardCharsets.UTF_8).hash();
     return hash.toString().substring(0, 16);
-  }
-
-  /** Given a Rust flavor, return a target triple or null if none known. */
-  @VisibleForTesting
-  public static @Nullable String targetTripleForFlavor(Flavor flavor) {
-    List<String> parts = Splitter.on('-').limit(2).splitToList(flavor.getName());
-
-    if (parts.size() != 2) {
-      return null;
-    }
-
-    String platform = parts.get(0);
-    String rawArch = parts.get(1);
-    String rustArch;
-    if (platform.equals(ApplePlatform.IPHONEOS.getName())
-        || platform.equals(ApplePlatform.IPHONESIMULATOR.getName())) {
-      // This is according to https://forge.rust-lang.org/platform-support.html
-      if (rawArch.equals("armv7")) {
-        // armv7 is not part of Architecture.
-        rustArch = "armv7";
-      } else {
-        Architecture arch = Architecture.fromName(parts.get(1));
-        if (arch == Architecture.X86_32) {
-          rustArch = "i386";
-        } else {
-          rustArch = arch.toString();
-        }
-      }
-      return rustArch + "-apple-ios";
-    } else if (platform.equals(ApplePlatform.MACOSX.getName())
-        || platform.equals(ApplePlatform.MACOSXCATALYST.getName())) {
-      switch (rawArch) {
-        case "arm64":
-          rustArch = "aarch64";
-          break;
-        case "x86_64":
-          rustArch = rawArch;
-          break;
-        case "i386":
-          // Rust does not support i386 target for macOS 32bit. Furthermore, i686 is Tier 3,
-          // so by default, it's not part of the official compiler builds. But let's support it,
-          // in case there's some unforeseen use case.
-          rustArch = "i686";
-          break;
-        default:
-          return null;
-      }
-
-      return rustArch + "-apple-darwin";
-    } else if (platform.equals("android")) {
-      // This is according to https://forge.rust-lang.org/platform-support.html
-      if (rawArch.equals("armv7")) {
-        // The only difference I see between
-        // thumbv7neon-linux-androideabi and armv7-linux-androideabi
-        // is that the former does not set +d16, but d16 support is
-        // part of armeabi-v7a per
-        // https://developer.android.com/ndk/guides/abis.html#v7a.
-        return "armv7-linux-androideabi";
-      } else {
-        // We want aarch64-linux-android, i686-linux-android, or x86_64-linux-android.
-        Architecture arch = Architecture.fromName(parts.get(1));
-        if (arch == Architecture.X86_32) {
-          rustArch = "i686";
-        } else {
-          rustArch = arch.toString();
-        }
-        return rustArch + "-linux-android";
-      }
-    } else {
-      return null;
-    }
-  }
-
-  /** Add the appropriate --target option to the given rustc args if the given flavor is known. */
-  public static void addTargetTripleForFlavor(Flavor flavor, ImmutableList.Builder<Arg> args) {
-    String triple = targetTripleForFlavor(flavor);
-    if (triple != null) {
-      args.add(StringArg.of("--target"), StringArg.of(triple));
-    }
   }
 
   /** Return a macro expander for a string with macros */

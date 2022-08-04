@@ -413,9 +413,6 @@ public class RustLibraryIntegrationTest {
             .runBuckCommand(
                 "run",
                 "--config",
-                // T125799685: Temporary while we migrate from implicit to explicit target triples.
-                "rust.use_rustc_target_triple=true",
-                "--config",
                 "rust#default.rustc_target_triple=fake-target-triple",
                 "//messenger:messenger#rlib")
             .getStderr(),

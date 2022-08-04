@@ -616,9 +616,6 @@ public class RustBinaryIntegrationTest {
             .runBuckCommand(
                 "run",
                 "--config",
-                // T125799685: Temporary while we migrate from implicit to explicit target triples.
-                "rust.use_rustc_target_triple=true",
-                "--config",
                 "rust#default.rustc_target_triple=fake-target-triple",
                 "//:xyzzy")
             .getStderr(),
@@ -1168,13 +1165,7 @@ public class RustBinaryIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "run",
-            "--config",
-            // T125799685: Temporary while we migrate from implicit to explicit target triples.
-            "rust.use_rustc_target_triple=true",
-            "--config",
-            "rust#default.rustc_target_triple=" + rustcTargetTriple,
-            "//:xyzzy");
+            "run", "--config", "rust#default.rustc_target_triple=" + rustcTargetTriple, "//:xyzzy");
 
     assertThat(result.getStdout(), containsString("Hello, world!"));
     assertThat(result.getExitCode(), Matchers.equalTo(ExitCode.SUCCESS));

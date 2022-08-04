@@ -99,12 +99,7 @@ public class RustBinaryDescription
 
     Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> flagsAndEnv =
         RustCompileUtils.getRustcFlagsAndEnv(
-            context,
-            buildTarget,
-            rustBuckConfig,
-            rustPlatform,
-            rustPlatform.getRustBinaryFlags(),
-            args);
+            context, buildTarget, rustPlatform, rustPlatform.getRustBinaryFlags(), args);
 
     ImmutableList<Arg> linkerFlags =
         RustCompileUtils.getLinkerFlags(context, buildTarget, rustPlatform, args);

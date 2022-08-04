@@ -53,7 +53,6 @@ public class RustBuckConfig {
   private static final String RUSTC_PLUGIN_PLATFORM = "rustc_plugin_platform";
   private static final String RUSTC_TARGET_TRIPLE = "rustc_target_triple";
   private static final String NATIVE_UNBUNDLE_DEPS = "native_unbundle_deps";
-  private static final String USE_RUSTC_TARGET_TRIPLE = "use_rustc_target_triple";
 
   public static final String DEFAULT_FLAVOR_LIBRARY_TYPE = "type";
 
@@ -328,10 +327,5 @@ public class RustBuckConfig {
 
   public Optional<Path> getAppleDeveloperDirIfSet() {
     return getOptionalPath("apple", "xcode_developer_dir");
-  }
-
-  // T125799685: Temporary while we migrate from implicit to explicit target triples.
-  boolean getUseRustcTargetTriple() {
-    return delegate.getBooleanValue(SECTION, USE_RUSTC_TARGET_TRIPLE, false);
   }
 }

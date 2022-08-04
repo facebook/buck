@@ -17,13 +17,11 @@
 package com.facebook.buck.features.rust;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -82,50 +80,6 @@ public class RustCompileTest {
             "//:myname",
             ImmutableSortedSet.of(FakeSourcePath.of("main.rs"), FakeSourcePath.of("myname.rs")));
     linkable.getCrateRoot();
-  }
-
-  @Test
-  public void flavorToRustTriple() {
-    assertEquals(
-        "aarch64-apple-ios",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphoneos-arm64")));
-    assertEquals(
-        "armv7-apple-ios",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphoneos-armv7")));
-    assertEquals(
-        "x86_64-apple-ios",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphonesimulator-x86_64")));
-    assertEquals(
-        "i386-apple-ios",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphonesimulator-i386")));
-
-    assertEquals(
-        "aarch64-linux-android",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-arm64")));
-    assertEquals(
-        "armv7-linux-androideabi",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-armv7")));
-    assertEquals(
-        "x86_64-linux-android",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-x86_64")));
-    assertEquals(
-        "i686-linux-android",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-i386")));
-    assertEquals(
-        "x86_64-apple-darwin",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("macosx-x86_64")));
-    assertEquals(
-        "i686-apple-darwin",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("macosx-i386")));
-    assertEquals(
-        "aarch64-apple-darwin",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("macosx-arm64")));
-    assertEquals(
-        "x86_64-apple-darwin",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("maccatalyst-x86_64")));
-    assertEquals(
-        "aarch64-apple-darwin",
-        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("maccatalyst-arm64")));
   }
 
   private static Tool fakeTool() {
