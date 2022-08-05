@@ -17,6 +17,7 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.DefaultAndroidInstallerPrinter;
 import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
@@ -39,6 +40,7 @@ public class AndroidDevicesHelperFactory {
         targetDeviceOptions,
         toolchainProvider,
         contextSupplier,
+        new DefaultAndroidInstallerPrinter(contextSupplier),
         adbConfig.getRestartAdbOnFailure(),
         adbConfig.getSkipInstallMetadata(),
         adbConfig.getAlwaysUseJavaAgent(),

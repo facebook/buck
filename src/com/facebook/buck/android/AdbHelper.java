@@ -39,14 +39,12 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
@@ -116,6 +114,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final boolean skipMetadataIfNoInstalls;
   private final boolean alwaysUseJavaAgent;
   private final boolean isZstdCompressionEnabled;
+  private final AndroidInstallPrinter androidPrinter;
 
   @Nullable private ListeningExecutorService executorService = null;
 
@@ -124,6 +123,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       TargetDeviceOptions deviceOptions,
       ToolchainProvider toolchainProvider,
       Supplier<ExecutionContext> contextSupplier,
+      AndroidInstallPrinter androidPrinter,
       boolean restartAdbOnFailure,
       boolean skipMetadataIfNoInstalls,
       boolean alwaysUseJavaAgent,
@@ -135,6 +135,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
+    this.androidPrinter = androidPrinter;
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
     this.alwaysUseJavaAgent = alwaysUseJavaAgent;
     this.isZstdCompressionEnabled = isZstdCompressionEnabled;
@@ -152,9 +153,9 @@ public class AdbHelper implements AndroidDevicesHelper {
     GetDevicesResult result = devicesSupplier.get();
     if (!quiet && result.devices.size() > 1) {
       // Report if multiple devices are matching the filter.
-      printMessage("Found " + result.devices.size() + " matching devices.\n");
+      androidPrinter.printMessage("Found " + result.devices.size() + " matching devices.\n");
     }
-    result.errorMessage.ifPresent(message -> printError(message));
+    result.errorMessage.ifPresent(message -> androidPrinter.printError(message));
     return result.devices;
   }
 
@@ -181,7 +182,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       GetDevicesResult result = devicesSupplier.get();
       if (!quiet && result.devices.size() > 1) {
         // Report if multiple devices are matching the filter.
-        printMessage("Found " + result.devices.size() + " matching devices.\n");
+        androidPrinter.printMessage("Found " + result.devices.size() + " matching devices.\n");
       }
       if (result.errorMessage.isPresent()) {
         throw new HumanReadableException(result.errorMessage.get());
@@ -235,7 +236,8 @@ public class AdbHelper implements AndroidDevicesHelper {
 
     // Report results.
     if (successCount > 0 && !quiet) {
-      printSuccess(String.format("Successfully ran %s on %d device(s)", description, successCount));
+      androidPrinter.printSuccess(
+          String.format("Successfully ran %s on %d device(s)", description, successCount));
     }
 
     if (failureCount != 0) {
@@ -262,19 +264,6 @@ public class AdbHelper implements AndroidDevicesHelper {
                     GlobalStateManager.singleton().getThreadToCommandRegister()),
                 adbThreadCount));
     return executorService;
-  }
-
-  private void printMessage(String message) {
-    getBuckEventBus().post(ConsoleEvent.info(message));
-  }
-
-  private void printSuccess(String successMessage) {
-    Ansi ansi = contextSupplier.get().getAnsi();
-    getBuckEventBus().post(ConsoleEvent.info(ansi.asHighlightedSuccessText(successMessage)));
-  }
-
-  private void printError(String failureMessage) {
-    getBuckEventBus().post(ConsoleEvent.severe(failureMessage));
   }
 
   @Override
@@ -459,7 +448,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       intentTargetNiceName = activity;
     }
 
-    printMessage(String.format("Starting activity %s...", intentTargetNiceName));
+    androidPrinter.printMessage(String.format("Starting activity %s...", intentTargetNiceName));
 
     StartActivityEvent.Started started =
         StartActivityEvent.started(hasInstallableApk.getBuildTarget(), intentTargetNiceName);
@@ -538,7 +527,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   @VisibleForTesting
   List<IDevice> filterDevices(IDevice[] allDevices) {
     if (allDevices.length == 0) {
-      printError("No devices are found.");
+      androidPrinter.printError("No devices are found.");
       return null;
     }
 
@@ -582,12 +571,12 @@ public class AdbHelper implements AndroidDevicesHelper {
 
     // Filtered out all devices.
     if (onlineDevices == 0) {
-      printError("No devices are found.");
+      androidPrinter.printError("No devices are found.");
       return null;
     }
 
     if (devices.isEmpty()) {
-      printError(
+      androidPrinter.printError(
           String.format(
               "Found %d connected device(s), but none of them matches specified filter.",
               onlineDevices));
@@ -687,7 +676,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     waitForConnection(adb);
     if (!adb.isConnected()) {
       // Try resetting state and reconnecting
-      printError("Unable to reconnect to existing server, starting a new one");
+      androidPrinter.printError("Unable to reconnect to existing server, starting a new one");
       adb.terminate();
       waitForConnection(adb);
     }
@@ -707,12 +696,13 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
 
     if (devices == null && restartAdbOnFailure) {
-      printError("No devices found with adb, restarting adb-server.");
+      androidPrinter.printError("No devices found with adb, restarting adb-server.");
       adb.restart();
       devices = filterDevices(adb.getDevices());
     }
     if (devices == null && restartAdbOnFailure) {
-      printError("No devices found with adb after restart, terminating and restarting adb-server.");
+      androidPrinter.printError(
+          "No devices found with adb after restart, terminating and restarting adb-server.");
       adb.terminate();
       if (!waitForConnection(adb)) {
         return GetDevicesResult.createFailure("Failed to re-create adb connection.");

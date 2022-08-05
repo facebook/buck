@@ -101,6 +101,7 @@ public class AdbHelperTest {
                 AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
             .build(),
         () -> executionContext,
+        new DefaultAndroidInstallerPrinter(() -> executionContext),
         true,
         /* skipMetadataIfNoInstalls= */ false,
         /* alwaysUseJavaAgent */ true,
@@ -567,12 +568,12 @@ public class AdbHelperTest {
                 AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
             .build(),
         () -> testContext,
+        new DefaultAndroidInstallerPrinter(() -> testContext),
         true,
         /* skipMetadataIfNoInstalls= */ false,
         /* alwaysUseJavaAgent */ true,
         /* isZstdCompressionEnabled */ true,
         AGENT_PORT_BASE) {
-      @Override
       AndroidDebugBridgeFacade createAdb() {
         return facade;
       }
@@ -599,6 +600,7 @@ public class AdbHelperTest {
                 AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
             .build(),
         () -> testContext,
+        new DefaultAndroidInstallerPrinter(() -> testContext),
         true,
         /* skipMetadataIfNoInstalls= */ false,
         /* alwaysUseJavaAgent */ false,

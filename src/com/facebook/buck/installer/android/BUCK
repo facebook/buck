@@ -11,5 +11,6 @@ buck_java_library(
         "//src/com/facebook/buck/core/sourcepath:types",
         "//src/com/facebook/buck/android/packageable:packageable",
         "//third-party/java/args4j:args4j",
+         "//src/com/facebook/buck/android:helpers",
     ]
 )

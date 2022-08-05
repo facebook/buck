@@ -349,6 +349,8 @@ buck_java_library(
 HELPERS_SRCS = [
     "AdbHelper.java",
     "AndroidDeviceInfo.java",
+    "AndroidInstallPrinter.java",
+    "DefaultAndroidInstallerPrinter.java",
     "DexFilesInfo.java",
     "MacroExpandersForAndroidRules.java",
     "NativeFilesInfo.java",
