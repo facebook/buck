@@ -1,7 +1,17 @@
 <idea-plugin>
   <extensions defaultExtensionNs="com.intellij">
-    <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.lang.BuckFileTypeFactory"/>
-    <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.lang.BcfgFileTypeFactory"/>
+    <fileType name="Buck"
+        implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckFileType"
+        fieldName="INSTANCE"
+        fileNames="BUCK"
+        extensions="bzl;BUCK"
+        language="Buck"/>
+    <fileType name="Buckconfig"
+        implementationClass="com.facebook.buck.intellij.ideabuck.lang.BcfgFileType"
+        fieldName="INSTANCE"
+        language="Buckconfig"
+        fileNames=".buckconfig.local"
+        extensions="bcfg;buckconfig"/>
     <lang.parserDefinition
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckParserDefinition"/>
