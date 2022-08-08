@@ -166,7 +166,8 @@ public class SplitZipStep implements Step {
         APKModuleGraph.getAPKModuleToClassesMap(
             apkModuleToJarPathMap,
             translatorFactory.createNullableObfuscationFunction(),
-            filesystem);
+            filesystem.getRootPath(),
+            filesystem.getIgnoredPaths());
 
     ZipSplitterFactory zipSplitterFactory;
     zipSplitterFactory =

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.apkmodule;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasBuildTargetAndBuildDeps;
 import com.facebook.buck.core.model.TargetGraphInterface;
@@ -24,7 +25,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
@@ -327,7 +328,8 @@ public class APKModuleGraph<BuildTargetType extends Comparable<BuildTargetType>>
   public static ImmutableMultimap<APKModule, String> getAPKModuleToClassesMap(
       ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
       Function<String, String> translatorFunction,
-      ProjectFilesystem filesystem)
+      AbsPath rootPath,
+      ImmutableSet<PathMatcher> ignoredPaths)
       throws IOException {
     ImmutableMultimap.Builder<APKModule, String> builder = ImmutableSetMultimap.builder();
     if (!apkModuleToJarPathMap.isEmpty()) {
@@ -335,10 +337,7 @@ public class APKModuleGraph<BuildTargetType extends Comparable<BuildTargetType>>
         for (Path jarFilePath : apkModuleToJarPathMap.get(dexStore)) {
           ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
           classpathTraverser.traverse(
-              new ClasspathTraversal(
-                  ImmutableSet.of(jarFilePath),
-                  filesystem.getRootPath(),
-                  filesystem.getIgnoredPaths()) {
+              new ClasspathTraversal(ImmutableSet.of(jarFilePath), rootPath, ignoredPaths) {
                 @Override
                 public void visit(FileLike entry) {
                   if (!entry.getRelativePath().endsWith(".class")) {

@@ -61,7 +61,10 @@ public class WriteAppModuleMetadataStep implements Step {
       ImmutableMultimap<APKModule, String> moduleToClassesMap =
           shouldIncludeClasses
               ? APKModuleGraph.getAPKModuleToClassesMap(
-                  apkModuleToJarPathMap, Functions.identity(), filesystem)
+                  apkModuleToJarPathMap,
+                  Functions.identity(),
+                  filesystem.getRootPath(),
+                  filesystem.getIgnoredPaths())
               : null;
 
       // Write metadata lines to output
