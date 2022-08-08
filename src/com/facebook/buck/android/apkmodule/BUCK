@@ -1,6 +1,8 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library","buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "java_immutables_library","buck_java_library")
 
 APK_MODULE_ONLY = ["APKModule.java"]
+
+BINARY_SRCS = ["APKModuleGraphExecutableMain.java"]
 
 java_immutables_library(
     name = "module-only",
@@ -19,7 +21,7 @@ java_immutables_library(
 
 buck_java_library(
     name = "apkmodule",
-    srcs = glob(["*.java"], exclude = APK_MODULE_ONLY),
+    srcs = glob(["*.java"], exclude = APK_MODULE_ONLY + BINARY_SRCS),
     tests = [
         "//test/com/facebook/buck/android/apkmodule:apkmodule",
     ],
@@ -37,5 +39,30 @@ buck_java_library(
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/rulekey:rulekey",
+    ],
+)
+
+buck_java_library(
+    name = "apkmodule-binary-lib",
+    srcs = BINARY_SRCS,
+    tests = [
+        "//test/com/facebook/buck/android/apkmodule:apkmodule",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":apkmodule",
+        "//src/com/facebook/buck/util/json:json",
+        "//third-party/java/args4j:args4j",
+    ],
+)
+
+buck_java_binary(
+    name = "apkmodule_binary",
+    main_class = "com.facebook.buck.android.apkmodule.APKModuleGraphExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":apkmodule-binary-lib",
     ],
 )
