@@ -99,6 +99,7 @@ public class JsonBuilder {
     return new JsonMap()
         .put("url", folder.getUrl())
         .put("isTestSource", folder.getIsTestSource())
+        .put("isResourceFolder", folder.getIsResourceFolder())
         .put("packagePrefix", folder.getPackagePrefix())
         .put("resourceFolderType", folder.getIjResourceFolderType().toString())
         .put("relativeOutputPath", folder.getRelativeOutputPath())

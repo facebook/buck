@@ -137,7 +137,9 @@ public class IjProjectJsonWriter extends IjProjectWriter {
                 modEntry ->
                     new JsonMap()
                         .put("fileUrl", modEntry.getFileUrl())
-                        .put("filePath", modEntry.getFilePath())
+                        .put(
+                            "filePath",
+                            modEntry.getFilePath() != null ? modEntry.getFilePath().toString() : "")
                         .put("group", modEntry.getGroup())
                         .get())
             .collect(Collectors.toList());
