@@ -154,12 +154,14 @@ public class MetadataProviderFactory {
     Optional<String> jobGroupId = executionEnvironment.getenv("BUCK_JOB_GROUP_ID");
     Optional<String> jobDeploymentStage = executionEnvironment.getenv("BUCK_JOB_DEPLOYMENT_STAGE");
     Optional<String> jobTenant = executionEnvironment.getenv("BUCK_JOB_TENANT");
+    Optional<String> jobAlias = executionEnvironment.getenv("BUCK_JOB_ALIAS");
 
     return ClientJobInfo.newBuilder()
         .setInstanceId(jobInstanceId.orElse(""))
         .setGroupId(jobGroupId.orElse(""))
         .setDeploymentStage(jobDeploymentStage.orElse(""))
         .setClientSideTenant(jobTenant.orElse(""))
+        .setClientSideAlias(jobAlias.orElse(""))
         .build();
   }
 
