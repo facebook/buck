@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.apkmodule.APKModuleMetadataUtil;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -26,19 +27,10 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.SortedMap;
-import java.util.SortedSet;
 
 public class WriteAppModuleMetadataStep implements Step {
   private final Path metadataOutput;
@@ -47,14 +39,6 @@ public class WriteAppModuleMetadataStep implements Step {
   private final APKModuleGraph<BuildTarget> apkModuleGraph;
   private final ProjectFilesystem filesystem;
   private final boolean shouldIncludeClasses;
-
-  public static final String CLASS_SECTION_HEADER = "CLASSES";
-  public static final String TARGETS_SECTION_HEADER = "TARGETS";
-  public static final String DEPS_SECTION_HEADER = "DEPS";
-  public static final String LIBRARIES_SECTION_HEADER = "LIBRARIES";
-  public static final String BLACKLIST_SECTION_HEADER = "BLACKLIST";
-  public static final String MODULE_INDENTATION = "  ";
-  public static final String ITEM_INDENTATION = "    ";
 
   public WriteAppModuleMetadataStep(
       Path metadataOutput,
@@ -74,54 +58,19 @@ public class WriteAppModuleMetadataStep implements Step {
   @Override
   public StepExecutionResult execute(StepExecutionContext context) {
     try {
-      // Get module to classes map in sorted order for build determinism and testing
-      TreeMultimap<APKModule, String> orderedModuleToClassesMap = null;
-      if (shouldIncludeClasses) {
-        ImmutableMultimap<APKModule, String> moduleToClassesMap =
-            APKModuleGraph.getAPKModuleToClassesMap(
-                apkModuleToJarPathMap, Functions.identity(), filesystem);
-        orderedModuleToClassesMap = sortModuleToStringsMultimap(moduleToClassesMap);
-      }
-
-      TreeMultimap<APKModule, String> orderedModuleToTargetsMap =
-          TreeMultimap.create(
-              (left, right) -> left.getName().compareTo(right.getName()), Ordering.natural());
-      for (APKModule module : apkModuleGraph.getAPKModules()) {
-        for (BuildTarget target : apkModuleGraph.getBuildTargets(module)) {
-          orderedModuleToTargetsMap.put(module, target.getFullyQualifiedName());
-        }
-      }
-
-      TreeMultimap<APKModule, String> orderedModuleToLibrariesMap =
-          TreeMultimap.create(Comparator.comparing(APKModule::getName), Ordering.natural());
-      if (apkModuleToNativeLibraryMap.isPresent()) {
-        orderedModuleToLibrariesMap.putAll(apkModuleToNativeLibraryMap.get());
-      }
-
-      // Module to module deps map is already sorted
-      SortedMap<APKModule, ? extends SortedSet<APKModule>> moduleToDepsMap =
-          apkModuleGraph.toOutgoingEdgesMap();
+      ImmutableMultimap<APKModule, String> moduleToClassesMap =
+          shouldIncludeClasses
+              ? APKModuleGraph.getAPKModuleToClassesMap(
+                  apkModuleToJarPathMap, Functions.identity(), filesystem)
+              : null;
 
       // Write metadata lines to output
-      LinkedList<String> metadataLines = new LinkedList<>();
-      if (orderedModuleToClassesMap != null) {
-        metadataLines.add(CLASS_SECTION_HEADER);
-        writeModuleToStringsMultimap(orderedModuleToClassesMap, metadataLines);
-      }
-      metadataLines.add(TARGETS_SECTION_HEADER);
-      writeModuleToStringsMultimap(orderedModuleToTargetsMap, metadataLines);
-      if (apkModuleGraph.getDenyListModules().isPresent()) {
-        metadataLines.add(BLACKLIST_SECTION_HEADER);
-        writeBuildTargetList(apkModuleGraph.getDenyListModules().get(), metadataLines);
-      }
-      metadataLines.add(DEPS_SECTION_HEADER);
-      writeModuleToModulesMap(moduleToDepsMap, metadataLines);
-
-      // Add libraries metadata
-      if (apkModuleToNativeLibraryMap.isPresent()) {
-        metadataLines.add(LIBRARIES_SECTION_HEADER);
-        writeModuleToStringsMultimap(orderedModuleToLibrariesMap, metadataLines);
-      }
+      List<String> metadataLines =
+          APKModuleMetadataUtil.getMetadataLines(
+              apkModuleGraph,
+              BuildTarget::getFullyQualifiedName,
+              Optional.ofNullable(moduleToClassesMap),
+              apkModuleToNativeLibraryMap);
       filesystem.writeLinesToPath(metadataLines, metadataOutput);
 
       return StepExecutionResults.SUCCESS;
@@ -139,40 +88,5 @@ public class WriteAppModuleMetadataStep implements Step {
   @Override
   public String getDescription(StepExecutionContext context) {
     return "module_metadata";
-  }
-
-  private static TreeMultimap<APKModule, String> sortModuleToStringsMultimap(
-      ImmutableMultimap<APKModule, String> multimap) {
-    TreeMultimap<APKModule, String> orderedMap =
-        TreeMultimap.create(
-            (left, right) -> left.getName().compareTo(right.getName()), Ordering.natural());
-    orderedMap.putAll(multimap);
-    return orderedMap;
-  }
-
-  private void writeModuleToStringsMultimap(
-      Multimap<APKModule, String> map, Collection<String> dest) {
-    for (APKModule dexStore : map.keySet()) {
-      dest.add(MODULE_INDENTATION + dexStore.getName());
-      for (String item : map.get(dexStore)) {
-        dest.add(ITEM_INDENTATION + item);
-      }
-    }
-  }
-
-  private void writeModuleToModulesMap(
-      Map<APKModule, ? extends Iterable<APKModule>> map, Collection<String> dest) {
-    for (Map.Entry<APKModule, ? extends Iterable<APKModule>> entry : map.entrySet()) {
-      dest.add(MODULE_INDENTATION + entry.getKey().getName());
-      for (APKModule item : entry.getValue()) {
-        dest.add(ITEM_INDENTATION + item.getName());
-      }
-    }
-  }
-
-  private void writeBuildTargetList(List<BuildTarget> buildTargets, Collection<String> dest) {
-    for (BuildTarget target : buildTargets) {
-      dest.add(MODULE_INDENTATION + target.getFullyQualifiedName());
-    }
   }
 }

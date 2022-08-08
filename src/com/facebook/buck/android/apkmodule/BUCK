@@ -1,8 +1,10 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library","buck_java_library")
 
+APK_MODULE_ONLY = ["APKModule.java"]
+
 java_immutables_library(
     name = "module-only",
-    srcs = ["APKModule.java"],
+    srcs = APK_MODULE_ONLY,
     tests = [
         "//test/com/facebook/buck/android/apkmodule:apkmodule",
     ],
@@ -17,7 +19,7 @@ java_immutables_library(
 
 buck_java_library(
     name = "apkmodule",
-    srcs = ["APKModuleGraph.java"],
+    srcs = glob(["*.java"], exclude = APK_MODULE_ONLY),
     tests = [
         "//test/com/facebook/buck/android/apkmodule:apkmodule",
     ],
