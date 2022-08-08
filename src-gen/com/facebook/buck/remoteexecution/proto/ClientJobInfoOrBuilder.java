@@ -80,4 +80,22 @@ public interface ClientJobInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getClientSideTenantBytes();
+
+  /**
+   * <pre>
+   * Job alias.
+   * </pre>
+   *
+   * <code>string client_side_alias = 5;</code>
+   */
+  java.lang.String getClientSideAlias();
+  /**
+   * <pre>
+   * Job alias.
+   * </pre>
+   *
+   * <code>string client_side_alias = 5;</code>
+   */
+  com.google.protobuf.ByteString
+      getClientSideAliasBytes();
 }

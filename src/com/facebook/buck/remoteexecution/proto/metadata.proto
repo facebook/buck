@@ -124,6 +124,9 @@ message ClientJobInfo {
 
   // Job tenant.
   string client_side_tenant = 4;
+
+  // Job alias.
+  string client_side_alias = 5;
 }
 
 // Optional context for an Action. May change between Actions from same RE Session if multiple jobs
