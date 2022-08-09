@@ -1,11 +1,11 @@
 #!/bin/sh
 
-BIN_FILENAME="sqlite-jdbc-3.20.0.jar"
-BIN_URL="http://central.maven.org/maven2/org/xerial/sqlite-jdbc/3.20.0/sqlite-jdbc-3.20.0.jar"
-BIN_HASH="143b1c0a453c9a8f77be14209ea15391d1e0eb93348fcfabf03cc227b0edae73"
-SOURCE_FILENAME="sqlite-jdbc-3.20.0-sources.jar"
-SOURCE_URL="http://central.maven.org/maven2/org/xerial/sqlite-jdbc/3.20.0/sqlite-jdbc-3.20.0-sources.jar"
-SOURCE_HASH="db6a12de3990dac9eb5af4f97d01e160f0c875bdad88a5e28aee39467d915f4b"
+BIN_FILENAME="sqlite-jdbc-3.39.2.0.jar"
+BIN_URL="http://central.maven.org/maven2/org/xerial/sqlite-jdbc/3.39.2.0/sqlite-jdbc-3.39.2.0.jar"
+BIN_HASH="9a5c3bb5b4a99e68a3070fab72bd05ad46e350c39879fe56d046ada280ad4d48"
+SOURCE_FILENAME="sqlite-jdbc-3.39.2.0-sources.jar"
+SOURCE_URL="http://central.maven.org/maven2/org/xerial/sqlite-jdbc/3.39.2.0/sqlite-jdbc-3.39.2.0-sources.jar"
+SOURCE_HASH="3f449331c7343da3038b954803bcfdfb5130f45c45f2d2e238ab7dfd6735e43e"
 
 wget "$BIN_URL" -O "$BIN_FILENAME"
 REAL_BIN_HASH=$(shasum -a 256 "$BIN_FILENAME" | awk {'print $1'})
