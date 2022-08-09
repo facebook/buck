@@ -16,13 +16,18 @@
 
 package com.facebook.buck.android.apkmodule;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +57,9 @@ public class APKModuleGraphExecutableMain {
 
   @Option(name = "--always-in-main-apk-seeds")
   private String alwaysInMainApkSeedsPath;
+
+  @Option(name = "--targets-to-jars")
+  private String targetsToJarsPath;
 
   public static void main(String[] args) throws IOException {
     APKModuleGraphExecutableMain main = new APKModuleGraphExecutableMain();
@@ -110,11 +118,31 @@ public class APKModuleGraphExecutableMain {
             Optional.of(appModuleDependenciesMap),
             alwaysInMainApkSeeds);
 
+    Optional<ImmutableMultimap<APKModule, String>> apkModuleToClassesMap = Optional.empty();
+    if (targetsToJarsPath != null) {
+      ImmutableMultimap.Builder<APKModule, Path> builder = ImmutableSetMultimap.builder();
+      for (String line : Files.readAllLines(Paths.get(targetsToJarsPath))) {
+        String[] parts = line.split(" ");
+        Preconditions.checkState(parts.length == 2);
+        ExternalTargetGraph.ExternalBuildTarget target = targetGraph.getBuildTarget(parts[0]);
+        APKModule module = apkModuleGraph.findModuleForTarget(target);
+        builder.put(module, Paths.get(parts[1]));
+      }
+
+      apkModuleToClassesMap =
+          Optional.of(
+              APKModuleGraph.getAPKModuleToClassesMap(
+                  builder.build(),
+                  Function.identity(),
+                  AbsPath.of(Paths.get(".").normalize().toAbsolutePath()),
+                  ImmutableSet.of()));
+    }
+
     List<String> metadataLines =
         APKModuleMetadataUtil.getMetadataLines(
             apkModuleGraph,
             ExternalTargetGraph.ExternalBuildTarget::getName,
-            Optional.empty(),
+            apkModuleToClassesMap,
             Optional.empty());
     Files.write(Paths.get(outputPath), metadataLines);
 
