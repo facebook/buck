@@ -5,11 +5,16 @@ from __future__ import absolute_import
 
 import os
 import posixpath
-from collections import Iterable
 
 from .compatibility import string as compatible_string
 from .compatibility import PY3
 from .util import Memoizer
+
+
+try:
+    from collections.abc import Iterable
+except ImportError:  # For PY3.2
+    from collections import Iterable
 
 if PY3:
   import urllib.parse as urlparse

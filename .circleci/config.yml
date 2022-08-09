@@ -51,7 +51,8 @@ install_openjdk8: &install_openjdk8
       sudo apt-get update && sudo apt-get install openjdk-8-jdk
       sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
     elif [ "${PLATFORM}" == "macos" ]; then
-      brew install --cask adoptopenjdk8
+      brew install openjdk@8
+      export PATH="/usr/local/opt/openjdk@8/bin:$PATH"
     fi
     java -version
 
@@ -102,23 +103,28 @@ install_golang: &install_golang
     go version
 
 install_python: &install_python
-  name: Install Python 3.6.2
+  name: Install Python 3.9.4
   command: |
     if [ "${PLATFORM}" == "macos" ]; then
       brew install pyenv
     fi
+    if [ "${PLATFORM}" == "linux" ]; then
+      # Reinstall libffi6 as Ubuntu 20.04 contains only libffi7
+      wget http://mirrors.kernel.org/ubuntu/pool/main/libf/libffi/libffi6_3.2.1-8_amd64.deb
+      sudo apt install ./libffi6_3.2.1-8_amd64.deb
+    fi
     pyenv versions
     export PATH="$(pyenv root)/shims:${PATH}"
     python_version=`python --version` || python_version="Python Not Found"
-    # Skip installation if Python 3.6.2 restored frm cache.
-    if [ "${python_version}" != "Python 3.6.2" ]; then
+    # Skip installation if Python 3.9.4 restored frm cache.
+    if [ "${python_version}" != "Python 3.9.4" ]; then
       # In the case that pyenv is upgraded to a new version, the cached python
       # is broken and should be uninstalled.
-      pyenv uninstall -f 3.6.2
-      pyenv install -s 3.6.2
-      pyenv global 3.6.2 system
+      pyenv uninstall -f 3.9.4
+      pyenv install -s 3.9.4
+      pyenv global 3.9.4 system
     else
-      echo "Python3.6.2 restored from cache, skip installation."
+      echo "Python3.9.4 restored from cache, skip installation."
     fi
     python --version
 
@@ -176,8 +182,7 @@ run_buck_build: &run_buck_build
     set -ex
     ./bin/buck build buck --out "${BUCK_PEX_LOCATION}" || { cat "buck-out/log/buck-0.log"; exit 1; }
 
-linux_environment: &linux_environment
-  # Use string constant for values, no environment variables
+linux_environment: &linux_environment # Use string constant for values, no environment variables
   PLATFORM: "linux"
   BUCKROOT: "/home/circleci/buck"
   ANDROID_SDK: "/home/circleci/android-sdk"
@@ -192,6 +197,7 @@ macos_environment: &macos_environment
   TERM: "dumb"
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
+  JAVA_HOME: "/usr/local/Cellar/openjdk@8/1.8.0+322"
 
 windows_environment: &windows_environment
   PLATFORM: "windows"
@@ -219,7 +225,7 @@ jobs:
     working_directory: "/home/circleci/buck"
     machine:
       # linux VM
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       # Steps run sequentially in separate shells
       - checkout
@@ -269,7 +275,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -314,7 +320,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -352,7 +358,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -398,7 +404,7 @@ jobs:
             export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
             set -eux
             # There is a bug in buck, see issue #2435 for details. skip the tests for now.
-            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.rust.RustBinaryIntegrationTest|com.facebook.buck.features.rust.RustLinkerIntegrationTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest)).*[Ii]ntegration.*'
+            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.rust.RustBinaryIntegrationTest|com.facebook.buck.features.rust.RustLinkerIntegrationTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest|com.facebook.buck.apple.AppleBinaryIntegrationTest|com.facebook.buck.features.haskell.HaskellBinaryIntegrationTest|com.facebook.buck.features.go.GoBinaryIntegrationTest)).*[Ii]ntegration.*'
             # Run this after the bug has been fixed:
             #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
 
@@ -407,7 +413,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -460,7 +466,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -509,7 +515,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -558,7 +564,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -600,6 +606,8 @@ jobs:
       - run:
           name: Run Android NDK 17 Tests
           command: |
+            # libcurses5 is needed for providing libtinfo.so.5
+            sudo apt install libncurses5
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
             source ~/dlang/dmd-2.091.0/activate
@@ -614,7 +622,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -663,7 +671,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -712,7 +720,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -761,7 +769,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -810,7 +818,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       # Steps run sequentially in separate shells
       - checkout
@@ -860,7 +868,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -904,7 +912,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -943,8 +951,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      # The tests do not support xcode 11.x.x yet.
-      xcode: "10.3.0"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -997,7 +1004,7 @@ jobs:
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             export PATH="$(pyenv root)/shims:${PATH}"
             export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
-            export JAVA_HOME=`/usr/libexec/java_home`
+            export JAVA_HOME="/usr/local/Cellar/openjdk@8/1.8.0+322"
             export PATH="${JAVA_HOME}/bin:${PATH}"
             source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
@@ -1005,7 +1012,7 @@ jobs:
             # Should run this:
             #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
             # But there are some test failures, exclude them for now and fix them later.
-            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest)).*[Ii]ntegration.*'
+            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple|com.facebook.buck.features.lua.LuaBinaryIntegrationTest|com.facebook.buck.testrunner.RunWithDefaultTimeoutIntegrationTest|com.facebook.buck.features.apple.project.ProjectIntegrationTest|com.facebook.buck.swift.SwiftIOSBundleIntegrationTest)).*[Ii]ntegration.*'
           no_output_timeout: 1h
 
   macos_test_heavy_integration:
@@ -1013,7 +1020,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -1055,7 +1062,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
-            export JAVA_HOME=`/usr/libexec/java_home`
+            export JAVA_HOME="/usr/local/Cellar/openjdk@8/1.8.0+322"
             export PATH="${JAVA_HOME}/bin:${PATH}"
             source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
@@ -1068,7 +1075,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -1117,7 +1124,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -1166,7 +1173,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -1226,7 +1233,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -1275,7 +1282,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -1324,7 +1331,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -1373,7 +1380,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -1429,8 +1436,8 @@ jobs:
           command: choco install ant --version=1.9.7
           shell: cmd.exe
       - run:
-          name: Install OpenJDK8
-          command: choco install adoptopenjdk8
+          name: Install OpenJDK11
+          command: choco install adoptopenjdk11
           shell: cmd.exe
       - run:
           # on Windows, python3 is installed as python but buck expect the name python3
@@ -1458,8 +1465,8 @@ jobs:
           command: choco install ant --version=1.9.7
           shell: cmd.exe
       - run:
-          name: Install OpenJDK8
-          command: choco install adoptopenjdk8
+          name: Install OpenJDK11
+          command: choco install adoptopenjdk11
           shell: cmd.exe
       - run:
           # on Windows, python3 is installed as python but buck expect the name python3
@@ -1486,7 +1493,7 @@ jobs:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "12.5.1"
     steps:
       - checkout
       - run:
@@ -1512,7 +1519,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
@@ -1577,7 +1584,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:

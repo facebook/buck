@@ -13,3 +13,5 @@ Local modifications:
  - Back-ported Python 3.6 compatibility commit c5ab73fd4d8e816e21a89d48c8d0c8095ef5a49c
  - Back-ported namespaced packages fix, commit 7d2dc7f500aa7ae227c3ddca4b278b807d353a5e
  - Fixed Python 3 issue with writing bytes to a text file (`with open(path, 'wb') as fp:` on line 68 in `compiler.py`)
+ - Imported from collections.abc instead of collections to support Python 3.10
+ - Back-ported removal of MarkerEvaluation from pieces of commit ba5633b3c7b9317b87130a2ea671d8c008a673d6 and a718819d2849196e902808301c9a95724510c5c1

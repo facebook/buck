@@ -3,7 +3,10 @@
 
 from __future__ import absolute_import
 
-from collections import Iterable
+try:
+    from collections.abc import Iterable
+except ImportError:  # For PY3.2
+    from collections import Iterable
 
 from pkg_resources import Requirement
 

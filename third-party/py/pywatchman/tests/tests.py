@@ -6,7 +6,6 @@ from __future__ import print_function
 # no unicode literals
 
 import binascii
-import collections
 import inspect
 import unittest
 import os
