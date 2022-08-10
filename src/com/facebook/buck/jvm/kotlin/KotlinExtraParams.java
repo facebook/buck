@@ -37,6 +37,8 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
 
   public abstract AbsPath getResolvedAnnotationProcessingClassPath();
 
+  public abstract KotlinLibraryDescription.AnnotationProcessingTool getAnnotationProcessingTool();
+
   public abstract ImmutableList<String> getExtraKotlincArguments();
 
   public abstract ImmutableMap<AbsPath, ImmutableMap<String, String>>
@@ -62,6 +64,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       AbsPath rootPath,
       SourcePath standardLibraryClassPath,
       SourcePath annotationProcessingClassPath,
+      KotlinLibraryDescription.AnnotationProcessingTool annotationProcessingTool,
       ImmutableList<String> extraKotlincArguments,
       ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
       ImmutableMap<String, SourcePath> kosabiPluginOptions,
@@ -74,6 +77,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
     return ImmutableKotlinExtraParams.ofImpl(
         resolver.getAbsolutePath(standardLibraryClassPath),
         resolver.getAbsolutePath(annotationProcessingClassPath),
+        annotationProcessingTool,
         extraKotlincArguments,
         kotlinCompilerPlugins.entrySet().stream()
             .collect(

@@ -128,18 +128,15 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
 
   @AddToRuleKey private final Kotlinc kotlinc;
 
-  @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   DaemonKotlincToJarStepFactory(
       Kotlinc kotlinc,
-      AnnotationProcessingTool annotationProcessingTool,
       ExtraClasspathProvider extraClasspathProvider,
       boolean hasAnnotationProcessing,
       boolean withDownwardApi) {
     super(hasAnnotationProcessing, withDownwardApi);
     this.kotlinc = kotlinc;
-    this.annotationProcessingTool = annotationProcessingTool;
     this.extraClasspathProvider = extraClasspathProvider;
   }
 
@@ -257,6 +254,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
           extraParams.getResolvedJavacOptions().getJavaAnnotationProcessorParams();
 
       prepareKaptProcessorsIfNeeded(
+          extraParams.getAnnotationProcessingTool(),
           invokingRule,
           rootPath,
           steps,
@@ -277,6 +275,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
           annotationProcessorParams);
 
       prepareKspProcessorsIfNeeded(
+          extraParams.getAnnotationProcessingTool(),
           invokingRule,
           rootPath,
           steps,
@@ -358,7 +357,8 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
     }
 
     ResolvedJavacOptions resolvedJavacOptions = extraParams.getResolvedJavacOptions();
-    if (hasKotlinSources && annotationProcessingTool == AnnotationProcessingTool.KAPT) {
+    if (hasKotlinSources
+        && extraParams.getAnnotationProcessingTool() == AnnotationProcessingTool.KAPT) {
       // Only disable javac annotation processing if KAPT definitely ran.
       resolvedJavacOptions =
           resolvedJavacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY);
@@ -387,6 +387,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
    * <p>This method will do nothing if there are no relevant annotation processors to run.
    */
   private void prepareKaptProcessorsIfNeeded(
+      AnnotationProcessingTool annotationProcessingTool,
       BuildTargetValue invokingRule,
       AbsPath rootPath,
       Builder<IsolatedStep> steps,
@@ -541,6 +542,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
 
   /** Initialize all the folders, steps and parameters needed to run KSP plugins for this rule. */
   private void prepareKspProcessorsIfNeeded(
+      AnnotationProcessingTool annotationProcessingTool,
       BuildTargetValue invokingRule,
       AbsPath rootPath,
       Builder<IsolatedStep> steps,
