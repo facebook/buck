@@ -133,10 +133,6 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
   @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
-  @AddToRuleKey private final boolean shouldGenerateAnnotationProcessingStats;
-
-  @AddToRuleKey private final boolean verifySourceOnlyAbiConstraints;
-
   DaemonKotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableList<String> extraKotlincArguments,
@@ -144,17 +140,13 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
       Optional<String> jvmTarget,
       ExtraClasspathProvider extraClasspathProvider,
       boolean hasAnnotationProcessing,
-      boolean withDownwardApi,
-      boolean shouldGenerateAnnotationProcessingStats,
-      boolean verifySourceOnlyAbiConstraints) {
+      boolean withDownwardApi) {
     super(hasAnnotationProcessing, withDownwardApi);
     this.kotlinc = kotlinc;
     this.extraKotlincArguments = extraKotlincArguments;
     this.annotationProcessingTool = annotationProcessingTool;
     this.jvmTarget = jvmTarget;
     this.extraClasspathProvider = extraClasspathProvider;
-    this.shouldGenerateAnnotationProcessingStats = shouldGenerateAnnotationProcessingStats;
-    this.verifySourceOnlyAbiConstraints = verifySourceOnlyAbiConstraints;
   }
 
   @Override
@@ -284,6 +276,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
           classesOutput,
           reportsOutput,
           parameters.shouldTrackClassUsage(),
+          extraParams.shouldGenerateAnnotationProcessingStats(),
           annotationProcessingOptionsBuilder,
           postKotlinCompilationSteps,
           annotationProcessorParams);
@@ -362,7 +355,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
               cellToPathMappings,
               extraParams.getResolvedKosabiPluginOptionPath(),
               sourceOnlyAbiClasspath,
-              verifySourceOnlyAbiConstraints));
+              extraParams.shouldVerifySourceOnlyAbiConstraints()));
 
       steps.addAll(postKotlinCompilationSteps.build());
     }
@@ -410,6 +403,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
       RelPath classesOutput,
       RelPath reportsOutput,
       boolean shouldTrackClassUsage,
+      boolean shouldGenerateAnnotationProcessingStats,
       Builder<String> annotationProcessingOptionsBuilder,
       Builder<IsolatedStep> postKotlinCompilationSteps,
       JavacPluginParams javaAnnotationProcessorParams) {

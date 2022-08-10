@@ -76,6 +76,10 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
 
   @AddToRuleKey private final ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings;
 
+  @AddToRuleKey private final boolean shouldGenerateAnnotationProcessingStats;
+
+  @AddToRuleKey private final boolean shouldVerifySourceOnlyAbiConstraints;
+
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
@@ -91,7 +95,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
       boolean withDownwardApi,
       boolean shouldGenerateAnnotationProcessingStats,
       ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings,
-      boolean verifySourceOnlyAbiConstraints) {
+      boolean shouldVerifySourceOnlyAbiConstraints) {
     super(
         kotlinc,
         extraKotlincArguments,
@@ -99,9 +103,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
         jvmTarget,
         extraClasspathProvider,
         BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions),
-        withDownwardApi,
-        shouldGenerateAnnotationProcessingStats,
-        verifySourceOnlyAbiConstraints);
+        withDownwardApi);
     this.javacOptions = javacOptions;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.standardLibraryClasspath = standardLibraryClasspath;
@@ -110,6 +112,8 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
     this.friendPaths = friendPaths;
     this.extraClasspathProvider = extraClasspathProvider;
     this.kosabiPluginOptionsMappings = kosabiPluginOptionsMappings;
+    this.shouldGenerateAnnotationProcessingStats = shouldGenerateAnnotationProcessingStats;
+    this.shouldVerifySourceOnlyAbiConstraints = shouldVerifySourceOnlyAbiConstraints;
   }
 
   @Override
@@ -123,7 +127,9 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
         kosabiPluginOptionsMappings,
         friendPaths,
         kotlinHomeLibraries,
-        javacOptions.withBootclasspathFromContext(extraClasspathProvider));
+        javacOptions.withBootclasspathFromContext(extraClasspathProvider),
+        shouldGenerateAnnotationProcessingStats,
+        shouldVerifySourceOnlyAbiConstraints);
   }
 
   @Override

@@ -47,6 +47,10 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
 
   public abstract ResolvedJavacOptions getResolvedJavacOptions();
 
+  public abstract boolean shouldGenerateAnnotationProcessingStats();
+
+  public abstract boolean shouldVerifySourceOnlyAbiConstraints();
+
   /** Resolve extra params. */
   public static KotlinExtraParams of(
       SourcePathResolverAdapter resolver,
@@ -57,7 +61,9 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       ImmutableMap<String, SourcePath> kosabiPluginOptions,
       ImmutableList<SourcePath> friendPaths,
       ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
-      JavacOptions javacOptions) {
+      JavacOptions javacOptions,
+      boolean shouldGenerateAnnotationProcessingStats,
+      boolean shouldVerifySourceOnlyAbiConstraints) {
     return ImmutableKotlinExtraParams.ofImpl(
         resolver.getAbsolutePath(standardLibraryClassPath),
         resolver.getAbsolutePath(annotationProcessingClassPath),
@@ -73,6 +79,8 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
                 Collectors.toMap(e -> e.getKey(), e -> resolver.getAbsolutePath(e.getValue()))),
         resolver.getAllAbsolutePaths(friendPaths),
         resolver.getAllAbsolutePaths(kotlinHomeLibraries),
-        ResolvedJavacOptions.of(javacOptions, resolver, rootPath));
+        ResolvedJavacOptions.of(javacOptions, resolver, rootPath),
+        shouldGenerateAnnotationProcessingStats,
+        shouldVerifySourceOnlyAbiConstraints);
   }
 }
