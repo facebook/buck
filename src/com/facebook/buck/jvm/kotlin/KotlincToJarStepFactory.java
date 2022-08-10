@@ -67,6 +67,8 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
   @AddToRuleKey private final SourcePath standardLibraryClasspath;
   @AddToRuleKey private final SourcePath annotationProcessingClassPath;
 
+  @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
+
   @AddToRuleKey
   private final ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins;
 
@@ -99,7 +101,6 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
       boolean shouldVerifySourceOnlyAbiConstraints) {
     super(
         kotlinc,
-        extraKotlincArguments,
         annotationProcessingTool,
         extraClasspathProvider,
         BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions),
@@ -109,6 +110,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.standardLibraryClasspath = standardLibraryClasspath;
     this.annotationProcessingClassPath = annotationProcessingClassPath;
+    this.extraKotlincArguments = extraKotlincArguments;
     this.kotlinCompilerPlugins = kotlinCompilerPlugins;
     this.friendPaths = friendPaths;
     this.extraClasspathProvider = extraClasspathProvider;
@@ -124,6 +126,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
         rootPath,
         standardLibraryClasspath,
         annotationProcessingClassPath,
+        extraKotlincArguments,
         kotlinCompilerPlugins,
         kosabiPluginOptionsMappings,
         friendPaths,

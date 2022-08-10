@@ -127,21 +127,18 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
   public static final String KSP_PROCESSOR_NAME_PREFIX = "KSP:";
 
   @AddToRuleKey private final Kotlinc kotlinc;
-  @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
 
   @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   DaemonKotlincToJarStepFactory(
       Kotlinc kotlinc,
-      ImmutableList<String> extraKotlincArguments,
       AnnotationProcessingTool annotationProcessingTool,
       ExtraClasspathProvider extraClasspathProvider,
       boolean hasAnnotationProcessing,
       boolean withDownwardApi) {
     super(hasAnnotationProcessing, withDownwardApi);
     this.kotlinc = kotlinc;
-    this.extraKotlincArguments = extraKotlincArguments;
     this.annotationProcessingTool = annotationProcessingTool;
     this.extraClasspathProvider = extraClasspathProvider;
   }
@@ -328,7 +325,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
                 extraArguments.add(target);
               });
 
-      extraArguments.addAll(extraKotlincArguments);
+      extraArguments.addAll(extraParams.getExtraKotlincArguments());
 
       // minified classpath required fo so-abi
       ImmutableSortedSet<AbsPath> sourceOnlyAbiClasspath =
