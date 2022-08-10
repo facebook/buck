@@ -43,7 +43,7 @@ import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescriptionArg;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory;
+import com.facebook.buck.jvm.kotlin.DaemonKotlincToJarStepFactory;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -216,7 +216,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     if (IjKotlinHelper.isKotlinModule(targetNode.getConstructorArg())
         && IjKotlinHelper.requiresKotlinAnnotationProcessing(targetNode.getConstructorArg())) {
       return Optional.of(
-          KotlincToJarStepFactory.getKaptAnnotationGenPath(
+          DaemonKotlincToJarStepFactory.getKaptAnnotationGenPath(
                   projectFilesystem.getBuckPaths(), targetNode.getBuildTarget())
               .getPath());
     }
@@ -228,7 +228,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     if (IjKotlinHelper.isKotlinModule(targetNode.getConstructorArg())
         && IjKotlinHelper.requiresKotlinAnnotationProcessing(targetNode.getConstructorArg())) {
       return Optional.of(
-          KotlincToJarStepFactory.getKspAnnotationGenPath(
+          DaemonKotlincToJarStepFactory.getKspAnnotationGenPath(
                   projectFilesystem.getBuckPaths(), targetNode.getBuildTarget())
               .getPath());
     }

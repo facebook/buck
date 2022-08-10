@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory.getAnnotationProcessors;
-import static com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory.getKaptAnnotationProcessors;
-import static com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory.getKspAnnotationProcessors;
+import static com.facebook.buck.jvm.kotlin.DaemonKotlincToJarStepFactory.getAnnotationProcessors;
+import static com.facebook.buck.jvm.kotlin.DaemonKotlincToJarStepFactory.getKaptAnnotationProcessors;
+import static com.facebook.buck.jvm.kotlin.DaemonKotlincToJarStepFactory.getKspAnnotationProcessors;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.model.BuildTarget;
