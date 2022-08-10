@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStream;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -37,6 +38,8 @@ import org.tukaani.xz.XZOutputStream;
 
 /** Main entry point for compressing libraries into a single file. */
 public class CompressLibrariesExecutableMain {
+  private static final int DEFAULT_ZSTD_COMPRESSION_LEVEL = 19;
+
   @Option(name = "--libraries", required = true)
   private String librariesList;
 
@@ -45,6 +48,9 @@ public class CompressLibrariesExecutableMain {
 
   @Option(name = "--xz-compression-level")
   private int xzCompressionLevel = -1;
+
+  @Option(name = "--compression-type", required = true)
+  private String compressionType;
 
   public static void main(String[] args) throws IOException {
     CompressLibrariesExecutableMain main = new CompressLibrariesExecutableMain();
@@ -67,7 +73,11 @@ public class CompressLibrariesExecutableMain {
             .collect(ImmutableList.toImmutableList());
     Path outputDir = Paths.get(outputDirString);
     Files.createDirectories(outputDir);
-    doXzsCompression(outputDir, libraries);
+    if (compressionType.equalsIgnoreCase("zstd")) {
+      doZstdCompression(outputDir, libraries);
+    } else {
+      doXzsCompression(outputDir, libraries);
+    }
   }
 
   private void doXzsCompression(Path outputDir, ImmutableList<Path> libraries) throws IOException {
@@ -79,6 +89,22 @@ public class CompressLibrariesExecutableMain {
         try (InputStream libraryInputStream =
             new BufferedInputStream(new FileInputStream(library.toFile()))) {
           ByteStreams.copy(libraryInputStream, xzOutputStream);
+        }
+      }
+    }
+  }
+
+  private void doZstdCompression(Path outputDir, ImmutableList<Path> libraries) throws IOException {
+    try (OutputStream zstdOutput =
+            new BufferedOutputStream(
+                new FileOutputStream(outputDir.resolve("libs.zstd").toFile()));
+        ZstdCompressorOutputStream zstdOutputStream =
+            new ZstdCompressorOutputStream(
+                zstdOutput, DEFAULT_ZSTD_COMPRESSION_LEVEL, false, true)) {
+      for (Path library : libraries) {
+        try (InputStream libraryInputStream =
+            new BufferedInputStream(new FileInputStream(library.toFile()))) {
+          ByteStreams.copy(libraryInputStream, zstdOutputStream);
         }
       }
     }
