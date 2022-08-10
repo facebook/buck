@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /** Extra params for creating Kotlin compile steps. */
@@ -47,6 +48,8 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
 
   public abstract ResolvedJavacOptions getResolvedJavacOptions();
 
+  public abstract Optional<String> getJvmTarget();
+
   public abstract boolean shouldGenerateAnnotationProcessingStats();
 
   public abstract boolean shouldVerifySourceOnlyAbiConstraints();
@@ -62,6 +65,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       ImmutableList<SourcePath> friendPaths,
       ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
       JavacOptions javacOptions,
+      Optional<String> jvmTarget,
       boolean shouldGenerateAnnotationProcessingStats,
       boolean shouldVerifySourceOnlyAbiConstraints) {
     return ImmutableKotlinExtraParams.ofImpl(
@@ -80,6 +84,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
         resolver.getAllAbsolutePaths(friendPaths),
         resolver.getAllAbsolutePaths(kotlinHomeLibraries),
         ResolvedJavacOptions.of(javacOptions, resolver, rootPath),
+        jvmTarget,
         shouldGenerateAnnotationProcessingStats,
         shouldVerifySourceOnlyAbiConstraints);
   }

@@ -63,6 +63,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
     implements CompileToJarStepFactory.CreatesExtraParams<KotlinExtraParams> {
 
   @AddToRuleKey private final JavacOptions javacOptions;
+  @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final SourcePath standardLibraryClasspath;
   @AddToRuleKey private final SourcePath annotationProcessingClassPath;
 
@@ -100,11 +101,11 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
         kotlinc,
         extraKotlincArguments,
         annotationProcessingTool,
-        jvmTarget,
         extraClasspathProvider,
         BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions),
         withDownwardApi);
     this.javacOptions = javacOptions;
+    this.jvmTarget = jvmTarget;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.standardLibraryClasspath = standardLibraryClasspath;
     this.annotationProcessingClassPath = annotationProcessingClassPath;
@@ -128,6 +129,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
         friendPaths,
         kotlinHomeLibraries,
         javacOptions.withBootclasspathFromContext(extraClasspathProvider),
+        jvmTarget,
         shouldGenerateAnnotationProcessingStats,
         shouldVerifySourceOnlyAbiConstraints);
   }

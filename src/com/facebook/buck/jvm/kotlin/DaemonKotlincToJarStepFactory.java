@@ -130,14 +130,12 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
   @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
 
   @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
-  @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   DaemonKotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableList<String> extraKotlincArguments,
       AnnotationProcessingTool annotationProcessingTool,
-      Optional<String> jvmTarget,
       ExtraClasspathProvider extraClasspathProvider,
       boolean hasAnnotationProcessing,
       boolean withDownwardApi) {
@@ -145,7 +143,6 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
     this.kotlinc = kotlinc;
     this.extraKotlincArguments = extraKotlincArguments;
     this.annotationProcessingTool = annotationProcessingTool;
-    this.jvmTarget = jvmTarget;
     this.extraClasspathProvider = extraClasspathProvider;
   }
 
@@ -268,6 +265,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
           steps,
           buckPaths,
           ignoredPaths,
+          extraParams.getJvmTarget(),
           extraParams.getResolvedStandardLibraryClassPath(),
           extraParams.getResolvedAnnotationProcessingClassPath(),
           outputDirectory,
@@ -322,11 +320,13 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
               .add(NO_STDLIB)
               .add(NO_REFLECT);
 
-      jvmTarget.ifPresent(
-          target -> {
-            extraArguments.add("-jvm-target");
-            extraArguments.add(target);
-          });
+      extraParams
+          .getJvmTarget()
+          .ifPresent(
+              target -> {
+                extraArguments.add("-jvm-target");
+                extraArguments.add(target);
+              });
 
       extraArguments.addAll(extraKotlincArguments);
 
@@ -395,6 +395,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
       Builder<IsolatedStep> steps,
       BuckPaths buckPaths,
       ImmutableSet<PathMatcher> ignoredPaths,
+      Optional<String> jvmTarget,
       AbsPath resolvedKotlinStandardLibraryClassPath,
       AbsPath resolvedAnnotationProcessingClassPath,
       RelPath outputDirectory,
@@ -483,7 +484,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
                 AP_OPTIONS
                     + encodeKaptApOptions(
                         apOptions.build(), rootPath.resolve(kaptGeneratedOutput).toString()))
-            .add(JAVAC_ARG + encodeOptions(getJavacArguments()))
+            .add(JAVAC_ARG + encodeOptions(getJavacArguments(jvmTarget)))
             .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
             .add(CORRECT_ERROR_TYPES + "true");
 
@@ -966,12 +967,13 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
         + extraParams.getShortName();
   }
 
-  private Map<String, String> getJavacArguments() {
+  private Map<String, String> getJavacArguments(Optional<String> jvmTarget) {
     Map<String, String> arguments = new HashMap<>();
-    if (jvmTarget.isPresent()) {
-      arguments.put("-source", jvmTarget.get());
-      arguments.put("-target", jvmTarget.get());
-    }
+    jvmTarget.ifPresent(
+        target -> {
+          arguments.put("-source", target);
+          arguments.put("-target", target);
+        });
     return arguments;
   }
 
