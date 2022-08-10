@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 @BuckStyleValue
 public abstract class KotlinExtraParams implements CompileToJarStepFactory.ExtraParams {
 
+  public abstract ImmutableList<AbsPath> getExtraClassPaths();
+
   public abstract AbsPath getResolvedStandardLibraryClassPath();
 
   public abstract AbsPath getResolvedAnnotationProcessingClassPath();
@@ -62,6 +64,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
   public static KotlinExtraParams of(
       SourcePathResolverAdapter resolver,
       AbsPath rootPath,
+      ImmutableList<AbsPath> extraClassPaths,
       SourcePath standardLibraryClassPath,
       SourcePath annotationProcessingClassPath,
       KotlinLibraryDescription.AnnotationProcessingTool annotationProcessingTool,
@@ -75,6 +78,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       boolean shouldGenerateAnnotationProcessingStats,
       boolean shouldVerifySourceOnlyAbiConstraints) {
     return ImmutableKotlinExtraParams.ofImpl(
+        extraClassPaths,
         resolver.getAbsolutePath(standardLibraryClassPath),
         resolver.getAbsolutePath(annotationProcessingClassPath),
         annotationProcessingTool,

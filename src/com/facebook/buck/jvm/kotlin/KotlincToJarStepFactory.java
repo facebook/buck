@@ -102,7 +102,6 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
       boolean shouldVerifySourceOnlyAbiConstraints) {
     super(
         kotlinc,
-        extraClasspathProvider,
         BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions),
         withDownwardApi);
     this.javacOptions = javacOptions;
@@ -125,6 +124,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
     return KotlinExtraParams.of(
         context.getSourcePathResolver(),
         rootPath,
+        ImmutableList.copyOf(extraClasspathProvider.getExtraClasspath()),
         standardLibraryClasspath,
         annotationProcessingClassPath,
         annotationProcessingTool,

@@ -45,7 +45,6 @@ import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.JavacPluginParams;
@@ -128,16 +127,10 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
 
   @AddToRuleKey private final Kotlinc kotlinc;
 
-  @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
-
   DaemonKotlincToJarStepFactory(
-      Kotlinc kotlinc,
-      ExtraClasspathProvider extraClasspathProvider,
-      boolean hasAnnotationProcessing,
-      boolean withDownwardApi) {
+      Kotlinc kotlinc, boolean hasAnnotationProcessing, boolean withDownwardApi) {
     super(hasAnnotationProcessing, withDownwardApi);
     this.kotlinc = kotlinc;
-    this.extraClasspathProvider = extraClasspathProvider;
   }
 
   @Override
@@ -230,7 +223,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
       ImmutableSortedSet<AbsPath> allClasspaths =
           ImmutableSortedSet.orderedBy(Comparator.comparing(AbsPath::getPath))
               .addAll(
-                  RichStream.from(extraClasspathProvider.getExtraClasspath())
+                  RichStream.from(extraParams.getExtraClassPaths())
                       .map(p -> remappedClasspathEntries.getOrDefault(p, p))
                       .iterator())
               .addAll(
@@ -376,6 +369,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
         resolvedJavac,
         resolvedJavacOptions,
         declaredClasspathEntries,
+        extraParams.getExtraClassPaths(),
         outputDirectory,
         sourceBuilder);
   }
@@ -732,6 +726,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
       ResolvedJavac resolvedJavac,
       ResolvedJavacOptions resolvedJavacOptions,
       ImmutableSortedSet<RelPath> declaredClasspathEntries,
+      ImmutableList<AbsPath> extraClassPaths,
       RelPath outputDirectory,
       ImmutableSortedSet.Builder<RelPath> sourceBuilder) {
 
@@ -760,10 +755,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
             .setClasspathEntries(
                 ImmutableSortedSet.orderedBy(RelPath.comparator())
                     .add(outputDirectory)
-                    .addAll(
-                        RichStream.from(extraClasspathProvider.getExtraClasspath())
-                            .map(rootPath::relativize)
-                            .iterator())
+                    .addAll(RichStream.from(extraClassPaths).map(rootPath::relativize).iterator())
                     .addAll(declaredClasspathEntries)
                     .build())
             .setSourceFilePaths(javaSourceFiles)
