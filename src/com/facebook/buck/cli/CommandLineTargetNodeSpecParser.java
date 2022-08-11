@@ -179,7 +179,7 @@ public class CommandLineTargetNodeSpecParser {
               "%s references a non-existent directory %s when run from %s\n"
                   + "However, %s exists in your repository root (%s).\n"
                   + "Non-absolute build targets are relative to your working directory.\n"
-                  + "Try either re-running your command the repository root, or re-running your "
+                  + "Try either re-running your command from the repository root, or re-running your "
                   + " command with //%s instead of %s";
           throw new HumanReadableException(
               str,
