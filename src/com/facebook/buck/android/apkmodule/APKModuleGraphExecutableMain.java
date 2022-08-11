@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import org.kohsuke.args4j.CmdLineException;
@@ -111,6 +112,7 @@ public class APKModuleGraphExecutableMain {
             : Optional.of(
                 Files.readAllLines(Paths.get(alwaysInMainApkSeedsPath)).stream()
                     .map(targetGraph::getBuildTarget)
+                    .filter(Objects::nonNull)
                     .collect(ImmutableList.toImmutableList()));
 
     APKModuleGraph<ExternalTargetGraph.ExternalBuildTarget> apkModuleGraph =
