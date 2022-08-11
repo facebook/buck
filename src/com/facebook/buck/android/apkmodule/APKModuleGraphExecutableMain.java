@@ -61,6 +61,9 @@ public class APKModuleGraphExecutableMain {
   @Option(name = "--targets-to-jars")
   private String targetsToJarsPath;
 
+  @Option(name = "--targets-to-so-names")
+  private String targetsToSoNamesPath;
+
   public static void main(String[] args) throws IOException {
     APKModuleGraphExecutableMain main = new APKModuleGraphExecutableMain();
     CmdLineParser parser = new CmdLineParser(main);
@@ -138,12 +141,33 @@ public class APKModuleGraphExecutableMain {
                   ImmutableSet.of()));
     }
 
+    Optional<ImmutableMultimap<APKModule, String>> apkModuleToNativeLibraryMap = Optional.empty();
+    if (targetsToSoNamesPath != null) {
+      ImmutableMultimap.Builder<APKModule, String> builder = ImmutableSetMultimap.builder();
+      for (String line : Files.readAllLines(Paths.get(targetsToSoNamesPath))) {
+        String[] parts = line.split(" ");
+        // First part is the target string, second part is the so name, and third is whether it can
+        // be an asset or not.
+        Preconditions.checkState(parts.length == 3);
+        ExternalTargetGraph.ExternalBuildTarget target = targetGraph.getBuildTarget(parts[0]);
+        APKModule module = apkModuleGraph.findModuleForTarget(target);
+        // We write out the .so's module if it is not in the root module, or if it can be an
+        // asset.
+        if (!module.isRootModule() || Boolean.parseBoolean(parts[2])) {
+          builder.put(module, parts[1]);
+        }
+      }
+
+      apkModuleToNativeLibraryMap = Optional.of(builder.build());
+    }
+
     List<String> metadataLines =
         APKModuleMetadataUtil.getMetadataLines(
             apkModuleGraph,
             ExternalTargetGraph.ExternalBuildTarget::getName,
             apkModuleToClassesMap,
-            Optional.empty());
+            apkModuleToNativeLibraryMap);
+
     Files.write(Paths.get(outputPath), metadataLines);
 
     System.exit(0);
