@@ -853,6 +853,9 @@ public class CxxLibraryFactory {
     ImmutableList<NativeLinkableGroup> delegateNativeLinkableGroups =
         delegate.flatMap(d -> d.getNativeLinkableExportedDeps()).orElse(ImmutableList.of());
 
+    ImmutableSet<SourcePath> swiftmodulePaths =
+        delegate.map(d -> d.getSwiftmodulePaths()).orElse(ImmutableSet.of());
+
     ImmutableList<NativeLinkable> allNativeLinkables =
         RichStream.from(deps)
             .filter(NativeLinkableGroup.class)
@@ -892,6 +895,7 @@ public class CxxLibraryFactory {
                 RichStream.from(postLinkerFlags).map(macrosConverter::convert).toImmutableList())
             .setFrameworks(frameworks)
             .setLibraries(libraries)
+            .setSwiftmodulePaths(swiftmodulePaths)
             .build(),
         Optional.empty(),
         cellRoots,
