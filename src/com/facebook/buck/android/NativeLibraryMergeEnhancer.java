@@ -453,14 +453,8 @@ class NativeLibraryMergeEnhancer {
       final Iterable<NativeLinkable> allLinkables,
       final ImmutableMap<NativeLinkable, APKModule> linkableAssetMap) {
     List<MergedNativeLibraryConstituents> allConstituents = new ArrayList<>();
-    // Modules are loaded independently and cannot be assumed to be available at runtime. As a
-    // result, it is safe to load an underlying library with module dependencies if and only if
-    // that library or others with the same module dependencies have been *explicitly* requested,
-    // indicating that the app layer believes its dependencies are available.
-    //
-    // Consequently, we must split up merged libraries by module dependencies so that we never
-    // force a module to be loaded that would not be required by an unmerged library.
-    Map<NativeLinkable, ImmutableSet<APKModule>> seenLinkablesToModuleDependencies =
+    // See MergeSequenceLinkableGrouping for details on why we need to keep track of this.
+    Map<NativeLinkable, Map<APKModule, Integer>> seenLinkablesToModuleDependencyEntryCounts =
         new HashMap<>();
 
     // Three types of linkables will not be merged at all. Their dependencies and dependents cannot
@@ -500,15 +494,15 @@ class NativeLibraryMergeEnhancer {
           ImmutableSet.builder();
 
       // Visit each previously-unvisited linkable in the dependency graphs of root targets,
-      // recording their module dependencies.
+      // recording their module dependency entry counts.
       for (Pattern rootTargetPattern : rootTargetPatterns) {
         for (NativeLinkable linkable : allLinkables) {
           if (rootTargetPattern
               .matcher(linkable.getBuildTarget().getUnflavoredBuildTarget().toString())
               .find()) {
-            traverseDependencyGraphAndRecordModuleDependencies(
+            traverseDependencyGraphAndRecordModuleDependencyEntryCounts(
                 linkable,
-                seenLinkablesToModuleDependencies,
+                seenLinkablesToModuleDependencyEntryCounts,
                 graphBuilder,
                 linkableAssetMap,
                 excludedLinkables,
@@ -556,14 +550,14 @@ class NativeLibraryMergeEnhancer {
       for (NativeLinkable newMergedLinkable : newMergedLinkables) {
         linkableGroupingsBuilder.put(
             new MergeSequenceLinkableGrouping(
-                seenLinkablesToModuleDependencies.get(newMergedLinkable),
+                seenLinkablesToModuleDependencyEntryCounts.get(newMergedLinkable),
                 linkableAssetMap.get(newMergedLinkable).isRootModule(),
                 newLinkablesToNewUnmergedLinkableDependents.getOrDefault(
                     newMergedLinkable, ImmutableSet.of())),
             newMergedLinkable);
       }
 
-      // To reduce churn, the linkable sets are sorted - see MergedSequenceLinkableGrouping for
+      // To reduce churn, the linkable sets are sorted - see MergeSequenceLinkableGrouping for
       // details. The first set is the only one we expect for most merge sequence steps, so its SO
       // name is left unsuffixed. Each other linkable set's SO name is suffixed with its list index.
       Iterable<Collection<NativeLinkable>> sortedLinkableSets =
@@ -591,40 +585,62 @@ class NativeLibraryMergeEnhancer {
     return allConstituents;
   }
 
-  private static ImmutableSet<APKModule> traverseDependencyGraphAndRecordModuleDependencies(
-      final NativeLinkable linkable,
-      final Map<NativeLinkable, ImmutableSet<APKModule>> seenLinkablesToModuleDependencies,
-      final ActionGraphBuilder graphBuilder,
-      final ImmutableMap<NativeLinkable, APKModule> linkableAssetMap,
-      final ImmutableSet<NativeLinkable> excludedLinkables,
-      final ImmutableSet.Builder<NativeLinkable> newMergedLinkablesBuilder,
-      final ImmutableSet.Builder<NativeLinkable> newUnmergedLinkablesBuilder) {
+  private static Map<APKModule, Integer>
+      traverseDependencyGraphAndRecordModuleDependencyEntryCounts(
+          final NativeLinkable linkable,
+          final Map<NativeLinkable, Map<APKModule, Integer>>
+              seenLinkablesToModuleDependencyEntryCounts,
+          final ActionGraphBuilder graphBuilder,
+          final ImmutableMap<NativeLinkable, APKModule> linkableAssetMap,
+          final ImmutableSet<NativeLinkable> excludedLinkables,
+          final ImmutableSet.Builder<NativeLinkable> newMergedLinkablesBuilder,
+          final ImmutableSet.Builder<NativeLinkable> newUnmergedLinkablesBuilder) {
     // Each seen linkable has been or is about to be assigned to a constituent builder.
-    if (seenLinkablesToModuleDependencies.containsKey(linkable)) {
-      return seenLinkablesToModuleDependencies.get(linkable);
+    if (seenLinkablesToModuleDependencyEntryCounts.containsKey(linkable)) {
+      return seenLinkablesToModuleDependencyEntryCounts.get(linkable);
     }
 
-    final ImmutableSet.Builder<APKModule> moduleDependenciesBuilder = ImmutableSet.builder();
+    final Map<APKModule, Integer> moduleDependencyEntryCounts = new HashMap<>();
+
+    // If the linkable belongs to a module, its entry count for that module is at least 1.
+    final APKModule linkableModule = linkableAssetMap.get(linkable);
+    if (linkableModule != null && !linkableModule.isRootModule()) {
+      moduleDependencyEntryCounts.put(linkableModule, 1);
+    }
+
     for (NativeLinkable dep :
         Iterables.concat(
             linkable.getNativeLinkableDeps(graphBuilder),
             linkable.getNativeLinkableExportedDeps(graphBuilder))) {
-      moduleDependenciesBuilder.addAll(
-          traverseDependencyGraphAndRecordModuleDependencies(
+      final APKModule depModule = linkableAssetMap.get(dep);
+      final Map<APKModule, Integer> depModuleDependencyEntryCounts =
+          traverseDependencyGraphAndRecordModuleDependencyEntryCounts(
               dep,
-              seenLinkablesToModuleDependencies,
+              seenLinkablesToModuleDependencyEntryCounts,
               graphBuilder,
               linkableAssetMap,
               excludedLinkables,
               newMergedLinkablesBuilder,
-              newUnmergedLinkablesBuilder));
-    }
+              newUnmergedLinkablesBuilder);
 
-    final APKModule containingModule = linkableAssetMap.get(linkable);
-    if (containingModule != null) {
-      moduleDependenciesBuilder.add(containingModule);
+      // The linkable's entry count for each module is the maximum of each target dependency's
+      // entry count for that module, plus 1 if the linkable is newly entering the module (the
+      // target dependency is *not* in the module, but the new linkable is).
+      for (Map.Entry<APKModule, Integer> entry : depModuleDependencyEntryCounts.entrySet()) {
+        final APKModule depModuleDependency = entry.getKey();
+        final int depModuleDependencyEntryCount = entry.getValue();
+
+        final int currentMaxEntryCount =
+            moduleDependencyEntryCounts.getOrDefault(depModuleDependency, 0);
+        int incrementedEntryCount = depModuleDependencyEntryCount;
+        if (depModuleDependency.equals(linkableModule) && !linkableModule.equals(depModule)) {
+          incrementedEntryCount++;
+        }
+
+        moduleDependencyEntryCounts.put(
+            depModuleDependency, Math.max(currentMaxEntryCount, incrementedEntryCount));
+      }
     }
-    final ImmutableSet<APKModule> moduleDependencies = moduleDependenciesBuilder.build();
 
     if (excludedLinkables.contains(linkable)) {
       newUnmergedLinkablesBuilder.add(linkable);
@@ -632,9 +648,9 @@ class NativeLibraryMergeEnhancer {
       newMergedLinkablesBuilder.add(linkable);
     }
 
-    seenLinkablesToModuleDependencies.put(linkable, moduleDependencies);
+    seenLinkablesToModuleDependencyEntryCounts.put(linkable, moduleDependencyEntryCounts);
 
-    return moduleDependencies;
+    return moduleDependencyEntryCounts;
   }
 
   private static void traverseNewDependencyGraphAndConstructDependentGraph(
@@ -1022,8 +1038,21 @@ class NativeLibraryMergeEnhancer {
    * A data object that identifies the groups into which the mergeable linkables in a merge sequence
    * step are split.
    *
-   * <p>Linkables must be split by module dependencies so that loading an individual target does not
-   * require any modules to be loaded that it does not actually depend on.
+   * <p>Linkables must be split by which non-root modules they are part of or depend on and <i>the
+   * maximum number of distinct times, across all target dependency chains, each non-root module
+   * dependency is entered</i>.
+   *
+   * <ul>
+   *   <li>A target cannot be merged with a target from another module.
+   *   <li>Within a given module, if a target is merged with another target that depends on more
+   *       other modules, individually loading the first target will result in unnecessary module
+   *       loads.
+   *   <li>Target dependency chains can pass into and out of the root module ("dex") any number of
+   *       times. As a result, module dependency cycles between the root module and a given non-root
+   *       module are allowed, but library dependency cycles following those module cycles are not.
+   *       If a target dependency chain weaves in and out of a non-root module in this manner, each
+   *       stretch of that chain on either side of the divide must be split apart from the others.
+   * </ul>
    *
    * <p>Dependencies of non-root modules with static linkage are added to the root module rather
    * than a shared module, so grouping linkables purely by module dependencies would be ambiguous
@@ -1036,15 +1065,15 @@ class NativeLibraryMergeEnhancer {
    */
   private static class MergeSequenceLinkableGrouping
       implements Comparable<MergeSequenceLinkableGrouping> {
-    private final ImmutableCollection<APKModule> moduleDependencies;
+    private final Map<APKModule, Integer> moduleDependencyEntryCounts;
     private final boolean isInRootModule;
     private final ImmutableCollection<NativeLinkable> newUnmergedLinkableDependents;
 
     private MergeSequenceLinkableGrouping(
-        ImmutableCollection<APKModule> moduleDependencies,
+        Map<APKModule, Integer> moduleDependencyEntryCounts,
         boolean isInRootModule,
         ImmutableCollection<NativeLinkable> newUnmergedLinkableDependents) {
-      this.moduleDependencies = moduleDependencies;
+      this.moduleDependencyEntryCounts = moduleDependencyEntryCounts;
       this.isInRootModule = isInRootModule;
       this.newUnmergedLinkableDependents = newUnmergedLinkableDependents;
     }
@@ -1058,22 +1087,24 @@ class NativeLibraryMergeEnhancer {
         return false;
       }
       MergeSequenceLinkableGrouping other = (MergeSequenceLinkableGrouping) o;
-      return moduleDependencies.equals(other.moduleDependencies)
+      return moduleDependencyEntryCounts.equals(other.moduleDependencyEntryCounts)
           && isInRootModule == other.isInRootModule
           && newUnmergedLinkableDependents.equals(other.newUnmergedLinkableDependents);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(moduleDependencies, isInRootModule, newUnmergedLinkableDependents);
+      return Objects.hash(
+          moduleDependencyEntryCounts, isInRootModule, newUnmergedLinkableDependents);
     }
 
     /**
      * Groupings are sorted first by descending module dependency count, then by reverse module
-     * dependency set lexicographical order, breaking ties by putting root module linkables first,
-     * then finally by ascending unmerged linkable dependent count and unmerged linkable dependent
-     * set lexicographical order. This ordering generally places targets closer to roots first, and
-     * the very first set always contains at least one root target.
+     * dependency set lexicographical order (by module, then by entry count for that module),
+     * breaking ties by putting root module linkables first, then finally by ascending unmerged
+     * linkable dependent count and unmerged linkable dependent set lexicographical order. This
+     * ordering generally places targets closer to roots first, and the very first set always
+     * contains at least one of the merge step's root targets.
      */
     @Override
     public int compareTo(MergeSequenceLinkableGrouping other) {
@@ -1082,11 +1113,14 @@ class NativeLibraryMergeEnhancer {
       }
 
       return ComparisonChain.start()
-          .compare(other.moduleDependencies.size(), this.moduleDependencies.size())
           .compare(
-              other.moduleDependencies,
-              this.moduleDependencies,
-              Comparators.lexicographical(Comparator.<APKModule>naturalOrder()))
+              other.moduleDependencyEntryCounts.size(), this.moduleDependencyEntryCounts.size())
+          .compare(
+              other.moduleDependencyEntryCounts.entrySet(),
+              this.moduleDependencyEntryCounts.entrySet(),
+              Comparators.lexicographical(
+                  Map.Entry.<APKModule, Integer>comparingByKey()
+                      .thenComparing(Map.Entry.<APKModule, Integer>comparingByValue())))
           .compareTrueFirst(this.isInRootModule, other.isInRootModule)
           .compare(
               this.newUnmergedLinkableDependents.size(), other.newUnmergedLinkableDependents.size())
