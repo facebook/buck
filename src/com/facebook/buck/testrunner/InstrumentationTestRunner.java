@@ -18,8 +18,10 @@ package com.facebook.buck.testrunner;
 
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmPreferences;
+import com.android.ddmlib.FileListingService;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.SyncService;
 import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
@@ -50,6 +52,7 @@ public class InstrumentationTestRunner {
   private final boolean attemptUninstallInstrumentationApk;
   private final Map<String, String> extraInstrumentationArguments;
   private final Map<String, String> extraFilesToPull;
+  private final Map<String, String> extraDirsToPull;
   private final boolean debug;
   private final boolean codeCoverage;
   private final boolean autoRunOnConnectedDevice;
@@ -76,7 +79,8 @@ public class InstrumentationTestRunner {
       String codeCoverageOutputFile,
       boolean autoRunOnConnectedDevice,
       Map<String, String> extraInstrumentationArguments,
-      Map<String, String> extraFilesToPull) {
+      Map<String, String> extraFilesToPull,
+      Map<String, String> extraDirsToPull) {
     this.adbExecutablePath = adbExecutablePath;
     this.deviceSerial = deviceSerial;
     this.packageName = packageName;
@@ -92,6 +96,7 @@ public class InstrumentationTestRunner {
     this.codeCoverageOutputFile = codeCoverageOutputFile;
     this.extraInstrumentationArguments = extraInstrumentationArguments;
     this.extraFilesToPull = extraFilesToPull;
+    this.extraDirsToPull = extraDirsToPull;
     this.autoRunOnConnectedDevice = autoRunOnConnectedDevice;
     this.debug = debug;
     this.codeCoverage = codeCoverage;
@@ -116,6 +121,7 @@ public class InstrumentationTestRunner {
     boolean autoRunOnConnectedDevice = false;
     Map<String, String> extraInstrumentationArguments = new HashMap<String, String>();
     Map<String, String> extraFilesToPull = new HashMap<String, String>();
+    Map<String, String> extraDirsToPull = new HashMap<String, String>();
 
     for (int i = 0; i < args.length; i++) {
       switch (args[i]) {
@@ -184,6 +190,10 @@ public class InstrumentationTestRunner {
           extraInstrumentationArguments.put(extraArguments[0], extraArguments[1]);
           break;
         case "--extra-file-to-pull":
+          // Format is --extra-file-to-pull /source/path/in/device.txt=/destination/path.txt
+          // Pulls contents of source file into destination file.
+          // Expects both parts of the argument to be files.
+          // Expects destination directory to exist.
           {
             String raw = args[++i];
             String[] parts = raw.split("=", 2);
@@ -192,6 +202,21 @@ public class InstrumentationTestRunner {
               System.exit(1);
             }
             extraFilesToPull.put(parts[0], parts[1]);
+            break;
+          }
+        case "--extra-dir-to-pull":
+          // Format is --extra-dir-to-pull /device/source=/directory/destination
+          // Pulls all files from source into destination directory.
+          // Expects both parts of the argument to be directories.
+          // Expects destination directory to exist.
+          {
+            String raw = args[++i];
+            String[] parts = raw.split("=", 2);
+            if (parts.length != 2) {
+              System.err.printf("Not a valid dir to pull: %s\n", raw);
+              System.exit(1);
+            }
+            extraDirsToPull.put(parts[0], parts[1]);
             break;
           }
       }
@@ -262,7 +287,8 @@ public class InstrumentationTestRunner {
         codeCoverageOutputFile,
         autoRunOnConnectedDevice,
         extraInstrumentationArguments,
-        extraFilesToPull);
+        extraFilesToPull,
+        extraDirsToPull);
   }
 
   /**
@@ -365,6 +391,9 @@ public class InstrumentationTestRunner {
         String devicePath = entry.getKey().replaceAll("$PACKAGE_NAME", this.packageName);
         device.pullFile(devicePath, entry.getValue());
       }
+      for (Map.Entry<String, String> entry : this.extraDirsToPull.entrySet()) {
+        pullDir(device, entry.getKey(), entry.getValue());
+      }
     } finally {
       if (this.attemptUninstallInstrumentationApk) {
         // Best effort uninstall from the emulator/device.
@@ -374,6 +403,42 @@ public class InstrumentationTestRunner {
         device.uninstallPackage(this.targetPackageName);
       }
     }
+  }
+
+  private void pullDir(IDevice device, String sourceDir, String destinationDir) throws Exception {
+    FileListingService listingService = device.getFileListingService();
+    FileListingService.FileEntry dir = locateDir(listingService, sourceDir);
+    if (dir == null) {
+      // source dir or one of its parents doesn't exist, nothing to pull.
+      System.err.printf("Failed to locate source directory: %s\n", sourceDir);
+      return;
+    }
+    FileListingService.FileEntry[] filesToPull = listingService.getChildrenSync(dir);
+    device.getSyncService().pull(filesToPull, destinationDir, SyncService.getNullProgressMonitor());
+  }
+
+  private FileListingService.FileEntry locateDir(FileListingService listingService, String dirPath)
+      throws Exception {
+    FileListingService.FileEntry dir = listingService.getRoot();
+    for (String pathSegment : dirPath.split(FileListingService.FILE_SEPARATOR)) {
+      if ("".equals(pathSegment)) {
+        // Ignore empty segments
+        continue;
+      }
+      // populate children in dir
+      listingService.getChildrenSync(dir);
+      dir = dir.findChild(pathSegment);
+      if (dir == null) {
+        return null;
+      }
+      if (dir.getType() == FileListingService.TYPE_LINK) {
+        // read location of target from symlink
+        String targetPath = dir.getInfo().substring("-> ".length());
+        // Follow the link before proceeding
+        dir = locateDir(listingService, targetPath);
+      }
+    }
+    return dir;
   }
 
   @Nullable
