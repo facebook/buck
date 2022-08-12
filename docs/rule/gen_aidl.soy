@@ -60,6 +60,16 @@ from <code>.aidl</code> files.
 {/call}
 
 {call buck.arg}
+  {param name: 'import_paths' /}
+  {param default : '[]' /}
+  {param desc}
+  A list of additional import statements for the aidl command.
+  (This appends an <code>-I</code> argument for each of the provided paths when 
+  invoking aidl from the command line.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'aidl_srcs' /}
   {param default : '[]' /}
   {param desc}

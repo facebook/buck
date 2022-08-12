@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
@@ -64,6 +65,7 @@ public class GenAidlDescription implements DescriptionWithTargetGraph<GenAidlDes
         params,
         args.getAidl(),
         args.getImportPath(),
+        args.getImportPaths(),
         args.getAidlSrcs(),
         downwardApiConfig.isEnabledForAndroid());
   }
@@ -75,6 +77,12 @@ public class GenAidlDescription implements DescriptionWithTargetGraph<GenAidlDes
     // import_path is an anomaly: it is a path that is relative to the project root rather than
     // relative to the build file directory.
     abstract String getImportPath();
+
+    // List of additional import paths to pass to the aidl tool, optional
+    @Value.Default
+    ImmutableList<String> getImportPaths() {
+      return ImmutableList.of();
+    }
 
     // Imported *.aidl files.
     @Value.Default

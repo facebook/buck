@@ -38,7 +38,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
@@ -69,6 +68,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   // should incorporate which version of aidl is used.
   @AddToRuleKey private final SourcePath aidlFilePath;
   @AddToRuleKey private final String importPath;
+  @AddToRuleKey private final ImmutableList<String> importPaths;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> aidlSrcs;
   private final RelPath output;
   private final RelPath genPath;
@@ -82,6 +82,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildRuleParams params,
       SourcePath aidlFilePath,
       String importPath,
+      ImmutableList<String> importPaths,
       ImmutableSortedSet<SourcePath> aidlSrcs,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
@@ -89,6 +90,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.frameworkIdlFile = frameworkIdlFile;
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
+    this.importPaths = importPaths;
     this.genPath =
         BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, "%s");
     this.output =
@@ -123,13 +125,16 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)));
 
+    ImmutableSortedSet<String> combinedImportPaths =
+        ImmutableSortedSet.<String>naturalOrder().addAll(importPaths).add(importPath).build();
+
     AidlStep command =
         new AidlStep(
             getProjectFilesystem(),
             aidlExecutable,
             frameworkIdlFile,
             context.getSourcePathResolver().getAbsolutePath(aidlFilePath).getPath(),
-            ImmutableSet.of(importPath),
+            combinedImportPaths,
             outputDirectory.getPath(),
             ProjectFilesystemUtils.relativize(
                 getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),

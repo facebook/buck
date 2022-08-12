@@ -50,6 +50,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -74,6 +75,10 @@ public class GenAidlTest {
     stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Files.createDirectories(
         stubFilesystem.getRootPath().resolve("java/com/example/base").getPath());
+    Files.createDirectories(
+        stubFilesystem.getRootPath().resolve("java/com/example/other/import/path").getPath());
+    Files.createDirectories(
+        stubFilesystem.getRootPath().resolve("java/com/example/one/more/import/path").getPath());
 
     pathToAidl = FakeSourcePath.of(stubFilesystem, "java/com/example/base/IWhateverService.aidl");
     importPath = Paths.get("java/com/example/base").toString();
@@ -85,7 +90,8 @@ public class GenAidlTest {
     pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
   }
 
-  private GenAidl createGenAidlRule(ImmutableSortedSet<SourcePath> aidlSourceDeps) {
+  private GenAidl createGenAidlRule(
+      ImmutableSortedSet<SourcePath> aidlSourceDeps, ImmutableList<String> importPaths) {
     BuildRuleParams params = TestBuildRuleParams.create();
     return new GenAidl(
         target,
@@ -95,13 +101,14 @@ public class GenAidlTest {
         params,
         pathToAidl,
         importPath,
+        importPaths,
         aidlSourceDeps,
         false);
   }
 
   @Test
   public void testSimpleGenAidlRule() {
-    GenAidl genAidlRule = createGenAidlRule(ImmutableSortedSet.of());
+    GenAidl genAidlRule = createGenAidlRule(ImmutableSortedSet.of(), ImmutableList.of());
     GenAidlDescription description =
         new GenAidlDescription(DownwardApiConfig.of(FakeBuckConfig.empty()));
     assertEquals(
@@ -143,6 +150,59 @@ public class GenAidlTest {
   }
 
   @Test
+  public void testSimpleGenAidlRuleWithImports() {
+    ImmutableList<String> importPaths =
+        ImmutableList.of(
+            Paths.get("java/com/example/one/more/import/path").toString(),
+            Paths.get("java/com/example/other/import/path").toString());
+    GenAidl genAidlRule = createGenAidlRule(ImmutableSortedSet.of(), importPaths);
+    GenAidlDescription description =
+        new GenAidlDescription(DownwardApiConfig.of(FakeBuckConfig.empty()));
+    assertEquals(
+        DescriptionCache.getRuleType(GenAidlDescription.class),
+        DescriptionCache.getRuleType(description));
+
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(pathResolver)
+            .withBuildCellRootPath(stubFilesystem.getRootPath());
+    List<Step> steps = genAidlRule.getBuildSteps(buildContext, new FakeBuildableContext());
+
+    RelPath outputDirectory = BuildTargetPaths.getScratchPath(stubFilesystem, target, "__%s.aidl");
+    assertEquals(
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory),
+            true),
+        steps.get(2));
+    assertEquals(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory)),
+        steps.get(3));
+
+    StringBuilder sb = new StringBuilder();
+
+    for (String path : importPaths) {
+      sb.append(String.format("-I%s ", stubFilesystem.resolve(path)));
+    }
+    IsolatedShellStep aidlStep = (IsolatedShellStep) steps.get(4);
+    assertEquals(
+        "gen_aidl() should use the aidl binary to write .java files.",
+        String.format(
+            "(cd %s && %s -p%s -I%s %s-o%s %s)",
+            stubFilesystem.getRootPath(),
+            pathToAidlExecutable,
+            pathToFrameworkAidl,
+            stubFilesystem.resolve(importPath),
+            sb.toString(),
+            stubFilesystem.resolve(outputDirectory),
+            pathToAidl.getRelativePath()),
+        aidlStep.getDescription(TestExecutionContext.newBuilder().build()));
+
+    assertEquals(7, steps.size());
+  }
+
+  @Test
   public void testTransitiveAidlDependenciesAffectTheRuleKey() throws IOException {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     StackedFileHashCache hashCache =
@@ -152,16 +212,18 @@ public class GenAidlTest {
     stubFilesystem.touch(
         stubFilesystem.getRootPath().resolve(pathToAidl.getRelativePath()).getPath());
 
-    GenAidl genAidlRuleNoDeps = createGenAidlRule(ImmutableSortedSet.of());
+    GenAidl genAidlRuleNoDeps = createGenAidlRule(ImmutableSortedSet.of(), ImmutableList.of());
     RuleKey ruleKey = factory.build(genAidlRuleNoDeps);
 
     // The rule key is different.
-    GenAidl genAidlRuleNoDeps2 = createGenAidlRule(ImmutableSortedSet.of(pathToAidl));
+    GenAidl genAidlRuleNoDeps2 =
+        createGenAidlRule(ImmutableSortedSet.of(pathToAidl), ImmutableList.of());
     RuleKey ruleKey2 = factory.build(genAidlRuleNoDeps2);
     assertNotEquals(ruleKey, ruleKey2);
 
     // And the rule key is stable.
-    GenAidl genAidlRuleNoDeps3 = createGenAidlRule(ImmutableSortedSet.of(pathToAidl));
+    GenAidl genAidlRuleNoDeps3 =
+        createGenAidlRule(ImmutableSortedSet.of(pathToAidl), ImmutableList.of());
     RuleKey ruleKey3 = factory.build(genAidlRuleNoDeps3);
     assertEquals(ruleKey2, ruleKey3);
   }
