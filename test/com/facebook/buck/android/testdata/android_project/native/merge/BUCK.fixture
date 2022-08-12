@@ -145,44 +145,97 @@ cxx_library(
     ],
 )
 
-# This graph validates native_library_merge_sequence behavior
-# separating non-root-module linkables that depend on the
-# root module from those linkables' root-module dependents.
+# This graph validates native_library_merge_sequence behavior preventing
+# target dependency cycles in cases where module dependency cycles are
+# allowed, namely when dependency chains repeatedly alternate between
+# the root module and one non-root module.
 #
 #    G
-#    |
-#    H
-#    |
-#    I
+#   /|\
+#  / | H
+#  | |/|
+#  | I |
+#  | |\|
+#  | | J
+#  |\|/|
+#  | K |
+#  | |\|
+#  \ | L
+#   \|/
+#    M
 #
-# G and I can_be_asset.
-# Putting H in an application_module_config and I in the
-# application_module_blacklist will produce the
-# root-non-root-root module dependency graph described above.
+# H, J, and L can_be_asset.
+# Putting G, I, K, and M in an application_module_config and H, J, and L
+# in the application_module_blacklist will split the densely connected
+# targets into root and non-root modules, preventing any merging.
 
 cxx_library(
     name = "G",
     srcs = ["G.c"],
-    can_be_asset = True,
     visibility = ["PUBLIC"],
     deps = [
         ":H",
+        ":I",
+        ":K",
+        ":M",
     ],
 )
 
 cxx_library(
     name = "H",
     srcs = ["H.c"],
+    can_be_asset = True,
     visibility = ["PUBLIC"],
     deps = [
         ":I",
+        ":J",
     ],
 )
 
 cxx_library(
     name = "I",
     srcs = ["I.c"],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":J",
+        ":K",
+    ],
+)
+
+cxx_library(
+    name = "J",
+    srcs = ["J.c"],
     can_be_asset = True,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":K",
+        ":L",
+    ],
+)
+
+cxx_library(
+    name = "K",
+    srcs = ["K.c"],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":L",
+        ":M",
+    ],
+)
+
+cxx_library(
+    name = "L",
+    srcs = ["L.c"],
+    can_be_asset = True,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":M",
+    ],
+)
+
+cxx_library(
+    name = "M",
+    srcs = ["M.c"],
     visibility = ["PUBLIC"],
     deps = [
     ],

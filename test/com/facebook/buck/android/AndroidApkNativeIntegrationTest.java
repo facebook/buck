@@ -482,25 +482,52 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_G.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_H.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_I.so");
-    zipInspector.assertFileExists("assets/native.merge.H/libs.txt");
-    zipInspector.assertFileExists("assets/native.merge.H/libs.xzs");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_J.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_K.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_L.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_M.so");
+    zipInspector.assertFileExists("assets/native.merge.G/libs.txt");
+    zipInspector.assertFileExists("assets/native.merge.G/libs.xzs");
 
-    // Root of library 1: Root module linkables depending on module H
-    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
-    assertThat(info.symbols.global, Matchers.hasItem("G"));
-    assertThat(info.symbols.global, not(Matchers.hasItem("H")));
+    // Root of library 1: Module G linkables with entry count 4
+    zipInspector.assertFileContains("assets/native.merge.G/libs.txt", "lib1.so");
+
+    // Library 1, sub-library 1: Root module linkables with module G entry count 3
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1_1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("H"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("I")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("J")));
     assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
     assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
-    assertThat(info.dtNeeded, Matchers.hasItem("lib1_1.so"));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1_2.so"));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1_3.so"));
 
-    // Library 1, sub-library 1: Module H linkables depending on the root module
-    zipInspector.assertFileContains("assets/native.merge.H/libs.txt", "lib1_1.so");
+    // Library 1, sub-library 2: Module G linkables with entry count 3
+    zipInspector.assertFileContains("assets/native.merge.G/libs.txt", "lib1_2.so");
 
-    // Library 1, sub-library 2: Root module linkables with no module dependencies
-    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1_2.so");
-    assertThat(info.symbols.global, Matchers.hasItem("I"));
+    // Library 1, sub-library 3: Root module linkables with module G entry count 2
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1_3.so");
+    assertThat(info.symbols.global, Matchers.hasItem("J"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("K")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("L")));
     assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
     assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1_4.so"));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1_5.so"));
+
+    // Library 1, sub-library 4: Module G linkables with entry count 2
+    zipInspector.assertFileContains("assets/native.merge.G/libs.txt", "lib1_4.so");
+
+    // Library 1, sub-library 5: Root module linkables with module G entry count 1
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1_5.so");
+    assertThat(info.symbols.global, Matchers.hasItem("L"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("M")));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1_6.so"));
+
+    // Library 1, sub-library 6: Module G linkables with entry count 1
+    zipInspector.assertFileContains("assets/native.merge.G/libs.txt", "lib1_6.so");
   }
 
   @Test

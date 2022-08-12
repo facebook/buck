@@ -1173,10 +1173,17 @@ android_binary(
 android_binary(
     name = "app_with_merge_sequence_and_root_non_root_root_module_dependencies",
     application_module_configs = {
-        "native.merge.H": ["//native/merge:H"],
+        "native.merge.G": [
+            "//native/merge:G",
+            "//native/merge:I",
+            "//native/merge:K",
+            "//native/merge:M",
+        ],
     },
     application_module_blacklist = [
-        "//native/merge:I",
+        "//native/merge:H",
+        "//native/merge:J",
+        "//native/merge:L",
     ],
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
