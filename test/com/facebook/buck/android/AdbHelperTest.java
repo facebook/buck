@@ -32,6 +32,7 @@ import com.facebook.buck.core.build.engine.impl.TestExecutionContextUtils;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
@@ -96,12 +97,19 @@ public class AdbHelperTest {
     return new AdbHelper(
         adbOptions,
         targetDeviceOptions,
-        new ToolchainProviderBuilder()
-            .withToolchain(
-                AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
-            .build(),
         () -> executionContext,
         new DefaultAndroidInstallerPrinter(() -> executionContext),
+        Optional.of(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+                .build()
+                .getByName(
+                    AndroidPlatformTarget.DEFAULT_NAME,
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    AndroidPlatformTarget.class)
+                .getAdbExecutable()
+                .toString()),
         true,
         /* skipMetadataIfNoInstalls= */ false,
         /* alwaysUseJavaAgent */ true,
@@ -563,12 +571,19 @@ public class AdbHelperTest {
     return new AdbHelper(
         createAdbOptions(),
         new TargetDeviceOptions(),
-        new ToolchainProviderBuilder()
-            .withToolchain(
-                AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
-            .build(),
         () -> testContext,
         new DefaultAndroidInstallerPrinter(() -> testContext),
+        Optional.of(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+                .build()
+                .getByName(
+                    AndroidPlatformTarget.DEFAULT_NAME,
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    AndroidPlatformTarget.class)
+                .getAdbExecutable()
+                .toString()),
         true,
         /* skipMetadataIfNoInstalls= */ false,
         /* alwaysUseJavaAgent */ true,
@@ -595,12 +610,19 @@ public class AdbHelperTest {
     return new AdbHelper(
         createAdbOptions(),
         new TargetDeviceOptions(),
-        new ToolchainProviderBuilder()
-            .withToolchain(
-                AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
-            .build(),
         () -> testContext,
         new DefaultAndroidInstallerPrinter(() -> testContext),
+        Optional.of(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+                .build()
+                .getByName(
+                    AndroidPlatformTarget.DEFAULT_NAME,
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    AndroidPlatformTarget.class)
+                .getAdbExecutable()
+                .toString()),
         true,
         /* skipMetadataIfNoInstalls= */ false,
         /* alwaysUseJavaAgent */ false,

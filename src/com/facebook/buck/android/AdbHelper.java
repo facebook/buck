@@ -29,14 +29,11 @@ import com.facebook.buck.android.exopackage.AndroidIntent;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.InstallEvent;
@@ -106,7 +103,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
-  private final ToolchainProvider toolchainProvider;
+  private final Optional<String> adbExecutableHelper;
   private final Supplier<ExecutionContext> contextSupplier;
   private final boolean restartAdbOnFailure;
   // Caches the list of android devices for this execution
@@ -121,9 +118,9 @@ public class AdbHelper implements AndroidDevicesHelper {
   public AdbHelper(
       AdbOptions adbOptions,
       TargetDeviceOptions deviceOptions,
-      ToolchainProvider toolchainProvider,
       Supplier<ExecutionContext> contextSupplier,
       AndroidInstallPrinter androidPrinter,
+      Optional<String> adbExecutable,
       boolean restartAdbOnFailure,
       boolean skipMetadataIfNoInstalls,
       boolean alwaysUseJavaAgent,
@@ -131,11 +128,11 @@ public class AdbHelper implements AndroidDevicesHelper {
       int agentPortBase) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
-    this.toolchainProvider = toolchainProvider;
     this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
     this.androidPrinter = androidPrinter;
+    this.adbExecutableHelper = adbExecutable;
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
     this.alwaysUseJavaAgent = alwaysUseJavaAgent;
     this.isZstdCompressionEnabled = isZstdCompressionEnabled;
@@ -638,14 +635,8 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private String getAdbExecutable() {
-    AndroidPlatformTarget target =
-        toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME,
-            // TODO(nga): use something else
-            UnconfiguredTargetConfiguration.INSTANCE,
-            AndroidPlatformTarget.class);
-
-    return target.getAdbExecutable().toString();
+    return this.adbExecutableHelper.orElseThrow(
+        () -> new HumanReadableException("No AdbExectuable set"));
   }
 
   private static class GetDevicesResult {
