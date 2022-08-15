@@ -25,10 +25,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -64,6 +68,9 @@ public class APKModuleGraphExecutableMain {
 
   @Option(name = "--targets-to-so-names")
   private String targetsToSoNamesPath;
+
+  @Option(name = "--output-target-to-module-only")
+  private boolean outputTargetToModuleOnly;
 
   public static void main(String[] args) throws IOException {
     APKModuleGraphExecutableMain main = new APKModuleGraphExecutableMain();
@@ -123,6 +130,11 @@ public class APKModuleGraphExecutableMain {
             Optional.of(appModuleDependenciesMap),
             alwaysInMainApkSeeds);
 
+    if (outputTargetToModuleOnly) {
+      Files.write(Paths.get(outputPath), getTargetToModuleMappingLines(apkModuleGraph));
+      return;
+    }
+
     Optional<ImmutableMultimap<APKModule, String>> apkModuleToClassesMap = Optional.empty();
     if (targetsToJarsPath != null) {
       ImmutableMultimap.Builder<APKModule, Path> builder = ImmutableSetMultimap.builder();
@@ -171,8 +183,6 @@ public class APKModuleGraphExecutableMain {
             apkModuleToNativeLibraryMap);
 
     Files.write(Paths.get(outputPath), metadataLines);
-
-    System.exit(0);
   }
 
   private ExternalTargetGraph buildTargetGraph(
@@ -197,5 +207,26 @@ public class APKModuleGraphExecutableMain {
                                     .collect(ImmutableSet.toImmutableSet()))));
 
     return new ExternalTargetGraph(underlyingMap, buildTargetMap);
+  }
+
+  private List<String> getTargetToModuleMappingLines(
+      APKModuleGraph<ExternalTargetGraph.ExternalBuildTarget> apkModuleGraph) {
+    TreeMultimap<APKModule, String> orderedModuleToTargetsMap =
+        TreeMultimap.create(Comparator.comparing(APKModule::getName), Ordering.natural());
+    for (APKModule module : apkModuleGraph.getAPKModules()) {
+      for (ExternalTargetGraph.ExternalBuildTarget target :
+          apkModuleGraph.getBuildTargets(module)) {
+        orderedModuleToTargetsMap.put(module, target.getName());
+      }
+    }
+    LinkedList<String> metadataLines = new LinkedList<>();
+    for (APKModule module : orderedModuleToTargetsMap.keySet()) {
+      String moduleName = module.getName();
+      for (String target : orderedModuleToTargetsMap.get(module)) {
+        metadataLines.add(String.format("%s %s", target, moduleName));
+      }
+    }
+
+    return metadataLines;
   }
 }
