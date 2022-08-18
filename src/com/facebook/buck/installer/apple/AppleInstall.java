@@ -30,6 +30,7 @@ import com.facebook.buck.installer.InstallResult;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.infer.annotation.Assertions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -80,7 +81,7 @@ public class AppleInstall {
     this.idbPath = Paths.get(options.getIdbPath());
     this.log = log;
     this.xcodeDeveloperPath = Optional.of(Paths.get(appInstallOptions.xcodeDeveloperPath));
-    setAppleBundleID(app.getParent());
+    setAppleBundleID(app);
     if (appInstallOptions.deviceHelperPath != null) {
       this.deviceHelperPath = Optional.of(Paths.get(appInstallOptions.deviceHelperPath));
     } else {
@@ -769,15 +770,18 @@ public class AppleInstall {
     }
   }
 
-  private void setAppleBundleID(Path parent) {
+  private void setAppleBundleID(Path appPath) {
     this.appleBundleId = Optional.empty();
-    Path plistPath = parent.resolve(appInstallOptions.infoPlistpath.getFileName());
+    Path plistPath = appPath.resolve(appInstallOptions.infoPlistpath.getFileName());
     try (InputStream bundlePlistStream = Files.newInputStream(plistPath)) {
       log.info(String.format("Getting Apple Bundle ID from %s", plistPath));
       this.appleBundleId =
           AppleInfoPlistParsing.getBundleIdFromPlistStream(plistPath, bundlePlistStream);
     } catch (IOException e) {
-      log.warning(String.format("Could not get apple bundle ID from %s", plistPath));
+      log.warning(
+          String.format(
+              "Could not get apple bundle ID from %s. Error: %s",
+              plistPath, Throwables.getStackTraceAsString(e)));
     }
   }
 }
