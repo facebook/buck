@@ -200,10 +200,16 @@ public class FatJarMain {
       boolean wrapperScript, Path artifact, boolean isDebug, String[] args) throws IOException {
     List<String> cmd = new ArrayList<>();
 
-    // Look for the Java binary given in an alternate location if given,
-    // otherwise use the Java binary that started us
-    String javaHome = System.getProperty("buck.fatjar.java.home", System.getProperty("java.home"));
-    cmd.add(Paths.get(javaHome, "bin", "java").toString());
+    // Check if wrapper uses script that provides java runtime by itself
+    boolean javaRuntimeProvided =
+        wrapperScript && "true".equalsIgnoreCase(getEnvValue("FAT_JAR_SKIP_ADDING_JAVA_RUNTIME"));
+    if (!javaRuntimeProvided) {
+      // Look for the Java binary given in an alternate location if given,
+      // otherwise use the Java binary that started us
+      String javaHome =
+          System.getProperty("buck.fatjar.java.home", System.getProperty("java.home"));
+      cmd.add(Paths.get(javaHome, "bin", "java").toString());
+    }
     // Pass through any VM arguments to the child process
     cmd.addAll(getJVMArguments());
     if (!cmd.contains("-XX:-MaxFDLimit")) {
