@@ -39,8 +39,10 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.stub.StreamObserver;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -71,6 +73,10 @@ import java.util.stream.Collectors;
  * </ol>
  */
 public class InstallerService extends InstallerGrpc.InstallerImplBase {
+
+  // TODO: make configurable or pass from buck2 w/ install info data.
+  private static final long INSTALL_MAX_WAIT_TIME = 1;
+  private static final TimeUnit INSTALL_TIMEOUT_UNIT = TimeUnit.MINUTES;
 
   private static final ThreadPoolExecutor THREAD_POOL =
       new ThreadPoolExecutor(
@@ -192,6 +198,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
 
     Set<String> errorMessages = new HashSet<>();
     CountDownLatch latch = new CountDownLatch(filesMap.size());
+    List<ListenableFuture<InstallResult>> futureList = new ArrayList<>(filesMap.size());
 
     for (Map.Entry<String, Path> fileEntry : filesMap.entrySet()) {
       String name = fileEntry.getKey();
@@ -201,10 +208,20 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
           LISTENING_EXECUTOR_SERVICE.submit(() -> install(name, path));
       Futures.addCallback(
           future, getInstallResultCallback(latch, errorMessages, name, path), directExecutor());
+      futureList.add(future);
     }
 
     // wait for all install futures
-    latch.await();
+    boolean allCompleted = latch.await(INSTALL_MAX_WAIT_TIME, INSTALL_TIMEOUT_UNIT);
+    if (!allCompleted) {
+      // cancel futures
+      futureList.forEach(f -> f.cancel(true));
+      // return timeout error message
+      return InstallResult.error(
+          "Timeout of "
+              + INSTALL_TIMEOUT_UNIT.toSeconds(INSTALL_MAX_WAIT_TIME)
+              + "s has been exceeded. Install failed.");
+    }
 
     if (errorMessages.isEmpty()) {
       return InstallResult.success();
