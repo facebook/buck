@@ -375,7 +375,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       if (Strings.isNullOrEmpty(country)) {
         country = "US-presumed";
       }
-      locale = language = "-" + country;
+      locale = language + "-" + country;
     }
     return locale;
   }
