@@ -213,6 +213,26 @@ public class FatJarMain {
     }
 
     if (wrapperScript) {
+
+      List<String> nonJvmArgs = new ArrayList<>();
+      if (isDebug) {
+        printDebugInfo(
+            "extracting -J prefix args for JVM positional options for generate_wrapper format");
+      }
+
+      for (int i = 0; i < args.length; i++) {
+        if (args[i].startsWith("-J")) {
+          if (isDebug) {
+            printDebugInfo("extracting arg: " + args[i].substring(2));
+          }
+          cmd.add(args[i].substring(2));
+        } else {
+          nonJvmArgs.add(args[i]);
+        }
+      }
+
+      args = nonJvmArgs.toArray(new String[0]);
+
       String customWrapper = getEnvValue("FAT_JAR_CUSTOM_SCRIPT");
       if (customWrapper != null) {
         if (isDebug) {
