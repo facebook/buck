@@ -18,11 +18,13 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.facebook.buck.io.file.MorePaths.pathWithPlatformSeparators;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -34,6 +36,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Functions;
@@ -94,6 +97,38 @@ public class KotlinLibraryIntegrationTest {
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
     buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldCompileKotlinClassWithExternalCompiler() throws Exception {
+    assumeThat(
+        "TODO T128936075 Windows External Kotlinc", Platform.detect(), not(Platform.WINDOWS));
+
+    workspace.addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            "kotlin",
+            ImmutableMap.of(
+                "external", "true",
+                "kotlin_home", "kotlinc/libexec/")));
+
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldFailToCompileKotlinClassWithBadExternalCompiler() throws Exception {
+    assumeThat(
+        "TODO T128936075 Windows External Kotlinc", Platform.detect(), not(Platform.WINDOWS));
+
+    workspace.addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            "kotlin",
+            ImmutableMap.of(
+                "external", "true",
+                "kotlin_home", "i_dont_exist")));
+
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
+    buildResult.assertFailure("Build should fail to resolve compiler.");
   }
 
   @Test

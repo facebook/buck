@@ -30,7 +30,6 @@ import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.io.file.FileExtensionMatcher;
 import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.io.file.PathMatcher;
@@ -125,12 +124,13 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
   public static final String KOTLIN_PLUGIN_OUT_PLACEHOLDER = "__codegen_dir__";
   public static final String KSP_PROCESSOR_NAME_PREFIX = "KSP:";
 
-  @AddToRuleKey private final Kotlinc kotlinc;
-
-  DaemonKotlincToJarStepFactory(
-      Kotlinc kotlinc, boolean hasAnnotationProcessing, boolean withDownwardApi) {
+  /**
+   * Only add parameters to this constructor that can be supplied both when constructing this
+   * factory in a KotlinCD worker, and in the buck main process. Everything else necessary to create
+   * compile steps should come in via {@link KotlinExtraParams}.
+   */
+  DaemonKotlincToJarStepFactory(boolean hasAnnotationProcessing, boolean withDownwardApi) {
     super(hasAnnotationProcessing, withDownwardApi);
-    this.kotlinc = kotlinc;
   }
 
   @Override
@@ -268,6 +268,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
           annotationProcessorParams);
 
       prepareKspProcessorsIfNeeded(
+          extraParams.getKotlinc(),
           extraParams.getAnnotationProcessingTool(),
           invokingRule,
           rootPath,
@@ -334,7 +335,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
               allClasspaths,
               extraParams.getResolvedKotlinHomeLibraries(),
               reportsOutput,
-              kotlinc,
+              extraParams.getKotlinc(),
               extraArguments.build(),
               ImmutableList.of(VERBOSE),
               parameters.getOutputPaths(),
@@ -536,6 +537,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
 
   /** Initialize all the folders, steps and parameters needed to run KSP plugins for this rule. */
   private void prepareKspProcessorsIfNeeded(
+      Kotlinc kotlinc,
       AnnotationProcessingTool annotationProcessingTool,
       BuildTargetValue invokingRule,
       AbsPath rootPath,

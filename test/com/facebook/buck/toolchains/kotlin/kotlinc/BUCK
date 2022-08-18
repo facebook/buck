@@ -4,9 +4,11 @@ load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
 filegroup(
     name = "kotlinc",
     srcs = [
+        "libexec/bin/kotlinc",
         "libexec/build.txt",
         "libexec/lib/kotlin-annotation-processing.jar",
         "libexec/lib/kotlin-compiler.jar",
+        "libexec/lib/kotlin-preloader.jar",
         "libexec/lib/kotlin-reflect.jar",
         "libexec/lib/kotlin-script-runtime.jar",
         "libexec/lib/kotlin-stdlib.jar",

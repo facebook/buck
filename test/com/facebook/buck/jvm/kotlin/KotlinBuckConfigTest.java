@@ -30,6 +30,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -40,6 +41,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -93,8 +95,9 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
-    assertEquals(command, kotlinCompiler.toString());
+    Optional<SourcePath> binary = kotlinBuckConfig.getPathToCompilerBinary();
+    assertTrue(binary.isPresent());
+    assertEquals(binary.get().toString(), kotlinCompiler.toString());
   }
 
   @Test
@@ -115,8 +118,9 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
-    assertEquals(command, kotlinCompiler.toString());
+    Optional<SourcePath> binary = kotlinBuckConfig.getPathToCompilerBinary();
+    assertTrue(binary.isPresent());
+    assertEquals(binary.get().toString(), kotlinCompiler.toString());
   }
 
   @Test
@@ -138,8 +142,9 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
-    assertEquals(command, kotlinCompiler.toString());
+    Optional<SourcePath> binary = kotlinBuckConfig.getPathToCompilerBinary();
+    assertTrue(binary.isPresent());
+    assertEquals(binary.get().toString(), kotlinCompiler.toString());
   }
 
   @Test
@@ -164,8 +169,9 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
-    assertEquals(command, kotlinCompiler.toString());
+    Optional<SourcePath> binary = kotlinBuckConfig.getPathToCompilerBinary();
+    assertTrue(binary.isPresent());
+    assertEquals(binary.get().toString(), kotlinCompiler.toString());
   }
 
   @Test
@@ -189,8 +195,9 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    String command = kotlinBuckConfig.getPathToCompilerBinary().toString();
-    assertEquals(command, kotlinCompiler.toString());
+    Optional<SourcePath> binary = kotlinBuckConfig.getPathToCompilerBinary();
+    assertTrue(binary.isPresent());
+    assertEquals(binary.get().toString(), kotlinCompiler.toString());
   }
 
   @Test

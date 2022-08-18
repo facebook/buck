@@ -86,11 +86,15 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
     this.delegate = delegate;
   }
 
-  public Kotlinc getKotlinc() {
+  /**
+   * Returns the path to the compiler binary if configured for external compilation, and none
+   * otherwise, indicating that the Kotlin compiler should be loaded in process.
+   */
+  public Optional<SourcePath> getPathToCompilerBinary() {
     if (isExternalCompilation()) {
-      return new ExternalKotlinc(getPathToCompilerBinary());
+      return Optional.of(getSourcePathFromAbsolutePath(getPathToExecutable("kotlinc")));
     } else {
-      return new JarBackedReflectedKotlinc();
+      return Optional.empty();
     }
   }
 
@@ -150,16 +154,24 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(SECTION, PROPERTY_KOTLINCD_DISABLED_FOR_WINDOWS, false);
   }
 
-  Path getPathToCompilerBinary() {
-    Path compilerPath = getKotlinHome().resolve("kotlinc");
-    if (!Files.isExecutable(compilerPath)) {
-      compilerPath = getKotlinHome().resolve(Paths.get("bin", "kotlinc"));
-      if (!Files.isExecutable(compilerPath)) {
-        throw new HumanReadableException("Could not resolve kotlinc location.");
-      }
+  /**
+   * Find an executable with basename {@param executable} in $KOTLIN_HOME or $KOTLIN_HOME/bin.
+   *
+   * @return a path to the executable in $KOTLIN_HOME.
+   */
+  private Path getPathToExecutable(String executable) {
+    Path path = getKotlinHome().resolve(executable);
+    if (Files.isExecutable(path)) {
+      return path;
     }
 
-    return new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
+    path = getKotlinHome().resolve(Paths.get("bin", executable));
+    if (Files.isExecutable(path)) {
+      return path;
+    }
+
+    throw new HumanReadableException(
+        "Could not resolve " + executable + " location in KOTLIN_HOME.");
   }
 
   private SourcePath getPathToJar(

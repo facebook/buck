@@ -61,6 +61,7 @@ import java.util.Optional;
  */
 public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
     implements CompileToJarStepFactory.CreatesExtraParams<KotlinExtraParams> {
+  @AddToRuleKey private final Optional<SourcePath> pathToKotlinc;
 
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final Optional<String> jvmTarget;
@@ -85,7 +86,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
   @AddToRuleKey private final boolean shouldVerifySourceOnlyAbiConstraints;
 
   KotlincToJarStepFactory(
-      Kotlinc kotlinc,
+      Optional<SourcePath> pathToKotlinc,
       ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
       SourcePath standardLibraryClasspath,
       SourcePath annotationProcessingClassPath,
@@ -100,10 +101,8 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
       boolean shouldGenerateAnnotationProcessingStats,
       ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings,
       boolean shouldVerifySourceOnlyAbiConstraints) {
-    super(
-        kotlinc,
-        BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions),
-        withDownwardApi);
+    super(BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
+    this.pathToKotlinc = pathToKotlinc;
     this.javacOptions = javacOptions;
     this.jvmTarget = jvmTarget;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
@@ -124,6 +123,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
     return KotlinExtraParams.of(
         context.getSourcePathResolver(),
         rootPath,
+        pathToKotlinc,
         ImmutableList.copyOf(extraClasspathProvider.getExtraClasspath()),
         standardLibraryClasspath,
         annotationProcessingClassPath,

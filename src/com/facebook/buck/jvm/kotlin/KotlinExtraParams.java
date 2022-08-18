@@ -28,10 +28,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.immutables.value.Value;
 
 /** Extra params for creating Kotlin compile steps. */
 @BuckStyleValue
 public abstract class KotlinExtraParams implements CompileToJarStepFactory.ExtraParams {
+
+  protected abstract Optional<AbsPath> getPathToKotlinc();
 
   public abstract ImmutableList<AbsPath> getExtraClassPaths();
 
@@ -60,10 +63,24 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
 
   public abstract boolean shouldVerifySourceOnlyAbiConstraints();
 
+  /**
+   * @return the instance of the kotlin compiler configured by these parameters and cached to serve
+   *     subsequent calls.
+   */
+  @Value.Lazy
+  public Kotlinc getKotlinc() {
+    if (getPathToKotlinc().isPresent()) {
+      return new ExternalKotlinc(getPathToKotlinc().get().getPath());
+    } else {
+      return new JarBackedReflectedKotlinc();
+    }
+  }
+
   /** Resolve extra params. */
   public static KotlinExtraParams of(
       SourcePathResolverAdapter resolver,
       AbsPath rootPath,
+      Optional<SourcePath> pathToKotlinc,
       ImmutableList<AbsPath> extraClassPaths,
       SourcePath standardLibraryClassPath,
       SourcePath annotationProcessingClassPath,
@@ -78,6 +95,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       boolean shouldGenerateAnnotationProcessingStats,
       boolean shouldVerifySourceOnlyAbiConstraints) {
     return ImmutableKotlinExtraParams.ofImpl(
+        pathToKotlinc.map(path -> resolver.getAbsolutePath(path)),
         extraClassPaths,
         resolver.getAbsolutePath(standardLibraryClassPath),
         resolver.getAbsolutePath(annotationProcessingClassPath),
