@@ -83,6 +83,20 @@ buck_java_library(
 )
 
 buck_java_library(
+    name = "kotlincd-model",
+    srcs = glob(["**/cd/model/kotlin/**/*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
+    exported_deps = [
+        "//src-gen:cd-model",
+        "//third-party/java/protobuf:protobuf",
+    ],
+)
+
+buck_java_library(
     name = "cd-model",
     srcs = glob(
         ["**/cd/model/common/**/*.java"],
