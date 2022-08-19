@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.android.exopackage.ExopackageInfo.NativeLibsInfo;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
@@ -30,6 +29,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Support out-of-process exopackage installation by creating a symlink tree mirroring the desired
@@ -42,7 +42,6 @@ public class ExopackageSymlinkTree {
    * Create a symlink tree rooted at rootPath which contains a mirror of what should appear on the
    * device as a result of an exopackage installation.
    *
-   * @param packageName
    * @param exoInfo the exopackage info for the app which will be installed
    * @param pathResolver needed to convert the exoInfo SourcePaths into real Paths
    * @param filesystem need to write files/create symlinks/access paths
@@ -57,39 +56,46 @@ public class ExopackageSymlinkTree {
       Path rootPath)
       throws IOException {
 
+    IsolatedExopackageInfo isolatedExopackageInfo = exoInfo.toIsolatedExopackageInfo(pathResolver);
+
     // Symlink the secondary dex files
-    if (exoInfo.getDexInfo().isPresent()) {
-      DexExoHelper dexExoHelper =
-          new DexExoHelper(pathResolver, filesystem, exoInfo.getDexInfo().get());
+    Optional<IsolatedExopackageInfo.IsolatedDexInfo> dexInfo = isolatedExopackageInfo.getDexInfo();
+    if (dexInfo.isPresent()) {
+      DexExoHelper dexExoHelper = new DexExoHelper(filesystem, dexInfo.get());
       linkFiles(rootPath, dexExoHelper.getFilesToInstall(), filesystem);
       writeMetadata(rootPath, dexExoHelper.getMetadataToInstall(), filesystem);
     }
 
     // Symlink the native so files
-    if (exoInfo.getNativeLibsInfo().isPresent()) {
-      NativeLibsInfo nativeLibsInfo = exoInfo.getNativeLibsInfo().get();
-      AbsPath metadataPath = pathResolver.getAbsolutePath(nativeLibsInfo.getMetadata());
+    Optional<IsolatedExopackageInfo.IsolatedNativeLibsInfo> nativeLibsInfo =
+        isolatedExopackageInfo.getNativeLibsInfo();
+    if (nativeLibsInfo.isPresent()) {
+      IsolatedExopackageInfo.IsolatedNativeLibsInfo isolatedNativeLibsInfo = nativeLibsInfo.get();
+      AbsPath metadataPath = isolatedNativeLibsInfo.getMetadata();
       // We don't yet know which device is our installation target, so we need to link all abis
       // which were built for the device
       List<String> abis = new ArrayList<>(detectAbis(metadataPath, filesystem));
       NativeExoHelper nativeExoHelper =
-          new NativeExoHelper(() -> abis, pathResolver, filesystem, nativeLibsInfo);
+          new NativeExoHelper(() -> abis, filesystem, isolatedNativeLibsInfo);
       linkFiles(rootPath, nativeExoHelper.getFilesToInstall(), filesystem);
       writeMetadata(rootPath, nativeExoHelper.getMetadataToInstall(), filesystem);
     }
 
     // Symlink the resources bundle
-    if (exoInfo.getResourcesInfo().isPresent()) {
+    Optional<IsolatedExopackageInfo.IsolatedResourcesInfo> resourcesInfo =
+        isolatedExopackageInfo.getResourcesInfo();
+    if (resourcesInfo.isPresent()) {
       ResourcesExoHelper resourcesExoHelper =
-          new ResourcesExoHelper(pathResolver, filesystem, exoInfo.getResourcesInfo().get());
+          new ResourcesExoHelper(filesystem, resourcesInfo.get());
       linkFiles(rootPath, resourcesExoHelper.getFilesToInstall(), filesystem);
       writeMetadata(rootPath, resourcesExoHelper.getMetadataToInstall(), filesystem);
     }
 
     // Symlink any app modules which were marked for exopackage install
-    if (exoInfo.getModuleInfo().isPresent()) {
-      ModuleExoHelper moduleExoHelper =
-          new ModuleExoHelper(pathResolver, filesystem, exoInfo.getModuleInfo().get());
+    Optional<ImmutableList<IsolatedExopackageInfo.IsolatedDexInfo>> moduleInfo =
+        isolatedExopackageInfo.getModuleInfo();
+    if (moduleInfo.isPresent()) {
+      ModuleExoHelper moduleExoHelper = new ModuleExoHelper(filesystem, moduleInfo.get());
       linkFiles(rootPath, moduleExoHelper.getFilesToInstall(), filesystem);
       writeMetadata(rootPath, moduleExoHelper.getMetadataToInstall(), filesystem);
     }
@@ -101,6 +107,7 @@ public class ExopackageSymlinkTree {
     filesystem.writeContentsToPath(
         PathFormatter.pathWithUnixSeparators(deviceRootPath), rootPath.resolve("metadata.txt"));
   }
+
   /** Create symlinks for each of the filesToInstall in the destPath with the proper hierarchy */
   private static void linkFiles(
       Path destPathRoot, Map<Path, Path> filesToInstall, ProjectFilesystem filesystem)

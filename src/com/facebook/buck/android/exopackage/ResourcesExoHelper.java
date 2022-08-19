@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -28,17 +27,15 @@ import java.util.stream.Stream;
 
 /** Installs resources for exo. */
 public class ResourcesExoHelper implements ExoHelper {
+
   @VisibleForTesting public static final Path RESOURCES_DIR = Paths.get("resources");
 
-  private final SourcePathResolverAdapter pathResolver;
   private final ProjectFilesystem projectFilesystem;
-  private final ExopackageInfo.ResourcesInfo resourcesInfo;
+  private final IsolatedExopackageInfo.IsolatedResourcesInfo resourcesInfo;
 
   ResourcesExoHelper(
-      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
-      ExopackageInfo.ResourcesInfo resourcesInfo) {
-    this.pathResolver = pathResolver;
+      IsolatedExopackageInfo.IsolatedResourcesInfo resourcesInfo) {
     this.projectFilesystem = projectFilesystem;
     this.resourcesInfo = resourcesInfo;
   }
@@ -50,23 +47,15 @@ public class ResourcesExoHelper implements ExoHelper {
 
   /** Returns a map of hash to path for resource files. */
   private static ImmutableMap<String, Path> getResourceFilesByHash(
-      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
-      Stream<ExopackagePathAndHash> resourcesPaths) {
+      Stream<IsolatedExopackageInfo.IsolatedExopackagePathAndHash> resourcesPaths) {
     return resourcesPaths
-        .filter(
-            pathAndHash ->
-                projectFilesystem.exists(
-                    pathResolver.getAbsolutePath(pathAndHash.getHashPath()).getPath()))
+        .filter(pathAndHash -> projectFilesystem.exists(pathAndHash.getHashPath().getPath()))
         .collect(
             ImmutableMap.toImmutableMap(
                 pathAndHash ->
-                    projectFilesystem
-                        .readFileIfItExists(pathResolver.getAbsolutePath(pathAndHash.getHashPath()))
-                        .get(),
-                i ->
-                    projectFilesystem.resolve(
-                        pathResolver.getAbsolutePath(i.getPath()).getPath())));
+                    projectFilesystem.readFileIfItExists(pathAndHash.getHashPath()).get(),
+                i -> i.getPath().getPath()));
   }
 
   @Override
@@ -87,8 +76,7 @@ public class ResourcesExoHelper implements ExoHelper {
   }
 
   private ImmutableMap<String, Path> getResourceFilesByHash() {
-    return getResourceFilesByHash(
-        pathResolver, projectFilesystem, resourcesInfo.getResourcesPaths().stream());
+    return getResourceFilesByHash(projectFilesystem, resourcesInfo.getResourcesPaths().stream());
   }
 
   private String getResourceMetadataContents(ImmutableMap<String, Path> filesByHash) {

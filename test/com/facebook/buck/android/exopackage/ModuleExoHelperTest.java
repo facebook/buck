@@ -19,10 +19,7 @@ package com.facebook.buck.android.exopackage;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
-import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -44,34 +41,27 @@ public class ModuleExoHelperTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
-  public ProjectWorkspace workspace;
-
-  public ProjectFilesystem filesystem;
-
   private ModuleExoHelper moduleExoHelper;
-  private Path moduleOutputPath;
-  private Path metadataOutputPath;
 
   @Before
   public void setUp() throws IOException {
-    workspace =
+    ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new ModuleExoHelperTest(), "modular_exo", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
-    moduleOutputPath = Paths.get("module_name");
-    metadataOutputPath = moduleOutputPath.resolve("metadata");
-    DexInfo dexInfo =
-        DexInfo.of(
-            PathSourcePath.of(filesystem, metadataOutputPath),
-            PathSourcePath.of(filesystem, moduleOutputPath));
-
-    BuildRuleResolver resolver = new TestActionGraphBuilder();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    Path moduleOutputPath = Paths.get("module_name");
+    Path metadataOutputPath = moduleOutputPath.resolve("metadata");
 
     moduleExoHelper =
         new ModuleExoHelper(
-            resolver.getSourcePathResolver(), filesystem, ImmutableList.of(dexInfo));
+            filesystem,
+            ImmutableList.of(
+                IsolatedExopackageInfo.IsolatedDexInfo.of(
+                    AbsPath.of(filesystem.resolve(metadataOutputPath)),
+                    AbsPath.of(filesystem.resolve(moduleOutputPath)))));
   }
 
   @Test

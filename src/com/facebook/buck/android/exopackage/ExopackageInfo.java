@@ -17,18 +17,84 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 import org.immutables.value.Value;
 
 @BuckStyleValueWithBuilder
 public abstract class ExopackageInfo {
+
+  /** Converts ExopackageInfo into IsolatedExopackageInfo */
+  public final IsolatedExopackageInfo toIsolatedExopackageInfo(SourcePathResolverAdapter resolver) {
+    Optional<DexInfo> optionalDexInfo = getDexInfo();
+    Optional<ImmutableList<DexInfo>> optionalModuleInfo = this.getModuleInfo();
+    Optional<NativeLibsInfo> optionalNativeLibsInfo = getNativeLibsInfo();
+    Optional<ResourcesInfo> optinalResourcesInfo = getResourcesInfo();
+
+    ImmutableIsolatedExopackageInfo.Builder builder = ImmutableIsolatedExopackageInfo.builder();
+
+    if (optionalDexInfo.isPresent()) {
+      DexInfo dexInfo = optionalDexInfo.get();
+      builder.setDexInfo(toIsolatedDexInfo(resolver, dexInfo));
+    }
+
+    if (optionalModuleInfo.isPresent()) {
+      ImmutableList<DexInfo> dexInfos = optionalModuleInfo.get();
+      ImmutableList<IsolatedExopackageInfo.IsolatedDexInfo> isolatedDexInfos =
+          dexInfos.stream()
+              .map(dexInfo -> toIsolatedDexInfo(resolver, dexInfo))
+              .collect(ImmutableList.toImmutableList());
+      builder.setModuleInfo(isolatedDexInfos);
+    }
+
+    if (optionalNativeLibsInfo.isPresent()) {
+      NativeLibsInfo nativeLibsInfo = optionalNativeLibsInfo.get();
+      IsolatedExopackageInfo.IsolatedNativeLibsInfo isolatedNativeLibsInfo =
+          IsolatedExopackageInfo.IsolatedNativeLibsInfo.of(
+              resolver.getAbsolutePath(nativeLibsInfo.getMetadata()),
+              resolver.getAbsolutePath(nativeLibsInfo.getDirectory()));
+      builder.setNativeLibsInfo(isolatedNativeLibsInfo);
+    }
+
+    if (optinalResourcesInfo.isPresent()) {
+      ResourcesInfo resourcesInfo = optinalResourcesInfo.get();
+      ImmutableList<ExopackagePathAndHash> resourcesPaths = resourcesInfo.getResourcesPaths();
+      ImmutableList<IsolatedExopackageInfo.IsolatedExopackagePathAndHash>
+          isolatedExopackagePathAndHashes =
+              resourcesPaths.stream()
+                  .map(i -> toIsolatedExopackageInfo(i, resolver))
+                  .collect(ImmutableList.toImmutableList());
+      builder.setResourcesInfo(
+          IsolatedExopackageInfo.IsolatedResourcesInfo.of(isolatedExopackagePathAndHashes));
+    }
+
+    return builder.build();
+  }
+
+  private IsolatedExopackageInfo.IsolatedExopackagePathAndHash toIsolatedExopackageInfo(
+      ExopackagePathAndHash exopackagePathAndHash, SourcePathResolverAdapter resolver) {
+    return IsolatedExopackageInfo.IsolatedExopackagePathAndHash.of(
+        resolver.getAbsolutePath(exopackagePathAndHash.getPath()),
+        resolver.getAbsolutePath(exopackagePathAndHash.getHashPath()));
+  }
+
+  @Nonnull
+  private IsolatedExopackageInfo.IsolatedDexInfo toIsolatedDexInfo(
+      SourcePathResolverAdapter resolver, DexInfo dexInfo) {
+    return IsolatedExopackageInfo.IsolatedDexInfo.of(
+        resolver.getAbsolutePath(dexInfo.getMetadata()),
+        resolver.getAbsolutePath(dexInfo.getDirectory()));
+  }
+
   @BuckStyleValue
   public interface DexInfo {
+
     SourcePath getMetadata();
 
     SourcePath getDirectory();
@@ -40,6 +106,7 @@ public abstract class ExopackageInfo {
 
   @BuckStyleValue
   public interface NativeLibsInfo {
+
     SourcePath getMetadata();
 
     SourcePath getDirectory();
@@ -51,6 +118,7 @@ public abstract class ExopackageInfo {
 
   @BuckStyleValue
   public interface ResourcesInfo {
+
     ImmutableList<ExopackagePathAndHash> getResourcesPaths();
 
     static ResourcesInfo of(ImmutableList<ExopackagePathAndHash> resourcesPaths) {

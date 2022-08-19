@@ -18,7 +18,6 @@ package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -41,17 +40,14 @@ import java.util.function.Supplier;
 public class NativeExoHelper implements ExoHelper {
   @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
   private final Supplier<List<String>> abiSupplier;
-  private final SourcePathResolverAdapter pathResolver;
   private final ProjectFilesystem projectFilesystem;
-  private final ExopackageInfo.NativeLibsInfo nativeLibsInfo;
+  private final IsolatedExopackageInfo.IsolatedNativeLibsInfo nativeLibsInfo;
 
   NativeExoHelper(
       Supplier<List<String>> abiSupplier,
-      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
-      ExopackageInfo.NativeLibsInfo nativeLibsInfo) {
+      IsolatedExopackageInfo.IsolatedNativeLibsInfo nativeLibsInfo) {
     this.abiSupplier = abiSupplier;
-    this.pathResolver = pathResolver;
     this.projectFilesystem = projectFilesystem;
     this.nativeLibsInfo = nativeLibsInfo;
   }
@@ -104,9 +100,7 @@ public class NativeExoHelper implements ExoHelper {
 
   private ImmutableMultimap<String, Path> getAllLibraries() throws IOException {
     return ExopackageInstaller.parseExopackageInfoMetadata(
-        pathResolver.getAbsolutePath(nativeLibsInfo.getMetadata()),
-        pathResolver.getAbsolutePath(nativeLibsInfo.getDirectory()),
-        projectFilesystem);
+        nativeLibsInfo.getMetadata(), nativeLibsInfo.getDirectory(), projectFilesystem);
   }
 
   private ImmutableMap<String, ImmutableMultimap<String, Path>> getFilesByHashForAbis()
@@ -132,11 +126,7 @@ public class NativeExoHelper implements ExoHelper {
       ImmutableMultimap<String, Path> allLibraries,
       String abi,
       ImmutableSet<String> ignoreLibraries) {
-    return filterLibrariesForAbi(
-        pathResolver.getAbsolutePath(nativeLibsInfo.getDirectory()),
-        allLibraries,
-        abi,
-        ignoreLibraries);
+    return filterLibrariesForAbi(nativeLibsInfo.getDirectory(), allLibraries, abi, ignoreLibraries);
   }
 
   @VisibleForTesting

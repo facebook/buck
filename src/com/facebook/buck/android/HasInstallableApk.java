@@ -34,19 +34,19 @@ public interface HasInstallableApk {
 
   ApkInfo getApkInfo();
 
-  /** Converts ApkInfo into IsolatedApkInfo */
-  default IsolatedApkInfo toIsolatedApkInfo(SourcePathResolverAdapter resolver) {
-    return ImmutableIsolatedApkInfo.ofImpl(
-        resolver.getAbsolutePath(getApkInfo().getManifestPath()),
-        resolver.getAbsolutePath(getApkInfo().getApkPath()));
-  }
-
   BuildTarget getBuildTarget();
 
   ProjectFilesystem getProjectFilesystem();
 
   default boolean isConcurrentInstallEnabled() {
     return false;
+  }
+
+  /** Converts ApkInfo into IsolatedApkInfo */
+  static IsolatedApkInfo toIsolatedApkInfo(SourcePathResolverAdapter resolver, ApkInfo apkInfo) {
+    return ImmutableIsolatedApkInfo.ofImpl(
+        resolver.getAbsolutePath(apkInfo.getManifestPath()),
+        resolver.getAbsolutePath(apkInfo.getApkPath()));
   }
 
   @BuckStyleValue

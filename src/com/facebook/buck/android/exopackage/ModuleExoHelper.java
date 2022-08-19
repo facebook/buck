@@ -16,9 +16,7 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -38,21 +36,17 @@ import java.util.stream.Collectors;
  */
 public class ModuleExoHelper implements ExoHelper {
   @VisibleForTesting public static final Path MODULAR_DEX_DIR = Paths.get("modular-dex");
-  private final SourcePathResolverAdapter pathResolver;
   private final ProjectFilesystem projectFilesystem;
-  private final List<ExopackageInfo.DexInfo> dexInfoForModules;
+  private final List<IsolatedExopackageInfo.IsolatedDexInfo> dexInfoForModules;
 
   /**
-   * @param pathResolver a SourcePathResolverAdapter for finding the output SourcePaths on disk
    * @param projectFilesystem the filesystem owning buck-out
    * @param dexInfoForModules a list of metadata/dex-output-dirs for the modules that we want to
    *     exo-install
    */
   ModuleExoHelper(
-      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
-      List<DexInfo> dexInfoForModules) {
-    this.pathResolver = pathResolver;
+      List<IsolatedExopackageInfo.IsolatedDexInfo> dexInfoForModules) {
     this.projectFilesystem = projectFilesystem;
     this.dexInfoForModules = dexInfoForModules;
   }
@@ -84,8 +78,8 @@ public class ModuleExoHelper implements ExoHelper {
   @Override
   public ImmutableMap<Path, String> getMetadataToInstall() throws IOException {
     Builder<Path, String> builder = ImmutableMap.builder();
-    for (DexInfo info : dexInfoForModules) {
-      AbsPath metadataFile = pathResolver.getAbsolutePath(info.getMetadata());
+    for (IsolatedExopackageInfo.IsolatedDexInfo info : dexInfoForModules) {
+      AbsPath metadataFile = info.getMetadata();
       if (!Files.exists(metadataFile.getPath())) {
         continue;
       }
@@ -115,16 +109,14 @@ public class ModuleExoHelper implements ExoHelper {
    */
   private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
     ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
-    for (DexInfo dexInfo : dexInfoForModules) {
-      AbsPath metadataFile = pathResolver.getAbsolutePath(dexInfo.getMetadata());
+    for (IsolatedExopackageInfo.IsolatedDexInfo dexInfo : dexInfoForModules) {
+      AbsPath metadataFile = dexInfo.getMetadata();
       if (!Files.exists(metadataFile.getPath())) {
         continue;
       }
       ImmutableMultimap<String, Path> multimap =
           ExopackageInstaller.parseExopackageInfoMetadata(
-              metadataFile,
-              pathResolver.getAbsolutePath(dexInfo.getDirectory()),
-              projectFilesystem);
+              metadataFile, dexInfo.getDirectory(), projectFilesystem);
       for (Map.Entry<String, Path> entry : multimap.entries()) {
         builder.put(entry);
       }

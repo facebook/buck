@@ -28,6 +28,7 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.AndroidIntent;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
+import com.facebook.buck.android.exopackage.IsolatedExopackageInfo;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
@@ -40,6 +41,7 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.util.Console;
@@ -153,7 +155,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       // Report if multiple devices are matching the filter.
       androidPrinter.printMessage("Found " + result.devices.size() + " matching devices.\n");
     }
-    result.errorMessage.ifPresent(message -> androidPrinter.printError(message));
+    result.errorMessage.ifPresent(androidPrinter::printError);
     return result.devices;
   }
 
@@ -272,12 +274,16 @@ public class AdbHelper implements AndroidDevicesHelper {
       boolean quiet)
       throws InterruptedException {
     HasInstallableApk.IsolatedApkInfo isolatedApkInfo =
-        hasInstallableApk.toIsolatedApkInfo(pathResolver);
+        HasInstallableApk.toIsolatedApkInfo(pathResolver, hasInstallableApk.getApkInfo());
 
     InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
     if (!quiet) {
       getBuckEventBus().post(started);
     }
+
+    String manifest =
+        tryToExtractPackageNameFromManifest(isolatedApkInfo.getManifestPath().getPath());
+
     AtomicBoolean success = new AtomicBoolean();
     Set<AndroidDeviceInfo> deviceInfos = new HashSet<>();
     try (Scope ignored =
@@ -290,9 +296,7 @@ public class AdbHelper implements AndroidDevicesHelper {
                         started,
                         success.get(),
                         Optional.empty(),
-                        Optional.of(
-                            tryToExtractPackageNameFromManifest(
-                                isolatedApkInfo.getManifestPath().getPath())),
+                        Optional.of(manifest),
                         deviceInfoMap,
                         AndroidDebugBridge.getSocketAddress() != null
                             ? Optional.of(AndroidDebugBridge.getSocketAddress().getPort())
@@ -319,9 +323,18 @@ public class AdbHelper implements AndroidDevicesHelper {
           },
           true);
 
-      Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
-      if (exopackageInfo.isPresent()) {
-        installApkExopackage(pathResolver, hasInstallableApk, quiet);
+      Optional<ExopackageInfo> optionalExopackageInfo =
+          hasInstallableApk.getApkInfo().getExopackageInfo();
+      if (optionalExopackageInfo.isPresent()) {
+        ExopackageInfo exopackageInfo = optionalExopackageInfo.get();
+        IsolatedExopackageInfo isolatedExopackageInfo =
+            exopackageInfo.toIsolatedExopackageInfo(pathResolver);
+        installApkExopackage(
+            hasInstallableApk.getProjectFilesystem(),
+            isolatedExopackageInfo,
+            isolatedApkInfo,
+            manifest,
+            quiet);
       } else {
         installApkDirectly(hasInstallableApk, installViaSd, quiet, isolatedApkInfo);
       }
@@ -332,12 +345,14 @@ public class AdbHelper implements AndroidDevicesHelper {
   private static ImmutableMap<String, String> convertToMap(Set<AndroidDeviceInfo> infos) {
     ImmutableMap.Builder<String, String> map = ImmutableMap.builder();
 
-    map.put("install_device_locales", toCommaList(infos, i -> i.getLocale()));
-    map.put("install_device_abis", toCommaList(infos, i -> i.getAbi()));
-    map.put("install_device_build_fingerprint", toCommaList(infos, i -> i.getBuildFingerprint()));
+    map.put("install_device_locales", toCommaList(infos, AndroidDeviceInfo::getLocale));
+    map.put("install_device_abis", toCommaList(infos, AndroidDeviceInfo::getAbi));
+    map.put(
+        "install_device_build_fingerprint",
+        toCommaList(infos, AndroidDeviceInfo::getBuildFingerprint));
     map.put("install_device_densities", toCommaList(infos, i -> i.getDensity().toString()));
-    map.put("install_device_dpi", toCommaList(infos, i -> i.getDpi()));
-    map.put("install_device_sdk", toCommaList(infos, i -> i.getSdk()));
+    map.put("install_device_dpi", toCommaList(infos, AndroidDeviceInfo::getDpi));
+    map.put("install_device_sdk", toCommaList(infos, AndroidDeviceInfo::getSdk));
     map.put("install_device_is_emulator", toCommaList(infos, i -> String.valueOf(i.isEmulator())));
 
     return map.build();
@@ -619,7 +634,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       return false;
     }
 
-    waitUntil(() -> adb.isInitialized(), ADB_CONNECT_TIMEOUT_MS, ADB_CONNECT_TIME_STEP_MS);
+    waitUntil(adb::isInitialized, ADB_CONNECT_TIMEOUT_MS, ADB_CONNECT_TIME_STEP_MS);
     return adb.isInitialized();
   }
 
@@ -751,19 +766,23 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkExopackage(
-      SourcePathResolverAdapter pathResolver, HasInstallableApk hasInstallableApk, boolean quiet)
+      ProjectFilesystem projectFilesystem,
+      IsolatedExopackageInfo isolatedExopackageInfo,
+      HasInstallableApk.IsolatedApkInfo isolatedApkInfo,
+      String manifest,
+      boolean quiet)
       throws InterruptedException {
     adbCall(
         "install exopackage apk",
         device -> {
           new ExopackageInstaller(
-                  pathResolver,
+                  isolatedExopackageInfo,
                   contextSupplier.get().getBuckEventBus(),
-                  hasInstallableApk.getProjectFilesystem(),
-                  tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo()),
+                  projectFilesystem,
+                  manifest,
                   device,
                   skipMetadataIfNoInstalls)
-              .doInstall(hasInstallableApk.getApkInfo());
+              .doInstall(isolatedApkInfo);
           return true;
         },
         quiet);

@@ -31,6 +31,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -65,6 +66,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class ExopackageInstallerIntegrationTest {
+
   private static final boolean DEBUG = false;
   private static final String FAKE_PACKAGE_NAME = "buck.exotest.fake";
   private static final Path INSTALL_ROOT =
@@ -517,6 +519,7 @@ public class ExopackageInstallerIntegrationTest {
   }
 
   class ExpectedStateBuilder {
+
     final Map<String, String> expectedApkState = new TreeMap<>();
     final Map<String, String> expectedFilesState = new TreeMap<>();
 
@@ -665,17 +668,15 @@ public class ExopackageInstallerIntegrationTest {
       moduleInfo = Optional.of(moduleInfoBuilder.build());
     }
 
+    ExopackageInfo exopackageInfo =
+        ExopackageInfo.builder()
+            .setDexInfo(dexInfo)
+            .setNativeLibsInfo(nativeLibsInfo)
+            .setResourcesInfo(resourcesInfo)
+            .setModuleInfo(moduleInfo)
+            .build();
     HasInstallableApk.ApkInfo apkInfo =
-        ImmutableApkInfo.ofImpl(
-            manifestSourcePath,
-            apkSourcePath,
-            Optional.of(
-                ExopackageInfo.builder()
-                    .setDexInfo(dexInfo)
-                    .setNativeLibsInfo(nativeLibsInfo)
-                    .setResourcesInfo(resourcesInfo)
-                    .setModuleInfo(moduleInfo)
-                    .build()));
+        ImmutableApkInfo.ofImpl(manifestSourcePath, apkSourcePath, Optional.of(exopackageInfo));
     device.setAllowedInstallCounts(
         expectedApksInstalled,
         expectedDexesInstalled,
@@ -683,14 +684,15 @@ public class ExopackageInstallerIntegrationTest {
         expectedResourcesInstalled,
         expectedModulesInstalled);
     try {
+      SourcePathResolverAdapter pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
       new ExopackageInstaller(
-              new TestActionGraphBuilder().getSourcePathResolver(),
+              exopackageInfo.toIsolatedExopackageInfo(pathResolver),
               executionContext.getBuckEventBus(),
               filesystem,
               FAKE_PACKAGE_NAME,
               device,
               /* skipMetadataIfNoInstalls= */ false)
-          .doInstall(apkInfo);
+          .doInstall(HasInstallableApk.toIsolatedApkInfo(pathResolver, apkInfo));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -766,6 +768,7 @@ public class ExopackageInstallerIntegrationTest {
   }
 
   private static class ExoState {
+
     private final String apkContent;
     private final String manifestContent;
     private final ImmutableList<String> secondaryDexesContents;

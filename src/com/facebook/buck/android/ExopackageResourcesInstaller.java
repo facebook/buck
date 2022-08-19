@@ -20,6 +20,7 @@ import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
+import com.facebook.buck.android.exopackage.IsolatedExopackageInfo;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -50,6 +51,7 @@ import javax.annotation.Nullable;
 
 /** Installs exopackage resource files to the device/devices. */
 public class ExopackageResourcesInstaller extends AbstractBuildRule {
+
   @AddToRuleKey private final InstallTrigger trigger;
   @AddToRuleKey private final ImmutableList<ExopackagePathAndHash> paths;
   @AddToRuleKey private final SourcePath manifestPath;
@@ -106,18 +108,19 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
                     device -> {
                       ImmutableSortedSet<Path> presentFiles =
                           Objects.requireNonNull(contents.get(device.getSerialNumber()));
+                      IsolatedExopackageInfo isolatedExopackageInfo =
+                          ExopackageInfo.builder()
+                              .setResourcesInfo(ExopackageInfo.ResourcesInfo.of(paths))
+                              .build()
+                              .toIsolatedExopackageInfo(resolver);
                       new ExopackageInstaller(
-                              resolver,
+                              isolatedExopackageInfo,
                               context.getBuckEventBus(),
                               getProjectFilesystem(),
                               packageName,
                               device,
                               adbConfig.getSkipInstallMetadata())
-                          .installMissingExopackageFiles(
-                              presentFiles,
-                              ExopackageInfo.builder()
-                                  .setResourcesInfo(ExopackageInfo.ResourcesInfo.of(paths))
-                                  .build());
+                          .installMissingExopackageFiles(presentFiles);
                       return true;
                     },
                     true);

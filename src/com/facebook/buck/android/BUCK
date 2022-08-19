@@ -455,6 +455,7 @@ java_immutables_library(
 UTILS_API_SRCS = [
     "exopackage/AndroidDevicesHelper.java",
     "exopackage/ExopackageInfo.java",
+    "exopackage/IsolatedExopackageInfo.java",
     "exopackage/AndroidDevice.java",
     "HasInstallableApk.java",
     "exopackage/PackageInfo.java",

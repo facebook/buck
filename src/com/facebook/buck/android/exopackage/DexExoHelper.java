@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -30,15 +29,12 @@ import java.util.Map;
 /** Installs secondary dexes for exo. */
 public class DexExoHelper implements ExoHelper {
   @VisibleForTesting public static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
-  private final SourcePathResolverAdapter pathResolver;
+
   private final ProjectFilesystem projectFilesystem;
-  private final ExopackageInfo.DexInfo dexInfo;
+  private final IsolatedExopackageInfo.IsolatedDexInfo dexInfo;
 
   DexExoHelper(
-      SourcePathResolverAdapter pathResolver,
-      ProjectFilesystem projectFilesystem,
-      ExopackageInfo.DexInfo dexInfo) {
-    this.pathResolver = pathResolver;
+      ProjectFilesystem projectFilesystem, IsolatedExopackageInfo.IsolatedDexInfo dexInfo) {
     this.projectFilesystem = projectFilesystem;
     this.dexInfo = dexInfo;
   }
@@ -70,7 +66,7 @@ public class DexExoHelper implements ExoHelper {
     // hashes in the file names (because we use that to skip re-uploads), so just hack
     // the metadata file to have hash-like names.
     return com.google.common.io.Files.toString(
-            pathResolver.getAbsolutePath(dexInfo.getMetadata()).toFile(), StandardCharsets.UTF_8)
+            dexInfo.getMetadata().toFile(), StandardCharsets.UTF_8)
         .replaceAll(
             "secondary-([\\d_]+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
   }
@@ -78,9 +74,7 @@ public class DexExoHelper implements ExoHelper {
   private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
     ImmutableMultimap<String, Path> multimap =
         ExopackageInstaller.parseExopackageInfoMetadata(
-            pathResolver.getAbsolutePath(dexInfo.getMetadata()).getPath(),
-            pathResolver.getAbsolutePath(dexInfo.getDirectory()).getPath(),
-            projectFilesystem);
+            dexInfo.getMetadata().getPath(), dexInfo.getDirectory().getPath(), projectFilesystem);
     // Convert multimap to a map, because every key should have only one value.
     ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
     for (Map.Entry<String, Path> entry : multimap.entries()) {
