@@ -79,6 +79,7 @@ import javax.annotation.Nullable;
 
 /** Helper for executing commands over ADB, especially for multiple devices. */
 public class AdbHelper implements AndroidDevicesHelper {
+
   private static final Logger log = Logger.get(AdbHelper.class);
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
@@ -270,6 +271,9 @@ public class AdbHelper implements AndroidDevicesHelper {
       boolean installViaSd,
       boolean quiet)
       throws InterruptedException {
+    HasInstallableApk.IsolatedApkInfo isolatedApkInfo =
+        hasInstallableApk.toIsolatedApkInfo(pathResolver);
+
     InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
     if (!quiet) {
       getBuckEventBus().post(started);
@@ -287,8 +291,8 @@ public class AdbHelper implements AndroidDevicesHelper {
                         success.get(),
                         Optional.empty(),
                         Optional.of(
-                            AdbHelper.tryToExtractPackageNameFromManifest(
-                                pathResolver, hasInstallableApk.getApkInfo())),
+                            tryToExtractPackageNameFromManifest(
+                                isolatedApkInfo.getManifestPath().getPath())),
                         deviceInfoMap,
                         AndroidDebugBridge.getSocketAddress() != null
                             ? Optional.of(AndroidDebugBridge.getSocketAddress().getPort())
@@ -319,7 +323,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       if (exopackageInfo.isPresent()) {
         installApkExopackage(pathResolver, hasInstallableApk, quiet);
       } else {
-        installApkDirectly(pathResolver, hasInstallableApk, installViaSd, quiet);
+        installApkDirectly(hasInstallableApk, installViaSd, quiet, isolatedApkInfo);
       }
       success.set(true);
     }
@@ -640,6 +644,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private static class GetDevicesResult {
+
     private final ImmutableList<AndroidDevice> devices;
     private final Optional<String> errorMessage;
 
@@ -732,6 +737,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   /** An exception that indicates that an executed command returned an unsuccessful exit code. */
   public static class CommandFailedException extends IOException {
+
     public final String command;
     public final int exitCode;
     public final String output;
@@ -764,12 +770,12 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkDirectly(
-      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
-      boolean quiet)
+      boolean quiet,
+      HasInstallableApk.IsolatedApkInfo isolatedApkInfo)
       throws InterruptedException {
-    File apk = pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toFile();
+    File apk = isolatedApkInfo.getApkPath().toFile();
     adbCall(
         String.format("install apk %s", hasInstallableApk.getBuildTarget().toString()),
         (device) -> device.installApkOnDevice(apk, installViaSd, quiet),
@@ -782,6 +788,7 @@ public class AdbHelper implements AndroidDevicesHelper {
    */
   @VisibleForTesting
   abstract static class AndroidDebugBridgeFacade {
+
     /** Initializes and connects the debug bridge. */
     boolean connect() {
       return false;
@@ -817,6 +824,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private class AndroidDebugBridgeFacadeImpl extends AndroidDebugBridgeFacade {
+
     private final String adbExecutable;
     private @Nullable AndroidDebugBridge bridge;
 
