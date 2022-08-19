@@ -241,6 +241,37 @@ cxx_library(
     ],
 )
 
+# Any library with used_by_wrap_script=True should not be merged
+cxx_library(
+    name = "N",
+    srcs = ["N.c"],
+    can_be_asset = True,
+    soname = "libN.so",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":O",
+    ],
+)
+
+cxx_library(
+    name = "O",
+    srcs = ["O.c"],
+    can_be_asset = True,
+    soname = "libO.so",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":P",
+    ],
+)
+
+cxx_library(
+    name = "P",
+    srcs = ["P.c"],
+    soname = "libP.so",
+    used_by_wrap_script = True,
+    visibility = ["PUBLIC"],
+)
+
 cxx_library(
     name = "glue_1",
     srcs = ["glue_1.c"],

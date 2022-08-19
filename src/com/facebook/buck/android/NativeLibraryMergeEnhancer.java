@@ -170,6 +170,8 @@ class NativeLibraryMergeEnhancer {
 
       Multimap<APKModule, NativeLinkable> linkables = baseResult.getNativeLinkables();
       Multimap<APKModule, NativeLinkable> assetLinkables = baseResult.getNativeLinkableAssets();
+      List<NativeLinkable> linkablesUsedByWrapScript =
+          baseResult.getNativeLinkablesUsedByWrapScript();
 
       ImmutableSet<APKModule> modules =
           ImmutableSet.<APKModule>builder()
@@ -177,7 +179,7 @@ class NativeLibraryMergeEnhancer {
               .addAll(assetLinkables.keySet())
               .build();
 
-      Stream<? extends NativeLinkable> allModulesLinkables = Stream.empty();
+      Stream<? extends NativeLinkable> allModulesLinkables = linkablesUsedByWrapScript.stream();
       ImmutableMap.Builder<NativeLinkable, APKModule> linkableAssetMapBuilder =
           ImmutableMap.builder();
       for (APKModule module : modules) {
@@ -203,6 +205,7 @@ class NativeLibraryMergeEnhancer {
               mergeSequenceBlocklist,
               graphBuilder,
               allLinkables,
+              linkablesUsedByWrapScript,
               linkableAssetMap);
 
       Iterable<MergedNativeLibraryConstituents> orderedConstituents =
@@ -251,16 +254,26 @@ class NativeLibraryMergeEnhancer {
           ImmutableListMultimap.builder();
       ImmutableMultimap.Builder<APKModule, NativeLinkable> moduleAssetLinkablesBuilder =
           ImmutableListMultimap.builder();
+      ImmutableList.Builder<NativeLinkable> nativeLinkablesUsedByWrapScriptBuilder =
+          ImmutableList.builder();
 
       for (MergedLibNativeLinkable linkable : mergedLinkables) {
-        APKModule module = getModuleForLinkable(linkable, linkableToModuleMap);
-        if (Collections.disjoint(linkable.constituents.getLinkables(), linkableAssetMap.keySet())) {
-          moduleLinkablesBuilder.put(module, linkable);
-        } else if (linkableAssetMap.keySet().containsAll(linkable.constituents.getLinkables())) {
-          moduleAssetLinkablesBuilder.put(module, linkable);
+        Set<NativeLinkable> constituents = linkable.constituents.getLinkables();
+        if (!Collections.disjoint(constituents, linkablesUsedByWrapScript)) {
+          // Linkables that are used by a wrap script must be in the root module and unmerged, both
+          // of which we've verified earlier. As a result, entering this if block implies that
+          // there's only a single constituent and it's used by a wrap script.
+          nativeLinkablesUsedByWrapScriptBuilder.add(linkable);
+        } else {
+          APKModule module = getModuleForLinkable(linkable, linkableToModuleMap);
+          if (Collections.disjoint(constituents, linkableAssetMap.keySet())) {
+            moduleLinkablesBuilder.put(module, linkable);
+          } else if (linkableAssetMap.keySet().containsAll(constituents)) {
+            moduleAssetLinkablesBuilder.put(module, linkable);
+          }
         }
 
-        for (NativeLinkable constituent : linkable.constituents.getLinkables()) {
+        for (NativeLinkable constituent : constituents) {
           constituent
               .getSharedLibraries(graphBuilder)
               .forEach(
@@ -289,8 +302,7 @@ class NativeLibraryMergeEnhancer {
           NativeLinkableEnhancementResult.of(
               moduleLinkablesBuilder.build(),
               moduleAssetLinkablesBuilder.build(),
-              // Linkables used by the wrap script are not intended to be merged
-              baseResult.getNativeLinkablesUsedByWrapScript()));
+              nativeLinkablesUsedByWrapScriptBuilder.build()));
     }
 
     ImmutableSortedMap.Builder<String, ImmutableSortedSet<String>> finalSonameTargetsBuilder =
@@ -351,6 +363,7 @@ class NativeLibraryMergeEnhancer {
       Optional<ImmutableList<Pattern>> mergeSequenceBlocklist,
       ActionGraphBuilder graphBuilder,
       Iterable<NativeLinkable> allLinkables,
+      List<NativeLinkable> linkablesUsedByWrapScript,
       ImmutableMap<NativeLinkable, APKModule> linkableAssetMap) {
     final List<MergedNativeLibraryConstituents> allConstituents;
     if (mergeMap.isPresent() && mergeSequence.isPresent()) {
@@ -368,6 +381,7 @@ class NativeLibraryMergeEnhancer {
               mergeSequenceBlocklist.orElse(ImmutableList.of()),
               graphBuilder,
               allLinkables,
+              linkablesUsedByWrapScript,
               linkableAssetMap);
     }
 
@@ -382,6 +396,15 @@ class NativeLibraryMergeEnhancer {
               String.format(
                   "Error: When processing %s, attempted to merge %s into both %s and %s",
                   buildTarget, linkable, linkableMembership.get(linkable), constituents));
+        }
+        // Linkables used by a wrap script should not be merged, because the wrap script references
+        // them by name directly. native_library_merge_sequence automatically blocks such linkables
+        // from being merged, but native_library_merge_map does not. Error out for any bad merges.
+        if (linkablesUsedByWrapScript.contains(linkable)) {
+          throw new HumanReadableException(
+              String.format(
+                  "Error: When processing %s, attempted to merge %s used by wrap script into %s",
+                  buildTarget, linkable, constituents));
         }
         linkableMembership.put(linkable, constituents);
 
@@ -451,19 +474,25 @@ class NativeLibraryMergeEnhancer {
       final ImmutableList<Pattern> mergeSequenceBlocklist,
       final ActionGraphBuilder graphBuilder,
       final Iterable<NativeLinkable> allLinkables,
+      List<NativeLinkable> linkablesUsedByWrapScript,
       final ImmutableMap<NativeLinkable, APKModule> linkableAssetMap) {
     List<MergedNativeLibraryConstituents> allConstituents = new ArrayList<>();
     // See MergeSequenceLinkableGrouping for details on why we need to keep track of this.
     Map<NativeLinkable, Map<APKModule, Integer>> seenLinkablesToModuleDependencyEntryCounts =
         new HashMap<>();
 
-    // Three types of linkables will not be merged at all. Their dependencies and dependents cannot
+    // Four types of linkables will not be merged at all. Their dependencies and dependents cannot
     // be merged with one another, as this would produce a dependency cycle.
     // - NativeLinkables without NativeLinkTargetInputs cannot be merged.
     // - Non-asset linkables are rare and often cannot be merged with other libraries. It's
     //   expeditious to simply not merge them.
     // - Linkables in native_library_merge_sequence_blocklist are explicitly excluded from merging.
+    // - Linkables used by a wrap script are referenced directly by name and should never be
+    //   merged. These linkables are required to not be asset libraries, so they should technically
+    //   already be excluded by that condition, but we also exclude them explicitly for clarity and
+    //   in case the asset library exclusion condition changes in the future.
     final ImmutableSet.Builder<NativeLinkable> excludedLinkablesBuilder = ImmutableSet.builder();
+    excludedLinkablesBuilder.addAll(linkablesUsedByWrapScript);
     for (NativeLinkable linkable : allLinkables) {
       if (!linkableAssetMap.containsKey(linkable)
           || !doesLinkableHaveLinkTargetInput(linkable, graphBuilder)) {

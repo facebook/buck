@@ -21,6 +21,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -528,6 +529,45 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
 
     // Library 1, sub-library 6: Module G linkables with entry count 1
     zipInspector.assertFileContains("assets/native.merge.G/libs.txt", "lib1_6.so");
+  }
+
+  @Test
+  public void testMergeMapWithLibraryUsedByWrapScript() {
+    String targetString = "//apps/sample:app_with_merge_map_lib_used_by_wrap_script";
+    ProcessResult processResult = workspace.runBuckBuild(targetString);
+    processResult.assertExitCode(ExitCode.BUILD_ERROR);
+    Pattern errorPattern =
+        Pattern.compile(
+            String.format(
+                ".*^Error: When processing %s, attempted to merge //native/merge:P\\[android-.+?\\]"
+                    + " used by wrap script into merge:libNOPE\\.so$.*",
+                targetString),
+            Pattern.DOTALL | Pattern.MULTILINE);
+    assertThat(processResult.getStderr(), matchesPattern(errorPattern));
+  }
+
+  @Test
+  public void testMergeSequenceWithLibraryUsedByWrapScript()
+      throws IOException, InterruptedException {
+    Path apk =
+        workspace.buildAndReturnOutput(
+            "//apps/sample:app_with_merge_sequence_lib_used_by_wrap_script");
+    ZipInspector zipInspector = new ZipInspector(apk);
+    zipInspector.assertFileExists("lib/x86/libNO.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libN.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libO.so");
+    zipInspector.assertFileExists("lib/x86/libP.so");
+
+    SymbolGetter syms = getSymbolGetter();
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(apk, "lib/x86/libNO.so");
+    assertThat(info.symbols.global, Matchers.hasItem("N"));
+    assertThat(info.symbols.global, Matchers.hasItem("O"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("P")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libO.so")));
+    assertThat(info.dtNeeded, Matchers.hasItem("libP.so"));
+
+    info = syms.getSymbolsAndDtNeeded(apk, "lib/x86/libP.so");
+    assertThat(info.symbols.global, Matchers.hasItem("P"));
   }
 
   @Test
