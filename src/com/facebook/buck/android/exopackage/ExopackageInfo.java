@@ -35,7 +35,7 @@ public abstract class ExopackageInfo {
     Optional<DexInfo> optionalDexInfo = getDexInfo();
     Optional<ImmutableList<DexInfo>> optionalModuleInfo = this.getModuleInfo();
     Optional<NativeLibsInfo> optionalNativeLibsInfo = getNativeLibsInfo();
-    Optional<ResourcesInfo> optinalResourcesInfo = getResourcesInfo();
+    Optional<ResourcesInfo> optionalResourcesInfo = getResourcesInfo();
 
     ImmutableIsolatedExopackageInfo.Builder builder = ImmutableIsolatedExopackageInfo.builder();
 
@@ -62,8 +62,8 @@ public abstract class ExopackageInfo {
       builder.setNativeLibsInfo(isolatedNativeLibsInfo);
     }
 
-    if (optinalResourcesInfo.isPresent()) {
-      ResourcesInfo resourcesInfo = optinalResourcesInfo.get();
+    if (optionalResourcesInfo.isPresent()) {
+      ResourcesInfo resourcesInfo = optionalResourcesInfo.get();
       ImmutableList<ExopackagePathAndHash> resourcesPaths = resourcesInfo.getResourcesPaths();
       ImmutableList<IsolatedExopackageInfo.IsolatedExopackagePathAndHash>
           isolatedExopackagePathAndHashes =

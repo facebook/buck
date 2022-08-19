@@ -291,6 +291,48 @@ public class AdbHelper implements AndroidDevicesHelper {
     HasInstallableApk.IsolatedApkInfo isolatedApkInfo =
         HasInstallableApk.toIsolatedApkInfo(pathResolver, apkInfo);
 
+    installApk(
+        isolatedApkInfo,
+        optionalIsolatedExopackageInfo,
+        rootPath,
+        installViaSd,
+        quiet,
+        fullyQualifiedName,
+        optionalBuckEventBus);
+  }
+
+  /** install method called from buck2 */
+  public void installApk(
+      AbsPath manifestPath,
+      AbsPath apkPath,
+      AbsPath rootPath,
+      boolean installViaSd,
+      boolean quiet,
+      String installableTargetFullyQualifiedName)
+      throws InterruptedException {
+
+    // TODO: add support of exo packages
+    Optional<IsolatedExopackageInfo> optionalIsolatedExopackageInfo = Optional.empty();
+
+    installApk(
+        ImmutableIsolatedApkInfo.ofImpl(manifestPath, apkPath),
+        optionalIsolatedExopackageInfo,
+        rootPath,
+        installViaSd,
+        quiet,
+        installableTargetFullyQualifiedName,
+        Optional.empty());
+  }
+
+  private void installApk(
+      HasInstallableApk.IsolatedApkInfo isolatedApkInfo,
+      Optional<IsolatedExopackageInfo> optionalIsolatedExopackageInfo,
+      AbsPath rootPath,
+      boolean installViaSd,
+      boolean quiet,
+      String fullyQualifiedName,
+      Optional<BuckEventBus> optionalBuckEventBus)
+      throws InterruptedException {
     InstallEvent.Started started = InstallEvent.started(fullyQualifiedName);
     if (!quiet) {
       getBuckEventBus().post(started);

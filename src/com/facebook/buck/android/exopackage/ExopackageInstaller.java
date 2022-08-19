@@ -145,7 +145,7 @@ public class ExopackageInstaller {
     File apk = isolatedApkInfo.getApkPath().toFile();
 
     if (shouldAppBeInstalled(isolatedApkInfo)) {
-      try (AutoCloseable ignored = getEvenScope("install_exo_apk")) {
+      try (AutoCloseable ignored = getEventScope("install_exo_apk")) {
         boolean success = device.installApkOnDevice(apk, /*installViaSd=*/ false, false);
         if (!success) {
           throw new RuntimeException("Installing Apk failed.");
@@ -154,7 +154,7 @@ public class ExopackageInstaller {
     }
   }
 
-  private AutoCloseable getEvenScope(String name) {
+  private AutoCloseable getEventScope(String name) {
     if (eventBus.isPresent()) {
       return SimplePerfEvent.scope(eventBus.get().isolated(), name);
     }
@@ -162,7 +162,7 @@ public class ExopackageInstaller {
   }
 
   private void killApp() throws Exception {
-    try (AutoCloseable ignored = getEvenScope("kill_app")) {
+    try (AutoCloseable ignored = getEventScope("kill_app")) {
       device.stopPackage(packageName);
     }
   }
@@ -327,7 +327,7 @@ public class ExopackageInstaller {
   }
 
   private String getInstalledAppSignature(String packagePath) throws Exception {
-    try (AutoCloseable ignored = getEvenScope("get_app_signature")) {
+    try (AutoCloseable ignored = getEventScope("get_app_signature")) {
       String output = device.getSignature(packagePath);
 
       String result = output.trim();
@@ -385,7 +385,7 @@ public class ExopackageInstaller {
 
   private void installFiles(String filesType, ImmutableMap<Path, Path> filesToInstall)
       throws Exception {
-    try (AutoCloseable ignored = getEvenScope("multi_install_" + filesType);
+    try (AutoCloseable ignored = getEventScope("multi_install_" + filesType);
         AutoCloseable ignored1 = device.createForward()) {
       // Make sure all the directories exist.
       filesToInstall.keySet().stream()
