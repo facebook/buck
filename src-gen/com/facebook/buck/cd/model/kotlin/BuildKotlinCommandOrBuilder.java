@@ -21,4 +21,32 @@ public interface BuildKotlinCommandOrBuilder extends
    * <code>.kotlincd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
    */
   com.facebook.buck.cd.model.kotlin.BaseCommandParamsOrBuilder getBaseCommandParamsOrBuilder();
+
+  /**
+   * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+   */
+  boolean hasLibraryJarCommand();
+  /**
+   * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+   */
+  com.facebook.buck.cd.model.kotlin.LibraryJarCommand getLibraryJarCommand();
+  /**
+   * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+   */
+  com.facebook.buck.cd.model.kotlin.LibraryJarCommandOrBuilder getLibraryJarCommandOrBuilder();
+
+  /**
+   * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+   */
+  boolean hasAbiJarCommand();
+  /**
+   * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+   */
+  com.facebook.buck.cd.model.kotlin.AbiJarCommand getAbiJarCommand();
+  /**
+   * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+   */
+  com.facebook.buck.cd.model.kotlin.AbiJarCommandOrBuilder getAbiJarCommandOrBuilder();
+
+  public com.facebook.buck.cd.model.kotlin.BuildKotlinCommand.CommandCase getCommandCase();
 }

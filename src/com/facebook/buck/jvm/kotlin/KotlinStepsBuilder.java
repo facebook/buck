@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.cd.model.kotlin.BaseCommandParams;
 import com.facebook.buck.cd.model.kotlin.BuildKotlinCommand;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.jvm.cd.CompileStepsBuilder;
 import com.facebook.buck.jvm.cd.DefaultCompileStepsBuilderFactory;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.types.Pair;
@@ -52,9 +53,26 @@ public class KotlinStepsBuilder {
         new DaemonKotlincToJarStepFactory(
             baseCommandParams.getHasAnnotationProcessing(), baseCommandParams.getWithDownwardApi());
 
-    /* DefaultCompileStepsBuilderFactory<KotlinExtraParams> stepsBuilderFactory = */
-    new DefaultCompileStepsBuilderFactory<>(kotlincToJarStepFactory);
+    DefaultCompileStepsBuilderFactory<KotlinExtraParams> stepsBuilderFactory =
+        new DefaultCompileStepsBuilderFactory<>(kotlincToJarStepFactory);
 
-    return new Pair<>(null, null);
+    AbsPath ruleCellRoot = null;
+    CompileStepsBuilder compileStepsBuilder;
+
+    switch (buildKotlinCommand.getCommandCase()) {
+      case LIBRARYJARCOMMAND:
+        compileStepsBuilder = stepsBuilderFactory.getLibraryBuilder();
+        break;
+
+      case ABIJARCOMMAND:
+        compileStepsBuilder = stepsBuilderFactory.getAbiBuilder();
+        break;
+
+      case COMMAND_NOT_SET:
+      default:
+        throw new IllegalStateException(buildKotlinCommand.getCommandCase() + " is not supported!");
+    }
+
+    return new Pair<>(ruleCellRoot, compileStepsBuilder.buildIsolatedSteps());
   }
 }

@@ -57,6 +57,34 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
+          case 18: {
+            com.facebook.buck.cd.model.kotlin.LibraryJarCommand.Builder subBuilder = null;
+            if (commandCase_ == 2) {
+              subBuilder = ((com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_).toBuilder();
+            }
+            command_ =
+                input.readMessage(com.facebook.buck.cd.model.kotlin.LibraryJarCommand.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom((com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_);
+              command_ = subBuilder.buildPartial();
+            }
+            commandCase_ = 2;
+            break;
+          }
+          case 26: {
+            com.facebook.buck.cd.model.kotlin.AbiJarCommand.Builder subBuilder = null;
+            if (commandCase_ == 3) {
+              subBuilder = ((com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_).toBuilder();
+            }
+            command_ =
+                input.readMessage(com.facebook.buck.cd.model.kotlin.AbiJarCommand.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom((com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_);
+              command_ = subBuilder.buildPartial();
+            }
+            commandCase_ = 3;
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -89,6 +117,44 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.cd.model.kotlin.BuildKotlinCommand.class, com.facebook.buck.cd.model.kotlin.BuildKotlinCommand.Builder.class);
   }
 
+  private int commandCase_ = 0;
+  private java.lang.Object command_;
+  public enum CommandCase
+      implements com.google.protobuf.Internal.EnumLite {
+    LIBRARYJARCOMMAND(2),
+    ABIJARCOMMAND(3),
+    COMMAND_NOT_SET(0);
+    private final int value;
+    private CommandCase(int value) {
+      this.value = value;
+    }
+    /**
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static CommandCase valueOf(int value) {
+      return forNumber(value);
+    }
+
+    public static CommandCase forNumber(int value) {
+      switch (value) {
+        case 2: return LIBRARYJARCOMMAND;
+        case 3: return ABIJARCOMMAND;
+        case 0: return COMMAND_NOT_SET;
+        default: return null;
+      }
+    }
+    public int getNumber() {
+      return this.value;
+    }
+  };
+
+  public CommandCase
+  getCommandCase() {
+    return CommandCase.forNumber(
+        commandCase_);
+  }
+
   public static final int BASECOMMANDPARAMS_FIELD_NUMBER = 1;
   private com.facebook.buck.cd.model.kotlin.BaseCommandParams baseCommandParams_;
   /**
@@ -110,6 +176,58 @@ private static final long serialVersionUID = 0L;
     return getBaseCommandParams();
   }
 
+  public static final int LIBRARYJARCOMMAND_FIELD_NUMBER = 2;
+  /**
+   * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+   */
+  public boolean hasLibraryJarCommand() {
+    return commandCase_ == 2;
+  }
+  /**
+   * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+   */
+  public com.facebook.buck.cd.model.kotlin.LibraryJarCommand getLibraryJarCommand() {
+    if (commandCase_ == 2) {
+       return (com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_;
+    }
+    return com.facebook.buck.cd.model.kotlin.LibraryJarCommand.getDefaultInstance();
+  }
+  /**
+   * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+   */
+  public com.facebook.buck.cd.model.kotlin.LibraryJarCommandOrBuilder getLibraryJarCommandOrBuilder() {
+    if (commandCase_ == 2) {
+       return (com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_;
+    }
+    return com.facebook.buck.cd.model.kotlin.LibraryJarCommand.getDefaultInstance();
+  }
+
+  public static final int ABIJARCOMMAND_FIELD_NUMBER = 3;
+  /**
+   * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+   */
+  public boolean hasAbiJarCommand() {
+    return commandCase_ == 3;
+  }
+  /**
+   * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+   */
+  public com.facebook.buck.cd.model.kotlin.AbiJarCommand getAbiJarCommand() {
+    if (commandCase_ == 3) {
+       return (com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_;
+    }
+    return com.facebook.buck.cd.model.kotlin.AbiJarCommand.getDefaultInstance();
+  }
+  /**
+   * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+   */
+  public com.facebook.buck.cd.model.kotlin.AbiJarCommandOrBuilder getAbiJarCommandOrBuilder() {
+    if (commandCase_ == 3) {
+       return (com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_;
+    }
+    return com.facebook.buck.cd.model.kotlin.AbiJarCommand.getDefaultInstance();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -127,6 +245,12 @@ private static final long serialVersionUID = 0L;
     if (baseCommandParams_ != null) {
       output.writeMessage(1, getBaseCommandParams());
     }
+    if (commandCase_ == 2) {
+      output.writeMessage(2, (com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_);
+    }
+    if (commandCase_ == 3) {
+      output.writeMessage(3, (com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -139,6 +263,14 @@ private static final long serialVersionUID = 0L;
     if (baseCommandParams_ != null) {
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(1, getBaseCommandParams());
+    }
+    if (commandCase_ == 2) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(2, (com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_);
+    }
+    if (commandCase_ == 3) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(3, (com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -160,6 +292,19 @@ private static final long serialVersionUID = 0L;
       if (!getBaseCommandParams()
           .equals(other.getBaseCommandParams())) return false;
     }
+    if (!getCommandCase().equals(other.getCommandCase())) return false;
+    switch (commandCase_) {
+      case 2:
+        if (!getLibraryJarCommand()
+            .equals(other.getLibraryJarCommand())) return false;
+        break;
+      case 3:
+        if (!getAbiJarCommand()
+            .equals(other.getAbiJarCommand())) return false;
+        break;
+      case 0:
+      default:
+    }
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -174,6 +319,18 @@ private static final long serialVersionUID = 0L;
     if (hasBaseCommandParams()) {
       hash = (37 * hash) + BASECOMMANDPARAMS_FIELD_NUMBER;
       hash = (53 * hash) + getBaseCommandParams().hashCode();
+    }
+    switch (commandCase_) {
+      case 2:
+        hash = (37 * hash) + LIBRARYJARCOMMAND_FIELD_NUMBER;
+        hash = (53 * hash) + getLibraryJarCommand().hashCode();
+        break;
+      case 3:
+        hash = (37 * hash) + ABIJARCOMMAND_FIELD_NUMBER;
+        hash = (53 * hash) + getAbiJarCommand().hashCode();
+        break;
+      case 0:
+      default:
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -314,6 +471,8 @@ private static final long serialVersionUID = 0L;
         baseCommandParams_ = null;
         baseCommandParamsBuilder_ = null;
       }
+      commandCase_ = 0;
+      command_ = null;
       return this;
     }
 
@@ -345,6 +504,21 @@ private static final long serialVersionUID = 0L;
       } else {
         result.baseCommandParams_ = baseCommandParamsBuilder_.build();
       }
+      if (commandCase_ == 2) {
+        if (libraryJarCommandBuilder_ == null) {
+          result.command_ = command_;
+        } else {
+          result.command_ = libraryJarCommandBuilder_.build();
+        }
+      }
+      if (commandCase_ == 3) {
+        if (abiJarCommandBuilder_ == null) {
+          result.command_ = command_;
+        } else {
+          result.command_ = abiJarCommandBuilder_.build();
+        }
+      }
+      result.commandCase_ = commandCase_;
       onBuilt();
       return result;
     }
@@ -396,6 +570,19 @@ private static final long serialVersionUID = 0L;
       if (other.hasBaseCommandParams()) {
         mergeBaseCommandParams(other.getBaseCommandParams());
       }
+      switch (other.getCommandCase()) {
+        case LIBRARYJARCOMMAND: {
+          mergeLibraryJarCommand(other.getLibraryJarCommand());
+          break;
+        }
+        case ABIJARCOMMAND: {
+          mergeAbiJarCommand(other.getAbiJarCommand());
+          break;
+        }
+        case COMMAND_NOT_SET: {
+          break;
+        }
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -424,6 +611,21 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+    private int commandCase_ = 0;
+    private java.lang.Object command_;
+    public CommandCase
+        getCommandCase() {
+      return CommandCase.forNumber(
+          commandCase_);
+    }
+
+    public Builder clearCommand() {
+      commandCase_ = 0;
+      command_ = null;
+      onChanged();
+      return this;
+    }
+
 
     private com.facebook.buck.cd.model.kotlin.BaseCommandParams baseCommandParams_;
     private com.google.protobuf.SingleFieldBuilderV3<
@@ -540,6 +742,278 @@ private static final long serialVersionUID = 0L;
         baseCommandParams_ = null;
       }
       return baseCommandParamsBuilder_;
+    }
+
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.kotlin.LibraryJarCommand, com.facebook.buck.cd.model.kotlin.LibraryJarCommand.Builder, com.facebook.buck.cd.model.kotlin.LibraryJarCommandOrBuilder> libraryJarCommandBuilder_;
+    /**
+     * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+     */
+    public boolean hasLibraryJarCommand() {
+      return commandCase_ == 2;
+    }
+    /**
+     * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+     */
+    public com.facebook.buck.cd.model.kotlin.LibraryJarCommand getLibraryJarCommand() {
+      if (libraryJarCommandBuilder_ == null) {
+        if (commandCase_ == 2) {
+          return (com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_;
+        }
+        return com.facebook.buck.cd.model.kotlin.LibraryJarCommand.getDefaultInstance();
+      } else {
+        if (commandCase_ == 2) {
+          return libraryJarCommandBuilder_.getMessage();
+        }
+        return com.facebook.buck.cd.model.kotlin.LibraryJarCommand.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+     */
+    public Builder setLibraryJarCommand(com.facebook.buck.cd.model.kotlin.LibraryJarCommand value) {
+      if (libraryJarCommandBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        command_ = value;
+        onChanged();
+      } else {
+        libraryJarCommandBuilder_.setMessage(value);
+      }
+      commandCase_ = 2;
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+     */
+    public Builder setLibraryJarCommand(
+        com.facebook.buck.cd.model.kotlin.LibraryJarCommand.Builder builderForValue) {
+      if (libraryJarCommandBuilder_ == null) {
+        command_ = builderForValue.build();
+        onChanged();
+      } else {
+        libraryJarCommandBuilder_.setMessage(builderForValue.build());
+      }
+      commandCase_ = 2;
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+     */
+    public Builder mergeLibraryJarCommand(com.facebook.buck.cd.model.kotlin.LibraryJarCommand value) {
+      if (libraryJarCommandBuilder_ == null) {
+        if (commandCase_ == 2 &&
+            command_ != com.facebook.buck.cd.model.kotlin.LibraryJarCommand.getDefaultInstance()) {
+          command_ = com.facebook.buck.cd.model.kotlin.LibraryJarCommand.newBuilder((com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_)
+              .mergeFrom(value).buildPartial();
+        } else {
+          command_ = value;
+        }
+        onChanged();
+      } else {
+        if (commandCase_ == 2) {
+          libraryJarCommandBuilder_.mergeFrom(value);
+        }
+        libraryJarCommandBuilder_.setMessage(value);
+      }
+      commandCase_ = 2;
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+     */
+    public Builder clearLibraryJarCommand() {
+      if (libraryJarCommandBuilder_ == null) {
+        if (commandCase_ == 2) {
+          commandCase_ = 0;
+          command_ = null;
+          onChanged();
+        }
+      } else {
+        if (commandCase_ == 2) {
+          commandCase_ = 0;
+          command_ = null;
+        }
+        libraryJarCommandBuilder_.clear();
+      }
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+     */
+    public com.facebook.buck.cd.model.kotlin.LibraryJarCommand.Builder getLibraryJarCommandBuilder() {
+      return getLibraryJarCommandFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+     */
+    public com.facebook.buck.cd.model.kotlin.LibraryJarCommandOrBuilder getLibraryJarCommandOrBuilder() {
+      if ((commandCase_ == 2) && (libraryJarCommandBuilder_ != null)) {
+        return libraryJarCommandBuilder_.getMessageOrBuilder();
+      } else {
+        if (commandCase_ == 2) {
+          return (com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_;
+        }
+        return com.facebook.buck.cd.model.kotlin.LibraryJarCommand.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.kotlincd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.kotlin.LibraryJarCommand, com.facebook.buck.cd.model.kotlin.LibraryJarCommand.Builder, com.facebook.buck.cd.model.kotlin.LibraryJarCommandOrBuilder> 
+        getLibraryJarCommandFieldBuilder() {
+      if (libraryJarCommandBuilder_ == null) {
+        if (!(commandCase_ == 2)) {
+          command_ = com.facebook.buck.cd.model.kotlin.LibraryJarCommand.getDefaultInstance();
+        }
+        libraryJarCommandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.cd.model.kotlin.LibraryJarCommand, com.facebook.buck.cd.model.kotlin.LibraryJarCommand.Builder, com.facebook.buck.cd.model.kotlin.LibraryJarCommandOrBuilder>(
+                (com.facebook.buck.cd.model.kotlin.LibraryJarCommand) command_,
+                getParentForChildren(),
+                isClean());
+        command_ = null;
+      }
+      commandCase_ = 2;
+      onChanged();;
+      return libraryJarCommandBuilder_;
+    }
+
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.kotlin.AbiJarCommand, com.facebook.buck.cd.model.kotlin.AbiJarCommand.Builder, com.facebook.buck.cd.model.kotlin.AbiJarCommandOrBuilder> abiJarCommandBuilder_;
+    /**
+     * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+     */
+    public boolean hasAbiJarCommand() {
+      return commandCase_ == 3;
+    }
+    /**
+     * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+     */
+    public com.facebook.buck.cd.model.kotlin.AbiJarCommand getAbiJarCommand() {
+      if (abiJarCommandBuilder_ == null) {
+        if (commandCase_ == 3) {
+          return (com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_;
+        }
+        return com.facebook.buck.cd.model.kotlin.AbiJarCommand.getDefaultInstance();
+      } else {
+        if (commandCase_ == 3) {
+          return abiJarCommandBuilder_.getMessage();
+        }
+        return com.facebook.buck.cd.model.kotlin.AbiJarCommand.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+     */
+    public Builder setAbiJarCommand(com.facebook.buck.cd.model.kotlin.AbiJarCommand value) {
+      if (abiJarCommandBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        command_ = value;
+        onChanged();
+      } else {
+        abiJarCommandBuilder_.setMessage(value);
+      }
+      commandCase_ = 3;
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+     */
+    public Builder setAbiJarCommand(
+        com.facebook.buck.cd.model.kotlin.AbiJarCommand.Builder builderForValue) {
+      if (abiJarCommandBuilder_ == null) {
+        command_ = builderForValue.build();
+        onChanged();
+      } else {
+        abiJarCommandBuilder_.setMessage(builderForValue.build());
+      }
+      commandCase_ = 3;
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+     */
+    public Builder mergeAbiJarCommand(com.facebook.buck.cd.model.kotlin.AbiJarCommand value) {
+      if (abiJarCommandBuilder_ == null) {
+        if (commandCase_ == 3 &&
+            command_ != com.facebook.buck.cd.model.kotlin.AbiJarCommand.getDefaultInstance()) {
+          command_ = com.facebook.buck.cd.model.kotlin.AbiJarCommand.newBuilder((com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_)
+              .mergeFrom(value).buildPartial();
+        } else {
+          command_ = value;
+        }
+        onChanged();
+      } else {
+        if (commandCase_ == 3) {
+          abiJarCommandBuilder_.mergeFrom(value);
+        }
+        abiJarCommandBuilder_.setMessage(value);
+      }
+      commandCase_ = 3;
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+     */
+    public Builder clearAbiJarCommand() {
+      if (abiJarCommandBuilder_ == null) {
+        if (commandCase_ == 3) {
+          commandCase_ = 0;
+          command_ = null;
+          onChanged();
+        }
+      } else {
+        if (commandCase_ == 3) {
+          commandCase_ = 0;
+          command_ = null;
+        }
+        abiJarCommandBuilder_.clear();
+      }
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+     */
+    public com.facebook.buck.cd.model.kotlin.AbiJarCommand.Builder getAbiJarCommandBuilder() {
+      return getAbiJarCommandFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+     */
+    public com.facebook.buck.cd.model.kotlin.AbiJarCommandOrBuilder getAbiJarCommandOrBuilder() {
+      if ((commandCase_ == 3) && (abiJarCommandBuilder_ != null)) {
+        return abiJarCommandBuilder_.getMessageOrBuilder();
+      } else {
+        if (commandCase_ == 3) {
+          return (com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_;
+        }
+        return com.facebook.buck.cd.model.kotlin.AbiJarCommand.getDefaultInstance();
+      }
+    }
+    /**
+     * <code>.kotlincd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.kotlin.AbiJarCommand, com.facebook.buck.cd.model.kotlin.AbiJarCommand.Builder, com.facebook.buck.cd.model.kotlin.AbiJarCommandOrBuilder> 
+        getAbiJarCommandFieldBuilder() {
+      if (abiJarCommandBuilder_ == null) {
+        if (!(commandCase_ == 3)) {
+          command_ = com.facebook.buck.cd.model.kotlin.AbiJarCommand.getDefaultInstance();
+        }
+        abiJarCommandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.cd.model.kotlin.AbiJarCommand, com.facebook.buck.cd.model.kotlin.AbiJarCommand.Builder, com.facebook.buck.cd.model.kotlin.AbiJarCommandOrBuilder>(
+                (com.facebook.buck.cd.model.kotlin.AbiJarCommand) command_,
+                getParentForChildren(),
+                isClean());
+        command_ = null;
+      }
+      commandCase_ = 3;
+      onChanged();;
+      return abiJarCommandBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

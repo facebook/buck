@@ -35,9 +35,17 @@ import "cd/resources/proto/common.proto";
 
 message BuildKotlinCommand {
     BaseCommandParams baseCommandParams = 1;
+    oneof command {
+        LibraryJarCommand libraryJarCommand = 2;
+        AbiJarCommand abiJarCommand = 3;
+    }
 }
 
 message BaseCommandParams {
     bool hasAnnotationProcessing = 1;
     bool withDownwardApi = 2;
 }
+
+message LibraryJarCommand {}
+
+message AbiJarCommand {}
