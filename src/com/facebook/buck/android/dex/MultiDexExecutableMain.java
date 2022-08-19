@@ -63,6 +63,9 @@ public class MultiDexExecutableMain {
   @Option(name = "--files-to-dex-list")
   private String filesToDexList;
 
+  @Option(name = "--module", required = true)
+  private String module;
+
   @Option(name = "--android-jar")
   private String androidJar;
 
@@ -186,6 +189,7 @@ public class MultiDexExecutableMain {
 
       long secondaryDexCount = Files.list(rawSecondaryDexesDirPath).count();
       ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
+      metadataLines.add(String.format(".id %s", module));
       ImmutableList.Builder<Path> secondaryDexJarPaths = ImmutableList.builder();
       for (int i = 0; i < secondaryDexCount; i++) {
         String secondaryDexName = String.format("classes%s.dex", i + 2);
@@ -203,12 +207,16 @@ public class MultiDexExecutableMain {
         D8Utils.writeSecondaryDexJarAndMetadataFile(
             secondaryDexOutputJarPath, metadataPath, rawSecondaryDexPath, compression);
 
+        Path secondaryDexOutput;
+        if (compression.equals("xz")) {
+          secondaryDexOutput = doXzCompression(secondaryDexOutputJarPath);
+        } else {
+          secondaryDexOutput = secondaryDexOutputJarPath;
+        }
+
         metadataLines.add(
             D8Utils.getSecondaryDexJarMetadataString(
-                secondaryDexOutputJarPath, String.format("secondary.dex%d.Canary", i + 1)));
-        if (compression.equals("xz")) {
-          doXzCompression(secondaryDexOutputJarPath);
-        }
+                secondaryDexOutput, String.format("secondary.dex%d.Canary", i + 1)));
       }
 
       if (compression.equals("xzs")) {
@@ -219,7 +227,7 @@ public class MultiDexExecutableMain {
     }
   }
 
-  private void doXzCompression(Path secondaryDexOutputJarPath) throws IOException {
+  private Path doXzCompression(Path secondaryDexOutputJarPath) throws IOException {
     Path xzCompressedOutputJarPath =
         secondaryDexOutputJarPath.resolveSibling(secondaryDexOutputJarPath.getFileName() + ".xz");
 
@@ -233,6 +241,8 @@ public class MultiDexExecutableMain {
     }
 
     Files.delete(secondaryDexOutputJarPath);
+
+    return xzCompressedOutputJarPath;
   }
 
   private void doXzsCompression(Path secondaryDexSubdir, ImmutableList<Path> secondaryDexJarPaths)
