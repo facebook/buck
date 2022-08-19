@@ -68,7 +68,9 @@ public final class BuckModule implements Disposable {
   }
 
   public void projectClosed() {
-    projectClosed.set(true);
+    if (projectClosed != null) {
+      projectClosed.set(true);
+    }
     BuckClientManager.getOrCreateClient(mProject, mEventHandler).disconnectWithoutRetry();
     if (mBuckEventsConsumer != null) {
       mBuckEventsConsumer.detach();
@@ -133,7 +135,7 @@ public final class BuckModule implements Disposable {
                   }
                 }
               });
-      if (!projectClosed.get()) {
+      if (projectClosed != null && !projectClosed.get()) {
         // Tell the client that we got disconnected, but we can retry
         BuckClientManager.getOrCreateClient(mProject, mEventHandler).disconnectWithRetry();
       }
