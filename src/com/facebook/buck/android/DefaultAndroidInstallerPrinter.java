@@ -24,10 +24,18 @@ import java.util.function.Supplier;
 
 /** Android logger for buckv1 installs */
 public class DefaultAndroidInstallerPrinter implements AndroidInstallPrinter {
-  private final Supplier<ExecutionContext> contextSupplier;
+
+  private Ansi ansi;
+  private BuckEventBus buckEventBus;
+  private Supplier<ExecutionContext> contextSupplier;
 
   public DefaultAndroidInstallerPrinter(Supplier<ExecutionContext> contextSupplier) {
     this.contextSupplier = contextSupplier;
+  }
+
+  public DefaultAndroidInstallerPrinter(Ansi ansi, BuckEventBus buckEventBus) {
+    this.ansi = ansi;
+    this.buckEventBus = buckEventBus;
   }
 
   @Override
@@ -37,8 +45,7 @@ public class DefaultAndroidInstallerPrinter implements AndroidInstallPrinter {
 
   @Override
   public void printSuccess(String successMessage) {
-    Ansi ansi = contextSupplier.get().getAnsi();
-    getBuckEventBus().post(ConsoleEvent.info(ansi.asHighlightedSuccessText(successMessage)));
+    getBuckEventBus().post(ConsoleEvent.info(getAnsi().asHighlightedSuccessText(successMessage)));
   }
 
   @Override
@@ -46,7 +53,19 @@ public class DefaultAndroidInstallerPrinter implements AndroidInstallPrinter {
     getBuckEventBus().post(ConsoleEvent.severe(failureMessage));
   }
 
+  private Ansi getAnsi() {
+    if (ansi == null) {
+      ansi = contextSupplier.get().getAnsi();
+    }
+
+    return ansi;
+  }
+
   private BuckEventBus getBuckEventBus() {
-    return contextSupplier.get().getBuckEventBus();
+    if (buckEventBus == null) {
+      buckEventBus = contextSupplier.get().getBuckEventBus();
+    }
+
+    return buckEventBus;
   }
 }

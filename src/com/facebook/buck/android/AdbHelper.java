@@ -138,7 +138,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
     this.alwaysUseJavaAgent = alwaysUseJavaAgent;
     this.isZstdCompressionEnabled = isZstdCompressionEnabled;
-    nextAgentPort = new AtomicInteger(agentPortBase);
+    this.nextAgentPort = new AtomicInteger(agentPortBase);
   }
 
   @VisibleForTesting
@@ -273,6 +273,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       boolean quiet)
       throws InterruptedException {
     HasInstallableApk.ApkInfo apkInfo = hasInstallableApk.getApkInfo();
+    AbsPath rootPath = hasInstallableApk.getProjectFilesystem().getRootPath();
     String fullyQualifiedName = hasInstallableApk.getBuildTarget().getFullyQualifiedName();
 
     Optional<IsolatedExopackageInfo> optionalIsolatedExopackageInfo = Optional.empty();
@@ -283,6 +284,9 @@ public class AdbHelper implements AndroidDevicesHelper {
           exopackageInfo.toIsolatedExopackageInfo(pathResolver);
       optionalIsolatedExopackageInfo = Optional.of(isolatedExopackageInfo);
     }
+
+    Optional<BuckEventBus> optionalBuckEventBus =
+        Optional.of(contextSupplier.get().getBuckEventBus());
 
     HasInstallableApk.IsolatedApkInfo isolatedApkInfo =
         HasInstallableApk.toIsolatedApkInfo(pathResolver, apkInfo);
@@ -336,8 +340,13 @@ public class AdbHelper implements AndroidDevicesHelper {
 
       if (optionalIsolatedExopackageInfo.isPresent()) {
         IsolatedExopackageInfo isolatedExopackageInfo = optionalIsolatedExopackageInfo.get();
-        AbsPath rootPath = hasInstallableApk.getProjectFilesystem().getRootPath();
-        installApkExopackage(rootPath, isolatedExopackageInfo, isolatedApkInfo, manifest, quiet);
+        installApkExopackage(
+            rootPath,
+            isolatedExopackageInfo,
+            isolatedApkInfo,
+            manifest,
+            quiet,
+            optionalBuckEventBus);
       } else {
         installApkDirectly(installViaSd, quiet, isolatedApkInfo, fullyQualifiedName);
       }
@@ -773,14 +782,16 @@ public class AdbHelper implements AndroidDevicesHelper {
       IsolatedExopackageInfo isolatedExopackageInfo,
       HasInstallableApk.IsolatedApkInfo isolatedApkInfo,
       String manifest,
-      boolean quiet)
+      boolean quiet,
+      Optional<BuckEventBus> optionalBuckEventBus)
       throws InterruptedException {
     adbCall(
         "install exopackage apk",
         device -> {
           new ExopackageInstaller(
                   isolatedExopackageInfo,
-                  contextSupplier.get().getBuckEventBus(),
+                  optionalBuckEventBus,
+                  androidPrinter,
                   rootPath,
                   manifest,
                   device,
