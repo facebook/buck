@@ -24,14 +24,15 @@ import java.util.Optional;
 
 public abstract class InstallEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
-  private final BuildTarget buildTarget;
 
-  protected InstallEvent(EventKey eventKey, BuildTarget buildTarget) {
+  private final String buildTarget;
+
+  protected InstallEvent(EventKey eventKey, String buildTarget) {
     super(eventKey);
     this.buildTarget = buildTarget;
   }
 
-  public BuildTarget getBuildTarget() {
+  public String getBuildTarget() {
     return buildTarget;
   }
 
@@ -42,10 +43,14 @@ public abstract class InstallEvent extends AbstractBuckEvent
 
   @Override
   protected String getValueString() {
-    return buildTarget.getFullyQualifiedName();
+    return buildTarget;
   }
 
   public static Started started(BuildTarget buildTarget) {
+    return started(buildTarget.getFullyQualifiedName());
+  }
+
+  public static Started started(String buildTarget) {
     return new Started(buildTarget);
   }
 
@@ -65,7 +70,8 @@ public abstract class InstallEvent extends AbstractBuckEvent
   }
 
   public static class Started extends InstallEvent {
-    protected Started(BuildTarget buildTarget) {
+
+    protected Started(String buildTarget) {
       super(EventKey.unique(), buildTarget);
     }
 
@@ -95,7 +101,7 @@ public abstract class InstallEvent extends AbstractBuckEvent
         Optional<String> packageName,
         ImmutableMap<String, String> deviceInfo,
         Optional<Integer> adbPort) {
-      super(started.getEventKey(), started.getBuildTarget());
+      super(started.getEventKey(), started.getValueString());
       this.success = success;
       this.pid = pid.orElse(invalidPid);
       this.packageName = packageName.orElse("");

@@ -41,7 +41,6 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.util.Console;
@@ -82,7 +81,7 @@ import javax.annotation.Nullable;
 /** Helper for executing commands over ADB, especially for multiple devices. */
 public class AdbHelper implements AndroidDevicesHelper {
 
-  private static final Logger log = Logger.get(AdbHelper.class);
+  private static final Logger LOG = Logger.get(AdbHelper.class);
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
@@ -273,10 +272,22 @@ public class AdbHelper implements AndroidDevicesHelper {
       boolean installViaSd,
       boolean quiet)
       throws InterruptedException {
-    HasInstallableApk.IsolatedApkInfo isolatedApkInfo =
-        HasInstallableApk.toIsolatedApkInfo(pathResolver, hasInstallableApk.getApkInfo());
+    HasInstallableApk.ApkInfo apkInfo = hasInstallableApk.getApkInfo();
+    String fullyQualifiedName = hasInstallableApk.getBuildTarget().getFullyQualifiedName();
 
-    InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
+    Optional<IsolatedExopackageInfo> optionalIsolatedExopackageInfo = Optional.empty();
+    Optional<ExopackageInfo> optionalExopackageInfo = apkInfo.getExopackageInfo();
+    if (optionalExopackageInfo.isPresent()) {
+      ExopackageInfo exopackageInfo = optionalExopackageInfo.get();
+      IsolatedExopackageInfo isolatedExopackageInfo =
+          exopackageInfo.toIsolatedExopackageInfo(pathResolver);
+      optionalIsolatedExopackageInfo = Optional.of(isolatedExopackageInfo);
+    }
+
+    HasInstallableApk.IsolatedApkInfo isolatedApkInfo =
+        HasInstallableApk.toIsolatedApkInfo(pathResolver, apkInfo);
+
+    InstallEvent.Started started = InstallEvent.started(fullyQualifiedName);
     if (!quiet) {
       getBuckEventBus().post(started);
     }
@@ -323,20 +334,12 @@ public class AdbHelper implements AndroidDevicesHelper {
           },
           true);
 
-      Optional<ExopackageInfo> optionalExopackageInfo =
-          hasInstallableApk.getApkInfo().getExopackageInfo();
-      if (optionalExopackageInfo.isPresent()) {
-        ExopackageInfo exopackageInfo = optionalExopackageInfo.get();
-        IsolatedExopackageInfo isolatedExopackageInfo =
-            exopackageInfo.toIsolatedExopackageInfo(pathResolver);
-        installApkExopackage(
-            hasInstallableApk.getProjectFilesystem(),
-            isolatedExopackageInfo,
-            isolatedApkInfo,
-            manifest,
-            quiet);
+      if (optionalIsolatedExopackageInfo.isPresent()) {
+        IsolatedExopackageInfo isolatedExopackageInfo = optionalIsolatedExopackageInfo.get();
+        AbsPath rootPath = hasInstallableApk.getProjectFilesystem().getRootPath();
+        installApkExopackage(rootPath, isolatedExopackageInfo, isolatedApkInfo, manifest, quiet);
       } else {
-        installApkDirectly(hasInstallableApk, installViaSd, quiet, isolatedApkInfo);
+        installApkDirectly(installViaSd, quiet, isolatedApkInfo, fullyQualifiedName);
       }
       success.set(true);
     }
@@ -766,7 +769,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkExopackage(
-      ProjectFilesystem projectFilesystem,
+      AbsPath rootPath,
       IsolatedExopackageInfo isolatedExopackageInfo,
       HasInstallableApk.IsolatedApkInfo isolatedApkInfo,
       String manifest,
@@ -778,7 +781,7 @@ public class AdbHelper implements AndroidDevicesHelper {
           new ExopackageInstaller(
                   isolatedExopackageInfo,
                   contextSupplier.get().getBuckEventBus(),
-                  projectFilesystem,
+                  rootPath,
                   manifest,
                   device,
                   skipMetadataIfNoInstalls)
@@ -789,14 +792,14 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkDirectly(
-      HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet,
-      HasInstallableApk.IsolatedApkInfo isolatedApkInfo)
+      HasInstallableApk.IsolatedApkInfo isolatedApkInfo,
+      String buildTarget)
       throws InterruptedException {
     File apk = isolatedApkInfo.getApkPath().toFile();
     adbCall(
-        String.format("install apk %s", hasInstallableApk.getBuildTarget().toString()),
+        String.format("install apk %s", buildTarget),
         (device) -> device.installApkOnDevice(apk, installViaSd, quiet),
         quiet);
   }
@@ -861,7 +864,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         // ADB was already initialized, we're fine, so just ignore.
       }
 
-      log.debug("Using %s to create AndroidDebugBridge", adbExecutable);
+      LOG.debug("Using %s to create AndroidDebugBridge", adbExecutable);
       this.bridge = AndroidDebugBridge.createBridge(adbExecutable, false);
       return this.bridge != null;
     }

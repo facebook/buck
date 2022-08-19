@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -30,12 +30,11 @@ import java.util.Map;
 public class DexExoHelper implements ExoHelper {
   @VisibleForTesting public static final Path SECONDARY_DEX_DIR = Paths.get("secondary-dex");
 
-  private final ProjectFilesystem projectFilesystem;
+  private final AbsPath rootPath;
   private final IsolatedExopackageInfo.IsolatedDexInfo dexInfo;
 
-  DexExoHelper(
-      ProjectFilesystem projectFilesystem, IsolatedExopackageInfo.IsolatedDexInfo dexInfo) {
-    this.projectFilesystem = projectFilesystem;
+  DexExoHelper(AbsPath rootPath, IsolatedExopackageInfo.IsolatedDexInfo dexInfo) {
+    this.rootPath = rootPath;
     this.dexInfo = dexInfo;
   }
 
@@ -74,7 +73,7 @@ public class DexExoHelper implements ExoHelper {
   private ImmutableMap<String, Path> getRequiredDexFiles() throws IOException {
     ImmutableMultimap<String, Path> multimap =
         ExopackageInstaller.parseExopackageInfoMetadata(
-            dexInfo.getMetadata().getPath(), dexInfo.getDirectory().getPath(), projectFilesystem);
+            dexInfo.getMetadata().getPath(), dexInfo.getDirectory().getPath(), rootPath);
     // Convert multimap to a map, because every key should have only one value.
     ImmutableMap.Builder<String, Path> builder = ImmutableMap.builder();
     for (Map.Entry<String, Path> entry : multimap.entries()) {

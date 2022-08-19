@@ -434,7 +434,7 @@ public class ProjectFilesystemUtils {
     if (Files.isRegularFile(fileToRead)) {
       String contents;
       try {
-        contents = new String(Files.readAllBytes(fileToRead), StandardCharsets.UTF_8);
+        contents = Files.readString(fileToRead);
       } catch (IOException e) {
         // Alternatively, we could return Optional.empty(), though something seems suspicious if we
         // have already verified that fileToRead is a file and then we cannot read it.

@@ -18,7 +18,6 @@ package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -40,15 +39,15 @@ import java.util.function.Supplier;
 public class NativeExoHelper implements ExoHelper {
   @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
   private final Supplier<List<String>> abiSupplier;
-  private final ProjectFilesystem projectFilesystem;
+  private final AbsPath rootPath;
   private final IsolatedExopackageInfo.IsolatedNativeLibsInfo nativeLibsInfo;
 
   NativeExoHelper(
       Supplier<List<String>> abiSupplier,
-      ProjectFilesystem projectFilesystem,
+      AbsPath rootPath,
       IsolatedExopackageInfo.IsolatedNativeLibsInfo nativeLibsInfo) {
     this.abiSupplier = abiSupplier;
-    this.projectFilesystem = projectFilesystem;
+    this.rootPath = rootPath;
     this.nativeLibsInfo = nativeLibsInfo;
   }
 
@@ -100,7 +99,7 @@ public class NativeExoHelper implements ExoHelper {
 
   private ImmutableMultimap<String, Path> getAllLibraries() throws IOException {
     return ExopackageInstaller.parseExopackageInfoMetadata(
-        nativeLibsInfo.getMetadata(), nativeLibsInfo.getDirectory(), projectFilesystem);
+        nativeLibsInfo.getMetadata(), nativeLibsInfo.getDirectory(), rootPath);
   }
 
   private ImmutableMap<String, ImmutableMultimap<String, Path>> getFilesByHashForAbis()

@@ -23,6 +23,7 @@ import com.facebook.buck.android.exopackage.IsolatedExopackageInfo;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -105,11 +106,15 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    AbsPath rootPath = projectFilesystem.getRootPath();
+
     return ImmutableList.of(
         new AbstractExecutionStep("installing_exo_files") {
           @Override
           public StepExecutionResult execute(StepExecutionContext context)
               throws IOException, InterruptedException {
+
             trigger.verify(context);
             SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
             String packageName =
@@ -117,7 +122,7 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
                     sourcePathResolver.getAbsolutePath(manifestPath).getPath());
             ImmutableSortedMap<String, ImmutableSortedSet<Path>> contents =
                 ExopackageDeviceDirectoryLister.deserializeDirectoryContentsForPackage(
-                    getProjectFilesystem(),
+                    projectFilesystem,
                     sourcePathResolver.getCellUnsafeRelPath(deviceExoContents).getPath(),
                     packageName);
             context
@@ -133,7 +138,7 @@ public class ExopackageFilesInstaller extends AbstractBuildRule {
                       new ExopackageInstaller(
                               isolatedExopackageInfo,
                               context.getBuckEventBus(),
-                              getProjectFilesystem(),
+                              rootPath,
                               packageName,
                               device,
                               adbConfig.getSkipInstallMetadata())

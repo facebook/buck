@@ -27,6 +27,8 @@ import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -43,6 +45,8 @@ import org.junit.rules.ExpectedException;
 public class ExopackageInstallerTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Rule public final TemporaryPaths tmpDir = new TemporaryPaths();
 
   @Test
   public void testParsePathAndPackageInfo() {
@@ -180,26 +184,29 @@ public class ExopackageInstallerTest {
     thrown.expectMessage("Illegal line in metadata file: " + illegalLine);
 
     Path baseDir = Paths.get("basedir");
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.writeLinesToPath(
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(tmpDir.getRoot());
+    AbsPath rootPath = filesystem.getRootPath();
+    Path metadataPath = Paths.get("metadata.txt");
+    ProjectFilesystemUtils.writeLinesToPath(
+        rootPath,
         ImmutableList.of(
             ".some_config",
             ".more_config with_spaces",
             "filename.jar aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "dir/anotherfile.jar bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
-        Paths.get("metadata.txt"));
+        metadataPath);
 
     assertEquals(
         ImmutableMultimap.of(
             Strings.repeat("a", 40), Paths.get("basedir/filename.jar"),
             Strings.repeat("b", 40), Paths.get("basedir/dir/anotherfile.jar")),
-        ExopackageInstaller.parseExopackageInfoMetadata(
-            Paths.get("metadata.txt"), baseDir, filesystem));
+        ExopackageInstaller.parseExopackageInfoMetadata(metadataPath, baseDir, rootPath));
 
-    filesystem.writeLinesToPath(
+    ProjectFilesystemUtils.writeLinesToPath(
+        rootPath,
         ImmutableList.of("filename.jar aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", illegalLine),
-        Paths.get("metadata.txt"));
+        metadataPath);
 
-    ExopackageInstaller.parseExopackageInfoMetadata(Paths.get("metadata.txt"), baseDir, filesystem);
+    ExopackageInstaller.parseExopackageInfoMetadata(metadataPath, baseDir, rootPath);
   }
 }

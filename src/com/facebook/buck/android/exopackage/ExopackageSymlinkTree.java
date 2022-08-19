@@ -57,11 +57,12 @@ public class ExopackageSymlinkTree {
       throws IOException {
 
     IsolatedExopackageInfo isolatedExopackageInfo = exoInfo.toIsolatedExopackageInfo(pathResolver);
+    AbsPath filesystemRootPath = filesystem.getRootPath();
 
     // Symlink the secondary dex files
     Optional<IsolatedExopackageInfo.IsolatedDexInfo> dexInfo = isolatedExopackageInfo.getDexInfo();
     if (dexInfo.isPresent()) {
-      DexExoHelper dexExoHelper = new DexExoHelper(filesystem, dexInfo.get());
+      DexExoHelper dexExoHelper = new DexExoHelper(filesystemRootPath, dexInfo.get());
       linkFiles(rootPath, dexExoHelper.getFilesToInstall(), filesystem);
       writeMetadata(rootPath, dexExoHelper.getMetadataToInstall(), filesystem);
     }
@@ -74,9 +75,9 @@ public class ExopackageSymlinkTree {
       AbsPath metadataPath = isolatedNativeLibsInfo.getMetadata();
       // We don't yet know which device is our installation target, so we need to link all abis
       // which were built for the device
-      List<String> abis = new ArrayList<>(detectAbis(metadataPath, filesystem));
+      List<String> abis = new ArrayList<>(detectAbis(metadataPath, filesystemRootPath));
       NativeExoHelper nativeExoHelper =
-          new NativeExoHelper(() -> abis, filesystem, isolatedNativeLibsInfo);
+          new NativeExoHelper(() -> abis, filesystemRootPath, isolatedNativeLibsInfo);
       linkFiles(rootPath, nativeExoHelper.getFilesToInstall(), filesystem);
       writeMetadata(rootPath, nativeExoHelper.getMetadataToInstall(), filesystem);
     }
@@ -86,7 +87,7 @@ public class ExopackageSymlinkTree {
         isolatedExopackageInfo.getResourcesInfo();
     if (resourcesInfo.isPresent()) {
       ResourcesExoHelper resourcesExoHelper =
-          new ResourcesExoHelper(filesystem, resourcesInfo.get());
+          new ResourcesExoHelper(filesystemRootPath, resourcesInfo.get());
       linkFiles(rootPath, resourcesExoHelper.getFilesToInstall(), filesystem);
       writeMetadata(rootPath, resourcesExoHelper.getMetadataToInstall(), filesystem);
     }
@@ -95,7 +96,7 @@ public class ExopackageSymlinkTree {
     Optional<ImmutableList<IsolatedExopackageInfo.IsolatedDexInfo>> moduleInfo =
         isolatedExopackageInfo.getModuleInfo();
     if (moduleInfo.isPresent()) {
-      ModuleExoHelper moduleExoHelper = new ModuleExoHelper(filesystem, moduleInfo.get());
+      ModuleExoHelper moduleExoHelper = new ModuleExoHelper(filesystemRootPath, moduleInfo.get());
       linkFiles(rootPath, moduleExoHelper.getFilesToInstall(), filesystem);
       writeMetadata(rootPath, moduleExoHelper.getMetadataToInstall(), filesystem);
     }
@@ -151,12 +152,12 @@ public class ExopackageSymlinkTree {
    *
    * @return a list of the ABI values that were found in the exopackage data for our app
    */
-  private static ImmutableList<String> detectAbis(
-      AbsPath metadataPath, ProjectFilesystem filesystem) throws IOException {
+  private static ImmutableList<String> detectAbis(AbsPath metadataPath, AbsPath filesystemRootPath)
+      throws IOException {
     // Each shared-object referenced by the metadata is contained within a folder named with the abi
     // so we extract the set of parent folder names for all the objects.
     return ExopackageInstaller.parseExopackageInfoMetadata(
-            metadataPath.getPath(), MorePaths.emptyOf(metadataPath.getPath()), filesystem)
+            metadataPath.getPath(), MorePaths.emptyOf(metadataPath.getPath()), filesystemRootPath)
         .values().stream()
         .map(path -> path.getParent().getFileName().toString())
         .collect(ImmutableSet.toImmutableSet())

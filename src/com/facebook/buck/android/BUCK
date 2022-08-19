@@ -389,6 +389,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android/agent/util:util",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/io/filesystem/impl:utils",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules/impl:impl",

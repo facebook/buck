@@ -569,7 +569,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "install",
         ChromeTraceData.Phase.END,
         ImmutableMap.of(
-            "target", finished.getBuildTarget().getFullyQualifiedName(),
+            "target", finished.getBuildTarget(),
             "success", Boolean.toString(finished.isSuccess())),
         finished);
   }

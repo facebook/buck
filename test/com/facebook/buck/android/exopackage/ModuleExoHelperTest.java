@@ -57,7 +57,7 @@ public class ModuleExoHelperTest {
 
     moduleExoHelper =
         new ModuleExoHelper(
-            filesystem,
+            filesystem.getRootPath(),
             ImmutableList.of(
                 IsolatedExopackageInfo.IsolatedDexInfo.of(
                     AbsPath.of(filesystem.resolve(metadataOutputPath)),

@@ -25,7 +25,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -74,7 +74,7 @@ public class ExopackageInstaller {
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
 
   private final IsolatedExopackageInfo exoInfo;
-  private final ProjectFilesystem projectFilesystem;
+  private final AbsPath rootPath;
   private final BuckEventBus eventBus;
   private final AndroidDevice device;
   private final String packageName;
@@ -84,12 +84,12 @@ public class ExopackageInstaller {
   public ExopackageInstaller(
       IsolatedExopackageInfo exoInfo,
       BuckEventBus eventBus,
-      ProjectFilesystem projectFilesystem,
+      AbsPath rootPath,
       String packageName,
       AndroidDevice device,
       boolean skipMetadataIfNoInstalls) {
     this.exoInfo = exoInfo;
-    this.projectFilesystem = projectFilesystem;
+    this.rootPath = rootPath;
     this.eventBus = eventBus;
     this.device = device;
     this.packageName = packageName;
@@ -148,7 +148,7 @@ public class ExopackageInstaller {
 
     Optional<IsolatedExopackageInfo.IsolatedDexInfo> dexInfo = exoInfo.getDexInfo();
     if (dexInfo.isPresent()) {
-      DexExoHelper helper = new DexExoHelper(projectFilesystem, dexInfo.get());
+      DexExoHelper helper = new DexExoHelper(rootPath, dexInfo.get());
       addPaths(helper, wantedPaths);
     }
 
@@ -164,7 +164,7 @@ public class ExopackageInstaller {
                   throw new HumanReadableException("Unable to communicate with device", e);
                 }
               },
-              projectFilesystem,
+              rootPath,
               nativeLibsInfo.get());
       addPaths(helper, wantedPaths);
     }
@@ -172,14 +172,14 @@ public class ExopackageInstaller {
     Optional<IsolatedExopackageInfo.IsolatedResourcesInfo> resourcesInfo =
         exoInfo.getResourcesInfo();
     if (resourcesInfo.isPresent()) {
-      ResourcesExoHelper helper = new ResourcesExoHelper(projectFilesystem, resourcesInfo.get());
+      ResourcesExoHelper helper = new ResourcesExoHelper(rootPath, resourcesInfo.get());
       addPaths(helper, wantedPaths);
     }
 
     Optional<ImmutableList<IsolatedExopackageInfo.IsolatedDexInfo>> moduleInfo =
         exoInfo.getModuleInfo();
     if (moduleInfo.isPresent()) {
-      ModuleExoHelper helper = new ModuleExoHelper(projectFilesystem, moduleInfo.get());
+      ModuleExoHelper helper = new ModuleExoHelper(rootPath, moduleInfo.get());
       addPaths(helper, wantedPaths);
     }
 
@@ -194,7 +194,7 @@ public class ExopackageInstaller {
 
     Optional<IsolatedExopackageInfo.IsolatedDexInfo> dexInfo = exoInfo.getDexInfo();
     if (dexInfo.isPresent()) {
-      DexExoHelper dexExoHelper = new DexExoHelper(projectFilesystem, dexInfo.get());
+      DexExoHelper dexExoHelper = new DexExoHelper(rootPath, dexInfo.get());
       installMissingFiles(presentFiles, dexExoHelper, metadata);
     }
 
@@ -210,7 +210,7 @@ public class ExopackageInstaller {
                   throw new HumanReadableException("Unable to communicate with device", e);
                 }
               },
-              projectFilesystem,
+              rootPath,
               nativeLibsInfo.get());
       installMissingFiles(presentFiles, nativeExoHelper, metadata);
     }
@@ -218,15 +218,14 @@ public class ExopackageInstaller {
     Optional<IsolatedExopackageInfo.IsolatedResourcesInfo> resourcesInfo =
         exoInfo.getResourcesInfo();
     if (resourcesInfo.isPresent()) {
-      ResourcesExoHelper resourcesExoHelper =
-          new ResourcesExoHelper(projectFilesystem, resourcesInfo.get());
+      ResourcesExoHelper resourcesExoHelper = new ResourcesExoHelper(rootPath, resourcesInfo.get());
       installMissingFiles(presentFiles, resourcesExoHelper, metadata);
     }
 
     Optional<ImmutableList<IsolatedExopackageInfo.IsolatedDexInfo>> moduleInfo =
         exoInfo.getModuleInfo();
     if (moduleInfo.isPresent()) {
-      ModuleExoHelper moduleExoHelper = new ModuleExoHelper(projectFilesystem, moduleInfo.get());
+      ModuleExoHelper moduleExoHelper = new ModuleExoHelper(rootPath, moduleInfo.get());
       installMissingFiles(presentFiles, moduleExoHelper, metadata);
     }
 
@@ -372,7 +371,7 @@ public class ExopackageInstaller {
               .collect(
                   Collectors.toMap(
                       entry -> dataRoot.resolve(entry.getKey()),
-                      entry -> projectFilesystem.resolve(entry.getValue())));
+                      entry -> rootPath.resolve(entry.getValue()).getPath()));
       // Install the files.
       device.installFiles(filesType, installPaths);
     }
@@ -400,9 +399,9 @@ public class ExopackageInstaller {
    */
   @VisibleForTesting
   public static ImmutableMultimap<String, Path> parseExopackageInfoMetadata(
-      Path metadataTxt, Path resolvePathAgainst, ProjectFilesystem filesystem) throws IOException {
+      Path metadataTxt, Path resolvePathAgainst, AbsPath rootPath) throws IOException {
     ImmutableMultimap.Builder<String, Path> builder = ImmutableMultimap.builder();
-    for (String line : filesystem.readLines(metadataTxt)) {
+    for (String line : ProjectFilesystemUtils.readLines(rootPath, metadataTxt)) {
       // ignore lines that start with '.'
       if (line.startsWith(".")) {
         continue;
@@ -417,9 +416,8 @@ public class ExopackageInstaller {
   }
 
   public static ImmutableMultimap<String, Path> parseExopackageInfoMetadata(
-      AbsPath metadataTxt, AbsPath resolvePathAgainst, ProjectFilesystem filesystem)
-      throws IOException {
+      AbsPath metadataTxt, AbsPath resolvePathAgainst, AbsPath rootPath) throws IOException {
     return parseExopackageInfoMetadata(
-        metadataTxt.getPath(), resolvePathAgainst.getPath(), filesystem);
+        metadataTxt.getPath(), resolvePathAgainst.getPath(), rootPath);
   }
 }

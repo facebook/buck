@@ -688,7 +688,7 @@ public class ExopackageInstallerIntegrationTest {
       new ExopackageInstaller(
               exopackageInfo.toIsolatedExopackageInfo(pathResolver),
               executionContext.getBuckEventBus(),
-              filesystem,
+              filesystem.getRootPath(),
               FAKE_PACKAGE_NAME,
               device,
               /* skipMetadataIfNoInstalls= */ false)

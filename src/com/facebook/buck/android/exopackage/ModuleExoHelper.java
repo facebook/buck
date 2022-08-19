@@ -17,7 +17,6 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -35,19 +34,18 @@ import java.util.stream.Collectors;
  * files when exopackage-for-modules is enabled
  */
 public class ModuleExoHelper implements ExoHelper {
+
   @VisibleForTesting public static final Path MODULAR_DEX_DIR = Paths.get("modular-dex");
-  private final ProjectFilesystem projectFilesystem;
+  private final AbsPath rootPath;
   private final List<IsolatedExopackageInfo.IsolatedDexInfo> dexInfoForModules;
 
   /**
-   * @param projectFilesystem the filesystem owning buck-out
    * @param dexInfoForModules a list of metadata/dex-output-dirs for the modules that we want to
    *     exo-install
    */
   ModuleExoHelper(
-      ProjectFilesystem projectFilesystem,
-      List<IsolatedExopackageInfo.IsolatedDexInfo> dexInfoForModules) {
-    this.projectFilesystem = projectFilesystem;
+      AbsPath rootPath, List<IsolatedExopackageInfo.IsolatedDexInfo> dexInfoForModules) {
+    this.rootPath = rootPath;
     this.dexInfoForModules = dexInfoForModules;
   }
 
@@ -116,7 +114,7 @@ public class ModuleExoHelper implements ExoHelper {
       }
       ImmutableMultimap<String, Path> multimap =
           ExopackageInstaller.parseExopackageInfoMetadata(
-              metadataFile, dexInfo.getDirectory(), projectFilesystem);
+              metadataFile, dexInfo.getDirectory(), rootPath);
       for (Map.Entry<String, Path> entry : multimap.entries()) {
         builder.put(entry);
       }

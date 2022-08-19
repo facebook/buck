@@ -589,6 +589,7 @@ public class AdbHelperTest {
         /* alwaysUseJavaAgent */ true,
         /* isZstdCompressionEnabled */ true,
         AGENT_PORT_BASE) {
+      @Override
       AndroidDebugBridgeFacade createAdb() {
         return facade;
       }
