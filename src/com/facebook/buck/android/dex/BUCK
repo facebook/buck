@@ -65,6 +65,7 @@ buck_java_library(
     ],
     deps = [
         ":dex",
+        "//src/com/facebook/buck/android/apkmodule:module-only",
         "//src/com/facebook/buck/android/proguard:translator",
         "//third-party/java/args4j:args4j",
         "//third-party/java/d8:d8",

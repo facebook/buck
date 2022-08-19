@@ -191,8 +191,7 @@ public class D8ExecutableMain {
           Files.write(
               Paths.get(secondaryDexMetadataLine),
               Collections.singletonList(
-                  D8Utils.getSecondaryDexJarMetadataString(
-                      outputPath, secondaryDexCanaryClassName)));
+                  D8Utils.getSecondaryDexMetadataString(outputPath, secondaryDexCanaryClassName)));
         } else {
           Preconditions.checkState(
               outputDex.endsWith(".dex"),

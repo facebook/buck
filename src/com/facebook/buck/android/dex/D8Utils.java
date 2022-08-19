@@ -175,15 +175,14 @@ public class D8Utils {
    * The secondary dex directory contains a single metadata.txt file which has one line per
    * secondary dex, consisting of:
    *
-   * <p><secondary dex jar file name> <hash of secondary dex jar> <canary class>
+   * <p><secondary dex file name> <sha1 hash of secondary dex> <canary class>
    */
-  static String getSecondaryDexJarMetadataString(
-      Path secondaryDexOutputJarPath, String canaryClassName) throws IOException {
+  static String getSecondaryDexMetadataString(Path secondaryDexPath, String canaryClassName)
+      throws IOException {
     return String.format(
         "%s %s %s",
-        secondaryDexOutputJarPath.getFileName(),
-        com.google.common.io.Files.hash(secondaryDexOutputJarPath.toFile(), Hashing.sha1())
-            .toString(),
+        secondaryDexPath.getFileName(),
+        com.google.common.io.Files.hash(secondaryDexPath.toFile(), Hashing.sha1()).toString(),
         canaryClassName);
   }
 

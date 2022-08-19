@@ -17,6 +17,7 @@
 package com.facebook.buck.android.dex;
 
 import com.android.tools.r8.CompilationFailedException;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.proguard.ProguardTranslatorFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -172,24 +173,26 @@ public class MultiDexExecutableMain {
 
     Path secondaryDexOutputDir = Paths.get(secondaryDexOutputDirString);
     Files.createDirectories(secondaryDexOutputDir);
+    Path secondaryDexSubdir = secondaryDexOutputDir.resolve(SECONDARY_DEX_SUBDIR);
+    Files.createDirectories(secondaryDexSubdir);
+
+    long secondaryDexCount = Files.list(rawSecondaryDexesDirPath).count();
+    ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
+    metadataLines.add(String.format(".id %s", module));
 
     if (compression.equals("raw")) {
-      Files.list(rawSecondaryDexesDirPath)
-          .forEach(
-              path -> {
-                try {
-                  Files.move(path, secondaryDexOutputDir.resolve(path.getFileName()));
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
-                }
-              });
+      if (APKModule.isRootModule(module)) {
+        metadataLines.add(".root_relative");
+      }
+      for (int i = 0; i < secondaryDexCount; i++) {
+        String secondaryDexName = String.format("classes%s.dex", i + 2);
+        Path movedDex = secondaryDexOutputDir.resolve(secondaryDexName);
+        Files.move(rawSecondaryDexesDirPath.resolve(secondaryDexName), movedDex);
+        metadataLines.add(
+            D8Utils.getSecondaryDexMetadataString(
+                movedDex, String.format("secondary.dex%d.Canary", i + 1)));
+      }
     } else {
-      Path secondaryDexSubdir = secondaryDexOutputDir.resolve(SECONDARY_DEX_SUBDIR);
-      Files.createDirectories(secondaryDexSubdir);
-
-      long secondaryDexCount = Files.list(rawSecondaryDexesDirPath).count();
-      ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
-      metadataLines.add(String.format(".id %s", module));
       ImmutableList.Builder<Path> secondaryDexJarPaths = ImmutableList.builder();
       for (int i = 0; i < secondaryDexCount; i++) {
         String secondaryDexName = String.format("classes%s.dex", i + 2);
@@ -215,16 +218,16 @@ public class MultiDexExecutableMain {
         }
 
         metadataLines.add(
-            D8Utils.getSecondaryDexJarMetadataString(
+            D8Utils.getSecondaryDexMetadataString(
                 secondaryDexOutput, String.format("secondary.dex%d.Canary", i + 1)));
       }
 
       if (compression.equals("xzs")) {
         doXzsCompression(secondaryDexSubdir, secondaryDexJarPaths.build());
       }
-
-      Files.write(secondaryDexSubdir.resolve("metadata.txt"), metadataLines.build());
     }
+
+    Files.write(secondaryDexSubdir.resolve("metadata.txt"), metadataLines.build());
   }
 
   private Path doXzCompression(Path secondaryDexOutputJarPath) throws IOException {
