@@ -88,12 +88,12 @@ public class D8ExecutableMain {
    *
    * <p>jar:<size of secondary dex jar (in bytes)> dex:<size of uncompressed dex file (in bytes)>
    *
-   * <p>It also contains a metadata.txt file, which consists on N lines, one for each secondary dex
-   * jar. Those lines consist of:
+   * <p>When using jar or raw compression, it also contains a metadata.txt file, which consists of N
+   * lines, one for each secondary dex file. Those lines consist of:
    *
-   * <p><secondary dex jar file name> <hash of secondary dex jar> <canary class>
+   * <p><secondary dex file name> <sha1 hash of secondary dex> <canary class>
    *
-   * <p>We write the line that needs to be added to metadata.txt for this secondary dex jar to
+   * <p>We write the line that needs to be added to metadata.txt for this secondary dex to
    * secondaryDexMetadataLine, and we use the secondaryDexCanaryClassName for the <canary class>.
    */
   @Option(name = "--secondary-dex-compression")
@@ -185,13 +185,6 @@ public class D8ExecutableMain {
                   .equals(secondaryDexMetadataFile));
           D8Utils.writeSecondaryDexJarAndMetadataFile(
               outputPath, secondaryDexMetadataFilePath, classesDotDex, "jar");
-
-          Preconditions.checkNotNull(secondaryDexMetadataLine);
-          Preconditions.checkNotNull(secondaryDexCanaryClassName);
-          Files.write(
-              Paths.get(secondaryDexMetadataLine),
-              Collections.singletonList(
-                  D8Utils.getSecondaryDexMetadataString(outputPath, secondaryDexCanaryClassName)));
         } else {
           Preconditions.checkState(
               outputDex.endsWith(".dex"),
@@ -199,6 +192,15 @@ public class D8ExecutableMain {
                   "Expect the outputDex to end with '.dex' if not '%s', but it is %s",
                   DEX_JAR_SUFFIX, outputDex));
           Files.move(classesDotDex, outputPath);
+        }
+
+        if ("jar".equals(secondaryDexCompression) || "raw".equals(secondaryDexCompression)) {
+          Preconditions.checkNotNull(secondaryDexMetadataLine);
+          Preconditions.checkNotNull(secondaryDexCanaryClassName);
+          Files.write(
+              Paths.get(secondaryDexMetadataLine),
+              Collections.singletonList(
+                  D8Utils.getSecondaryDexMetadataString(outputPath, secondaryDexCanaryClassName)));
         }
       }
 
