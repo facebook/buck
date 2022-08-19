@@ -55,7 +55,7 @@ case "$(uname -s)" in
   Linux) OS="linux" ;;
 esac
 
-PROTOC="protoc"
+PROTOC=${PROTOC:-'protoc'}
 PROTOC_VERSION="3.7.0"
 
 #----------------------------------------------
