@@ -1,12 +1,25 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library")
 
+CANARY = "CanaryUtils.java"
+
 D8_EXECUTABLE_MAIN = "D8ExecutableMain.java"
 
 MULTI_DEX_EXECUTABLE_MAIN = "MultiDexExecutableMain.java"
 
 buck_java_library(
+    name = "canary",
+    srcs = [CANARY],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)
+
+buck_java_library(
     name = "dex",
-    srcs = glob(["*.java"], exclude = [D8_EXECUTABLE_MAIN, MULTI_DEX_EXECUTABLE_MAIN]),
+    srcs = glob(["*.java"], exclude = [CANARY, D8_EXECUTABLE_MAIN, MULTI_DEX_EXECUTABLE_MAIN]),
     visibility = [
         "PUBLIC",
     ],

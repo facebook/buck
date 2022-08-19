@@ -83,6 +83,7 @@ buck_java_library(
     deps = [
         ":dalvik_stats_tool",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
+        "//src/com/facebook/buck/android/dex:canary",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
