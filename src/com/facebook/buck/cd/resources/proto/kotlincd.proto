@@ -32,6 +32,7 @@ option java_outer_classname = "KotlinCDProto";
 package kotlincd.api.v1;
 
 import "cd/resources/proto/common.proto";
+import "cd/resources/proto/javacd.proto";
 
 message BuildKotlinCommand {
     BaseCommandParams baseCommandParams = 1;
@@ -46,6 +47,12 @@ message BaseCommandParams {
     bool withDownwardApi = 2;
 }
 
-message LibraryJarCommand {}
+message LibraryJarCommand {
+    javacd.api.v1.BaseJarCommand baseJarCommand = 1;
+    javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;
+}
 
-message AbiJarCommand {}
+message AbiJarCommand {
+    javacd.api.v1.BaseJarCommand baseJarCommand = 1;
+    javacd.api.v1.JarParameters abiJarParameters = 2;
+}

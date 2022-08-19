@@ -33,6 +33,7 @@ private static final long serialVersionUID = 0L;
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
+    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields =
         com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
@@ -43,6 +44,32 @@ private static final long serialVersionUID = 0L;
           case 0:
             done = true;
             break;
+          case 10: {
+            com.facebook.buck.cd.model.java.BaseJarCommand.Builder subBuilder = null;
+            if (baseJarCommand_ != null) {
+              subBuilder = baseJarCommand_.toBuilder();
+            }
+            baseJarCommand_ = input.readMessage(com.facebook.buck.cd.model.java.BaseJarCommand.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(baseJarCommand_);
+              baseJarCommand_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
+          case 18: {
+            com.facebook.buck.cd.model.java.JarParameters.Builder subBuilder = null;
+            if (abiJarParameters_ != null) {
+              subBuilder = abiJarParameters_.toBuilder();
+            }
+            abiJarParameters_ = input.readMessage(com.facebook.buck.cd.model.java.JarParameters.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(abiJarParameters_);
+              abiJarParameters_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -75,6 +102,48 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.cd.model.kotlin.AbiJarCommand.class, com.facebook.buck.cd.model.kotlin.AbiJarCommand.Builder.class);
   }
 
+  public static final int BASEJARCOMMAND_FIELD_NUMBER = 1;
+  private com.facebook.buck.cd.model.java.BaseJarCommand baseJarCommand_;
+  /**
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   */
+  public boolean hasBaseJarCommand() {
+    return baseJarCommand_ != null;
+  }
+  /**
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   */
+  public com.facebook.buck.cd.model.java.BaseJarCommand getBaseJarCommand() {
+    return baseJarCommand_ == null ? com.facebook.buck.cd.model.java.BaseJarCommand.getDefaultInstance() : baseJarCommand_;
+  }
+  /**
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   */
+  public com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder getBaseJarCommandOrBuilder() {
+    return getBaseJarCommand();
+  }
+
+  public static final int ABIJARPARAMETERS_FIELD_NUMBER = 2;
+  private com.facebook.buck.cd.model.java.JarParameters abiJarParameters_;
+  /**
+   * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+   */
+  public boolean hasAbiJarParameters() {
+    return abiJarParameters_ != null;
+  }
+  /**
+   * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+   */
+  public com.facebook.buck.cd.model.java.JarParameters getAbiJarParameters() {
+    return abiJarParameters_ == null ? com.facebook.buck.cd.model.java.JarParameters.getDefaultInstance() : abiJarParameters_;
+  }
+  /**
+   * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+   */
+  public com.facebook.buck.cd.model.java.JarParametersOrBuilder getAbiJarParametersOrBuilder() {
+    return getAbiJarParameters();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -89,6 +158,12 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
+    if (baseJarCommand_ != null) {
+      output.writeMessage(1, getBaseJarCommand());
+    }
+    if (abiJarParameters_ != null) {
+      output.writeMessage(2, getAbiJarParameters());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -98,6 +173,14 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
+    if (baseJarCommand_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(1, getBaseJarCommand());
+    }
+    if (abiJarParameters_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(2, getAbiJarParameters());
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -113,6 +196,16 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.cd.model.kotlin.AbiJarCommand other = (com.facebook.buck.cd.model.kotlin.AbiJarCommand) obj;
 
+    if (hasBaseJarCommand() != other.hasBaseJarCommand()) return false;
+    if (hasBaseJarCommand()) {
+      if (!getBaseJarCommand()
+          .equals(other.getBaseJarCommand())) return false;
+    }
+    if (hasAbiJarParameters() != other.hasAbiJarParameters()) return false;
+    if (hasAbiJarParameters()) {
+      if (!getAbiJarParameters()
+          .equals(other.getAbiJarParameters())) return false;
+    }
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -124,6 +217,14 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    if (hasBaseJarCommand()) {
+      hash = (37 * hash) + BASEJARCOMMAND_FIELD_NUMBER;
+      hash = (53 * hash) + getBaseJarCommand().hashCode();
+    }
+    if (hasAbiJarParameters()) {
+      hash = (37 * hash) + ABIJARPARAMETERS_FIELD_NUMBER;
+      hash = (53 * hash) + getAbiJarParameters().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -257,6 +358,18 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      if (baseJarCommandBuilder_ == null) {
+        baseJarCommand_ = null;
+      } else {
+        baseJarCommand_ = null;
+        baseJarCommandBuilder_ = null;
+      }
+      if (abiJarParametersBuilder_ == null) {
+        abiJarParameters_ = null;
+      } else {
+        abiJarParameters_ = null;
+        abiJarParametersBuilder_ = null;
+      }
       return this;
     }
 
@@ -283,6 +396,16 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.facebook.buck.cd.model.kotlin.AbiJarCommand buildPartial() {
       com.facebook.buck.cd.model.kotlin.AbiJarCommand result = new com.facebook.buck.cd.model.kotlin.AbiJarCommand(this);
+      if (baseJarCommandBuilder_ == null) {
+        result.baseJarCommand_ = baseJarCommand_;
+      } else {
+        result.baseJarCommand_ = baseJarCommandBuilder_.build();
+      }
+      if (abiJarParametersBuilder_ == null) {
+        result.abiJarParameters_ = abiJarParameters_;
+      } else {
+        result.abiJarParameters_ = abiJarParametersBuilder_.build();
+      }
       onBuilt();
       return result;
     }
@@ -331,6 +454,12 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(com.facebook.buck.cd.model.kotlin.AbiJarCommand other) {
       if (other == com.facebook.buck.cd.model.kotlin.AbiJarCommand.getDefaultInstance()) return this;
+      if (other.hasBaseJarCommand()) {
+        mergeBaseJarCommand(other.getBaseJarCommand());
+      }
+      if (other.hasAbiJarParameters()) {
+        mergeAbiJarParameters(other.getAbiJarParameters());
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -358,6 +487,240 @@ private static final long serialVersionUID = 0L;
         }
       }
       return this;
+    }
+
+    private com.facebook.buck.cd.model.java.BaseJarCommand baseJarCommand_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.java.BaseJarCommand, com.facebook.buck.cd.model.java.BaseJarCommand.Builder, com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder> baseJarCommandBuilder_;
+    /**
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     */
+    public boolean hasBaseJarCommand() {
+      return baseJarCommandBuilder_ != null || baseJarCommand_ != null;
+    }
+    /**
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     */
+    public com.facebook.buck.cd.model.java.BaseJarCommand getBaseJarCommand() {
+      if (baseJarCommandBuilder_ == null) {
+        return baseJarCommand_ == null ? com.facebook.buck.cd.model.java.BaseJarCommand.getDefaultInstance() : baseJarCommand_;
+      } else {
+        return baseJarCommandBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     */
+    public Builder setBaseJarCommand(com.facebook.buck.cd.model.java.BaseJarCommand value) {
+      if (baseJarCommandBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        baseJarCommand_ = value;
+        onChanged();
+      } else {
+        baseJarCommandBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     */
+    public Builder setBaseJarCommand(
+        com.facebook.buck.cd.model.java.BaseJarCommand.Builder builderForValue) {
+      if (baseJarCommandBuilder_ == null) {
+        baseJarCommand_ = builderForValue.build();
+        onChanged();
+      } else {
+        baseJarCommandBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     */
+    public Builder mergeBaseJarCommand(com.facebook.buck.cd.model.java.BaseJarCommand value) {
+      if (baseJarCommandBuilder_ == null) {
+        if (baseJarCommand_ != null) {
+          baseJarCommand_ =
+            com.facebook.buck.cd.model.java.BaseJarCommand.newBuilder(baseJarCommand_).mergeFrom(value).buildPartial();
+        } else {
+          baseJarCommand_ = value;
+        }
+        onChanged();
+      } else {
+        baseJarCommandBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     */
+    public Builder clearBaseJarCommand() {
+      if (baseJarCommandBuilder_ == null) {
+        baseJarCommand_ = null;
+        onChanged();
+      } else {
+        baseJarCommand_ = null;
+        baseJarCommandBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     */
+    public com.facebook.buck.cd.model.java.BaseJarCommand.Builder getBaseJarCommandBuilder() {
+      
+      onChanged();
+      return getBaseJarCommandFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     */
+    public com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder getBaseJarCommandOrBuilder() {
+      if (baseJarCommandBuilder_ != null) {
+        return baseJarCommandBuilder_.getMessageOrBuilder();
+      } else {
+        return baseJarCommand_ == null ?
+            com.facebook.buck.cd.model.java.BaseJarCommand.getDefaultInstance() : baseJarCommand_;
+      }
+    }
+    /**
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.java.BaseJarCommand, com.facebook.buck.cd.model.java.BaseJarCommand.Builder, com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder> 
+        getBaseJarCommandFieldBuilder() {
+      if (baseJarCommandBuilder_ == null) {
+        baseJarCommandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.cd.model.java.BaseJarCommand, com.facebook.buck.cd.model.java.BaseJarCommand.Builder, com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder>(
+                getBaseJarCommand(),
+                getParentForChildren(),
+                isClean());
+        baseJarCommand_ = null;
+      }
+      return baseJarCommandBuilder_;
+    }
+
+    private com.facebook.buck.cd.model.java.JarParameters abiJarParameters_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.java.JarParameters, com.facebook.buck.cd.model.java.JarParameters.Builder, com.facebook.buck.cd.model.java.JarParametersOrBuilder> abiJarParametersBuilder_;
+    /**
+     * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+     */
+    public boolean hasAbiJarParameters() {
+      return abiJarParametersBuilder_ != null || abiJarParameters_ != null;
+    }
+    /**
+     * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+     */
+    public com.facebook.buck.cd.model.java.JarParameters getAbiJarParameters() {
+      if (abiJarParametersBuilder_ == null) {
+        return abiJarParameters_ == null ? com.facebook.buck.cd.model.java.JarParameters.getDefaultInstance() : abiJarParameters_;
+      } else {
+        return abiJarParametersBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+     */
+    public Builder setAbiJarParameters(com.facebook.buck.cd.model.java.JarParameters value) {
+      if (abiJarParametersBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        abiJarParameters_ = value;
+        onChanged();
+      } else {
+        abiJarParametersBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+     */
+    public Builder setAbiJarParameters(
+        com.facebook.buck.cd.model.java.JarParameters.Builder builderForValue) {
+      if (abiJarParametersBuilder_ == null) {
+        abiJarParameters_ = builderForValue.build();
+        onChanged();
+      } else {
+        abiJarParametersBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+     */
+    public Builder mergeAbiJarParameters(com.facebook.buck.cd.model.java.JarParameters value) {
+      if (abiJarParametersBuilder_ == null) {
+        if (abiJarParameters_ != null) {
+          abiJarParameters_ =
+            com.facebook.buck.cd.model.java.JarParameters.newBuilder(abiJarParameters_).mergeFrom(value).buildPartial();
+        } else {
+          abiJarParameters_ = value;
+        }
+        onChanged();
+      } else {
+        abiJarParametersBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+     */
+    public Builder clearAbiJarParameters() {
+      if (abiJarParametersBuilder_ == null) {
+        abiJarParameters_ = null;
+        onChanged();
+      } else {
+        abiJarParameters_ = null;
+        abiJarParametersBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+     */
+    public com.facebook.buck.cd.model.java.JarParameters.Builder getAbiJarParametersBuilder() {
+      
+      onChanged();
+      return getAbiJarParametersFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+     */
+    public com.facebook.buck.cd.model.java.JarParametersOrBuilder getAbiJarParametersOrBuilder() {
+      if (abiJarParametersBuilder_ != null) {
+        return abiJarParametersBuilder_.getMessageOrBuilder();
+      } else {
+        return abiJarParameters_ == null ?
+            com.facebook.buck.cd.model.java.JarParameters.getDefaultInstance() : abiJarParameters_;
+      }
+    }
+    /**
+     * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.java.JarParameters, com.facebook.buck.cd.model.java.JarParameters.Builder, com.facebook.buck.cd.model.java.JarParametersOrBuilder> 
+        getAbiJarParametersFieldBuilder() {
+      if (abiJarParametersBuilder_ == null) {
+        abiJarParametersBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.cd.model.java.JarParameters, com.facebook.buck.cd.model.java.JarParameters.Builder, com.facebook.buck.cd.model.java.JarParametersOrBuilder>(
+                getAbiJarParameters(),
+                getParentForChildren(),
+                isClean());
+        abiJarParameters_ = null;
+      }
+      return abiJarParametersBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

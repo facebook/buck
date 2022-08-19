@@ -8,4 +8,30 @@ package com.facebook.buck.cd.model.kotlin;
 public interface AbiJarCommandOrBuilder extends
     // @@protoc_insertion_point(interface_extends:kotlincd.api.v1.AbiJarCommand)
     com.google.protobuf.MessageOrBuilder {
+
+  /**
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   */
+  boolean hasBaseJarCommand();
+  /**
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   */
+  com.facebook.buck.cd.model.java.BaseJarCommand getBaseJarCommand();
+  /**
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   */
+  com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder getBaseJarCommandOrBuilder();
+
+  /**
+   * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+   */
+  boolean hasAbiJarParameters();
+  /**
+   * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+   */
+  com.facebook.buck.cd.model.java.JarParameters getAbiJarParameters();
+  /**
+   * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+   */
+  com.facebook.buck.cd.model.java.JarParametersOrBuilder getAbiJarParametersOrBuilder();
 }

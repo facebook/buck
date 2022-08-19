@@ -89,7 +89,10 @@ buck_java_library(
         "//src/com/facebook/buck/...",
         "//test/com/facebook/buck/...",
     ],
-    deps = ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
+    deps = [
+        "//src-gen:javacd-model",
+        "//third-party/java/jakarta.annotation-api:jakarta.annotation-api"
+    ],
     exported_deps = [
         "//src-gen:cd-model",
         "//third-party/java/protobuf:protobuf",

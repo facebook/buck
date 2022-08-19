@@ -47,17 +47,23 @@ public final class KotlinCDProto {
     java.lang.String[] descriptorData = {
       "\n!cd/resources/proto/kotlincd.proto\022\017kot" +
       "lincd.api.v1\032\037cd/resources/proto/common." +
-      "proto\"\330\001\n\022BuildKotlinCommand\022=\n\021baseComm" +
-      "andParams\030\001 \001(\0132\".kotlincd.api.v1.BaseCo" +
-      "mmandParams\022?\n\021libraryJarCommand\030\002 \001(\0132\"" +
-      ".kotlincd.api.v1.LibraryJarCommandH\000\0227\n\r" +
-      "abiJarCommand\030\003 \001(\0132\036.kotlincd.api.v1.Ab" +
-      "iJarCommandH\000B\t\n\007command\"M\n\021BaseCommandP" +
-      "arams\022\037\n\027hasAnnotationProcessing\030\001 \001(\010\022\027" +
-      "\n\017withDownwardApi\030\002 \001(\010\"\023\n\021LibraryJarCom" +
-      "mand\"\017\n\rAbiJarCommandB4\n!com.facebook.bu" +
-      "ck.cd.model.kotlinB\rKotlinCDProtoP\001b\006pro" +
-      "to3"
+      "proto\032\037cd/resources/proto/javacd.proto\"\330" +
+      "\001\n\022BuildKotlinCommand\022=\n\021baseCommandPara" +
+      "ms\030\001 \001(\0132\".kotlincd.api.v1.BaseCommandPa" +
+      "rams\022?\n\021libraryJarCommand\030\002 \001(\0132\".kotlin" +
+      "cd.api.v1.LibraryJarCommandH\000\0227\n\rabiJarC" +
+      "ommand\030\003 \001(\0132\036.kotlincd.api.v1.AbiJarCom" +
+      "mandH\000B\t\n\007command\"M\n\021BaseCommandParams\022\037" +
+      "\n\027hasAnnotationProcessing\030\001 \001(\010\022\027\n\017withD" +
+      "ownwardApi\030\002 \001(\010\"\217\001\n\021LibraryJarCommand\0225" +
+      "\n\016baseJarCommand\030\001 \001(\0132\035.javacd.api.v1.B" +
+      "aseJarCommand\022C\n\025libraryJarBaseCommand\030\002" +
+      " \001(\0132$.javacd.api.v1.LibraryJarBaseComma" +
+      "nd\"~\n\rAbiJarCommand\0225\n\016baseJarCommand\030\001 " +
+      "\001(\0132\035.javacd.api.v1.BaseJarCommand\0226\n\020ab" +
+      "iJarParameters\030\002 \001(\0132\034.javacd.api.v1.Jar" +
+      "ParametersB4\n!com.facebook.buck.cd.model" +
+      ".kotlinB\rKotlinCDProtoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -71,6 +77,7 @@ public final class KotlinCDProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           com.facebook.buck.cd.model.common.CommonCDProto.getDescriptor(),
+          com.facebook.buck.cd.model.java.JavaCDProto.getDescriptor(),
         }, assigner);
     internal_static_kotlincd_api_v1_BuildKotlinCommand_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -89,14 +96,15 @@ public final class KotlinCDProto {
     internal_static_kotlincd_api_v1_LibraryJarCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_kotlincd_api_v1_LibraryJarCommand_descriptor,
-        new java.lang.String[] { });
+        new java.lang.String[] { "BaseJarCommand", "LibraryJarBaseCommand", });
     internal_static_kotlincd_api_v1_AbiJarCommand_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_kotlincd_api_v1_AbiJarCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_kotlincd_api_v1_AbiJarCommand_descriptor,
-        new java.lang.String[] { });
+        new java.lang.String[] { "BaseJarCommand", "AbiJarParameters", });
     com.facebook.buck.cd.model.common.CommonCDProto.getDescriptor();
+    com.facebook.buck.cd.model.java.JavaCDProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
