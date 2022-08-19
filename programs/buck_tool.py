@@ -614,7 +614,7 @@ class BuckTool(object):
         """
         Run the command by directly invoking `java` (rather than by sending a command via nailgun)
         """
-        command = ["buck"]
+        command = ["java"]
         extra_default_options = [
             "-Dbuck.is_buckd=false",
             "-Djava.io.tmpdir={0}".format(self._tmp_dir),
@@ -635,7 +635,7 @@ class BuckTool(object):
         command.extend(self._add_args_from_env(argv, post_run_files))
         now = int(round(time.time() * 1000))
         env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
-        with Tracing("buck", args={"command": command}):
+        with Tracing("java", args={"command": command}):
             subprocess_cwd = self._buck_project.root
             logging.debug(
                 "Spawning Buck directly without Nailgun:\n  cwd={cwd}\n  executable={exe_path}\n  command={cmd}\n  env={env}".format(
