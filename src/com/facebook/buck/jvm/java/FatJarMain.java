@@ -25,9 +25,11 @@
 package com.facebook.buck.jvm.java;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.JarURLConnection;
@@ -114,6 +116,16 @@ public class FatJarMain {
         printDebugInfo("Executing command: " + command);
       }
       processBuilder.command(command);
+      if (isWrapperScript) {
+        Path rootDirectory = getRootDirectory();
+        if (debug) {
+          String currentDirectory = System.getProperty("user.dir");
+          printDebugInfo(
+              String.format(
+                  "Changing working directory from %s to %s", currentDirectory, rootDirectory));
+        }
+        processBuilder.directory(rootDirectory.toFile());
+      }
       updateEnvironment(environment, nativeLibs, debug);
       processBuilder.inheritIO();
 
@@ -121,6 +133,23 @@ public class FatJarMain {
       // up the native libraries.
       System.exit(processBuilder.start().waitFor());
     }
+  }
+
+  private static Path getRootDirectory() throws IOException, InterruptedException {
+    // TODO: @classpath_args are relative to repo root for buck2
+    String command = "hg root";
+    Process process = Runtime.getRuntime().exec(command);
+    Path path;
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+      path = Paths.get(reader.readLine());
+    }
+    int exitCode = process.waitFor();
+    if (exitCode != 0) {
+      throw new IllegalStateException(
+          String.format("Command '%s' execution failed. Exit code: %s.", command, exitCode));
+    }
+    return path;
   }
 
   private static boolean isWrapperScript() throws IOException {
@@ -226,14 +255,14 @@ public class FatJarMain {
             "extracting -J prefix args for JVM positional options for generate_wrapper format");
       }
 
-      for (int i = 0; i < args.length; i++) {
-        if (args[i].startsWith("-J")) {
+      for (String arg : args) {
+        if (arg.startsWith("-J")) {
           if (isDebug) {
-            printDebugInfo("extracting arg: " + args[i].substring(2));
+            printDebugInfo("extracting arg: " + arg.substring(2));
           }
-          cmd.add(args[i].substring(2));
+          cmd.add(arg.substring(2));
         } else {
-          nonJvmArgs.add(args[i]);
+          nonJvmArgs.add(arg);
         }
       }
 
