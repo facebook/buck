@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.testng.IAnnotationTransformer;
 import org.testng.IClass;
@@ -41,6 +42,16 @@ import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.TestNG;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Guice;
 import org.testng.annotations.ITestAnnotation;
@@ -171,6 +182,20 @@ public final class TestNGRunner extends BaseRunner {
       if (testMethod == null) {
         return;
       }
+      if (hasConfigurationAnnotation(testMethod)) {
+        transformConfiguration(annotation);
+      } else {
+        transformTest(annotation, testMethod);
+      }
+    }
+
+    private void transformConfiguration(ITestAnnotation annotation) {
+      if (isDryRun) {
+        annotation.setEnabled(false);
+      }
+    }
+
+    private void transformTest(ITestAnnotation annotation, Method testMethod) {
       String className = testMethod.getDeclaringClass().getName();
       String methodName = testMethod.getName();
       TestDescription description = new TestDescription(className, methodName);
@@ -182,19 +207,29 @@ public final class TestNGRunner extends BaseRunner {
           results.add(TestResult.forExcluded(className, methodName, reason));
         }
         annotation.setEnabled(false);
-        return;
-      }
-      if (!annotation.getEnabled()) {
+      } else if (!annotation.getEnabled()) {
         // on a dry run, have to record it now -- since it doesn't run, listener can't do it
         results.add(TestResult.forDisabled(className, methodName));
-        return;
-      }
-      if (isDryRun) {
+      } else if (isDryRun) {
         // on a dry run, record it now and don't run it
         results.add(TestResult.forDryRun(className, methodName));
         annotation.setEnabled(false);
-        return;
       }
+    }
+
+    private boolean hasConfigurationAnnotation(Method testMethod) {
+      return Stream.of(
+              BeforeSuite.class,
+              AfterSuite.class,
+              BeforeTest.class,
+              AfterTest.class,
+              BeforeGroups.class,
+              AfterGroups.class,
+              BeforeClass.class,
+              AfterClass.class,
+              BeforeMethod.class,
+              AfterMethod.class)
+          .anyMatch(testMethod::isAnnotationPresent);
     }
   }
 
