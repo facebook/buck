@@ -135,6 +135,10 @@ import org.kohsuke.args4j.spi.Setter;
 public class TestCommand extends BuildCommand {
 
   private static final Logger LOG = Logger.get(TestCommand.class);
+  protected static final String EXTERNAL_RUNNER_AND_UNSUPPORTED_DEBUG_MODE =
+      "\nThe flag `--debug` when using an external runner can lead to undefined behaviour. Please make sure your external runner supports debug mode."
+          + "\n[Internal Only] Alternatively, check if your test type/platform is supported by fdb https://fburl.com/fdb, otherwise use -c test.external_runner=\"\" to use the buck internal runner. \nTo run your tests with fdb, use: \n   fdb buck test <target>" // MOE:strip_line
+      ;
 
   @Option(name = "--all", usage = "Whether all of the tests should be run. ")
   private boolean all = false;
@@ -787,6 +791,8 @@ public class TestCommand extends BuildCommand {
           Optional<ImmutableList<String>> externalTestRunner =
               externalRunnerProvider.getExternalTestRunner(params.getBuckConfig(), testRules);
           if (externalTestRunner.isPresent()) {
+            displayIfNeededExternalRunnerAndUnsupportedFeature(
+                params.getBuckEventBus(), isDebugEnabled);
             return runTestsExternal(
                 params,
                 build,
@@ -805,6 +811,14 @@ public class TestCommand extends BuildCommand {
               rulesUnderTestForCoverage);
         }
       }
+    }
+  }
+
+  @VisibleForTesting
+  void displayIfNeededExternalRunnerAndUnsupportedFeature(
+      BuckEventBus buckEventBus, boolean isDebugEnabled) {
+    if (isDebugEnabled) {
+      buckEventBus.post(ConsoleEvent.warning(EXTERNAL_RUNNER_AND_UNSUPPORTED_DEBUG_MODE));
     }
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.cli.TestCommand.EXTERNAL_RUNNER_AND_UNSUPPORTED_DEBUG_MODE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertEquals;
@@ -28,6 +29,8 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.impl.FakeTestRule;
 import com.facebook.buck.core.test.rule.TestRule;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -311,5 +314,41 @@ public class TestCommandTest {
                         .getForCell(CellName.ROOT_CELL_NAME))
                 .build()),
         Matchers.equalTo(1));
+  }
+
+  @Test
+  public void
+      givenDebugModeWhenDisplayIfNeededExternalRunnerAndUnsupportedFeatureThenExternalRunnerMessageSentToConsole()
+          throws CmdLineException {
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+    BuckEventBusForTests.CapturingEventListener buckEventsListener =
+        new BuckEventBusForTests.CapturingEventListener();
+    eventBus.register(buckEventsListener);
+    TestCommand command = getCommand();
+
+    command.displayIfNeededExternalRunnerAndUnsupportedFeature(eventBus, true);
+
+    assertTrue(
+        buckEventsListener
+            .getConsoleEventLogMessages()
+            .contains(EXTERNAL_RUNNER_AND_UNSUPPORTED_DEBUG_MODE));
+  }
+
+  @Test
+  public void
+      givenNotDebugModeWhenDisplayIfNeededExternalRunnerAndUnsupportedFeatureThenExternalRunnerMessageIsNotSentToConsole()
+          throws CmdLineException {
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+    BuckEventBusForTests.CapturingEventListener buckEventsListener =
+        new BuckEventBusForTests.CapturingEventListener();
+    eventBus.register(buckEventsListener);
+    TestCommand command = getCommand();
+
+    command.displayIfNeededExternalRunnerAndUnsupportedFeature(eventBus, false);
+
+    assertFalse(
+        buckEventsListener
+            .getConsoleEventLogMessages()
+            .contains(EXTERNAL_RUNNER_AND_UNSUPPORTED_DEBUG_MODE));
   }
 }
