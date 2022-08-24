@@ -28,9 +28,12 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 class ExopackageAgent {
+
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
 
-  private boolean useNativeAgent;
+  private static final AutoCloseable EMPTY = () -> {};
+
+  private final boolean useNativeAgent;
   private final String classPath;
   private final String nativeAgentPath;
 
@@ -45,16 +48,19 @@ class ExopackageAgent {
    * without -fPIC. The java agent works fine on L as long as we don't use it for mkdir.
    */
   private static boolean useNativeAgent(
-      BuckEventBus eventBus, AndroidDevice device, boolean alwaysUseJavaAgent) throws Exception {
+      Optional<BuckEventBus> eventBus, AndroidDevice device, boolean alwaysUseJavaAgent)
+      throws Exception {
     if (alwaysUseJavaAgent) {
       return false;
     }
 
     String value;
-    try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(eventBus.isolated(), "get_device_sdk_version")) {
+    try (AutoCloseable scope = getEventScope(eventBus, "get_device_sdk_version")) {
+
       value = device.getProperty("ro.build.version.sdk");
-      scope.appendFinishedInfo("sdk_version", value);
+      if (scope instanceof SimplePerfEvent.Scope) {
+        ((SimplePerfEvent.Scope) scope).appendFinishedInfo("sdk_version", value);
+      }
     }
     try {
       if (Integer.parseInt(value) > 19) {
@@ -107,7 +113,10 @@ class ExopackageAgent {
   }
 
   public static ExopackageAgent installAgentIfNecessary(
-      BuckEventBus eventBus, AndroidDevice device, Path agentApkPath, boolean alwaysUseJavaAgent) {
+      Optional<BuckEventBus> eventBus,
+      AndroidDevice device,
+      Path agentApkPath,
+      boolean alwaysUseJavaAgent) {
     try {
       Optional<PackageInfo> agentInfo = device.getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       if (agentInfo.isPresent()
@@ -135,24 +144,33 @@ class ExopackageAgent {
     }
   }
 
-  private static void uninstallAgent(BuckEventBus eventBus, AndroidDevice device)
+  private static void uninstallAgent(Optional<BuckEventBus> eventBus, AndroidDevice device)
       throws InstallException {
-    try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(eventBus.isolated(), "uninstall_old_agent")) {
+    try (AutoCloseable ignored = getEventScope(eventBus, "uninstall_old_agent")) {
       device.uninstallPackage(AgentUtil.AGENT_PACKAGE_NAME);
+    } catch (Exception e) {
+      throw new InstallException(e);
     }
   }
 
   private static void installAgentApk(
-      BuckEventBus eventBus, AndroidDevice device, Path agentApkPath) {
-    try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(eventBus.isolated(), "install_agent_apk")) {
+      Optional<BuckEventBus> eventBus, AndroidDevice device, Path agentApkPath) {
+    try (AutoCloseable ignored = getEventScope(eventBus, "install_agent_apk")) {
       File apkPath = agentApkPath.toFile();
       boolean success =
           device.installApkOnDevice(apkPath, /* installViaSd */ false, /* quiet */ false);
       if (!success) {
         throw new RuntimeException();
       }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
+  }
+
+  private static AutoCloseable getEventScope(Optional<BuckEventBus> eventBus, String name) {
+    if (eventBus.isPresent()) {
+      return SimplePerfEvent.scope(eventBus.get().isolated(), name);
+    }
+    return EMPTY;
   }
 }

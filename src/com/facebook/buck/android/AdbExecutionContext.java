@@ -16,13 +16,17 @@
 
 package com.facebook.buck.android;
 
-/** Interface for logging android installs in the AdbHelper */
-public interface AndroidInstallPrinter {
-  void printMessage(String message);
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.util.Console;
+import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
-  void printSuccess(String message);
+/** ADB execution context */
+public interface AdbExecutionContext {
 
-  void printWarning(String message);
+  Optional<BuckEventBus> getBuckEventBus();
 
-  void printError(String message);
+  ImmutableMap<String, String> getEnvironment();
+
+  Console getConsole();
 }

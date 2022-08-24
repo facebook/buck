@@ -49,6 +49,11 @@ public class DefaultAndroidInstallerPrinter implements AndroidInstallPrinter {
   }
 
   @Override
+  public void printWarning(String message) {
+    getBuckEventBus().post(ConsoleEvent.warning(message));
+  }
+
+  @Override
   public void printError(String failureMessage) {
     getBuckEventBus().post(ConsoleEvent.severe(failureMessage));
   }

@@ -25,12 +25,12 @@ import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.AndroidInstallPrinter;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
@@ -75,7 +75,10 @@ import javax.annotation.Nullable;
 
 @VisibleForTesting
 public class RealAndroidDevice implements AndroidDevice {
+
   private static final Logger LOG = Logger.get(RealAndroidDevice.class);
+
+  private static final AutoCloseable EMPTY = () -> {};
 
   private static final String ECHO_COMMAND_SUFFIX = " ; echo -n :$?";
   // Taken from ddms source code.
@@ -109,7 +112,8 @@ public class RealAndroidDevice implements AndroidDevice {
   private static final byte[] ID_SEND = "SEND".getBytes(DEFAULT_ENCODING);
   private static final int SYNC_DATA_MAX = 64 * 1024; // 64KB
 
-  private final BuckEventBus eventBus;
+  private final Optional<BuckEventBus> eventBus;
+  private final AndroidInstallPrinter androidInstallPrinter;
   private final IDevice device;
   private final Console console;
   private final Supplier<ExopackageAgent> agent;
@@ -117,7 +121,8 @@ public class RealAndroidDevice implements AndroidDevice {
   private final boolean isZstdCompressionEnabled;
 
   public RealAndroidDevice(
-      BuckEventBus eventBus,
+      Optional<BuckEventBus> eventBus,
+      AndroidInstallPrinter androidInstallPrinter,
       IDevice device,
       Console console,
       @Nullable Path agentApkPath,
@@ -125,6 +130,7 @@ public class RealAndroidDevice implements AndroidDevice {
       boolean alwaysUseJavaAgent,
       boolean isZstdCompressionEnabled) {
     this.eventBus = eventBus;
+    this.androidInstallPrinter = androidInstallPrinter;
     this.device = device;
     this.console = console;
     this.agent =
@@ -140,8 +146,12 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   @VisibleForTesting
-  public RealAndroidDevice(BuckEventBus buckEventBus, IDevice device, Console console) {
-    this(buckEventBus, device, console, null, -1, true, true);
+  public RealAndroidDevice(
+      Optional<BuckEventBus> eventBus,
+      AndroidInstallPrinter androidInstallPrinter,
+      IDevice device,
+      Console console) {
+    this(eventBus, androidInstallPrinter, device, console, null, -1, true, true);
   }
 
   /**
@@ -358,7 +368,6 @@ public class RealAndroidDevice implements AndroidDevice {
    * @param packageName application package name
    * @param keepData true if user data is to be kept
    * @return error message or null if successful
-   * @throws InstallException
    */
   @Nullable
   private String deviceUninstallPackage(String packageName, boolean keepData)
@@ -520,7 +529,7 @@ public class RealAndroidDevice implements AndroidDevice {
     LOG.debug("Installing %s on %s, installViaSd=%s", apk, name, installViaSd);
     long start = System.currentTimeMillis();
     if (!quiet) {
-      eventBus.post(ConsoleEvent.info("Installing apk on %s.", name));
+      androidInstallPrinter.printMessage(String.format("Installing apk on %s.", name));
     }
     try {
       String reason = null;
@@ -688,8 +697,8 @@ public class RealAndroidDevice implements AndroidDevice {
         device.removeForward(agentPort, agentPort);
       } catch (AdbCommandRejectedException e) {
         LOG.warn(e, "Failed to remove adb forward on port %d for device %s", agentPort, device);
-        eventBus.post(
-            ConsoleEvent.warning(
+        androidInstallPrinter.printWarning(
+            String.format(
                 "Failed to remove adb forward %d. This is not necessarily a problem\n"
                     + "because it will be recreated during the next exopackage installation.\n"
                     + "See the log for the full exception.",
@@ -1052,7 +1061,7 @@ public class RealAndroidDevice implements AndroidDevice {
           }
           LOG.verbose("Wrote files");
         }
-      } catch (IOException e) {
+      } catch (Exception e) {
         error = Optional.of(e);
       }
     }
@@ -1122,10 +1131,10 @@ public class RealAndroidDevice implements AndroidDevice {
             processName);
     try {
       executeCommandWithErrorChecking(String.format("run-as %s %s", packageName, command));
-      eventBus.post(ConsoleEvent.warning("Successfully terminated process " + processName));
+      androidInstallPrinter.printWarning("Successfully terminated process " + processName);
     } catch (AdbHelper.CommandFailedException e) {
-      eventBus.post(
-          ConsoleEvent.warning(
+      androidInstallPrinter.printWarning(
+          String.format(
               "No matching process found: %s. "
                   + "Check to ensure the process exists and is running.",
               processName));
@@ -1147,9 +1156,9 @@ public class RealAndroidDevice implements AndroidDevice {
                     .append(Escaper.escapeAsShellString(entry.getValue())));
     try {
       executeCommandWithErrorChecking(commandBuilder.toString());
-      eventBus.post(ConsoleEvent.warning("Successfully sent broadcast " + action));
+      androidInstallPrinter.printWarning("Successfully sent broadcast " + action);
     } catch (AdbHelper.CommandFailedException e) {
-      eventBus.post(ConsoleEvent.warning("Unable to send broadcast " + action));
+      androidInstallPrinter.printWarning("Unable to send broadcast " + action);
     }
   }
 
@@ -1165,7 +1174,6 @@ public class RealAndroidDevice implements AndroidDevice {
     /**
      * Look for an error message in {@code line}.
      *
-     * @param line
      * @return an error message if {@code line} is indicative of an error, {@code null} otherwise.
      */
     @Nullable
@@ -1212,14 +1220,13 @@ public class RealAndroidDevice implements AndroidDevice {
   "--complete" indicates that the transmission is complete, and the agent should exit.
    */
   private void multiInstallFilesToStream(
-      OutputStream stream, String filesType, Map<Path, Path> installPaths) throws IOException {
+      OutputStream stream, String filesType, Map<Path, Path> installPaths) throws Exception {
     long startTime = System.currentTimeMillis();
     long totalByteCount = 0;
     for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
       Path destination = entry.getKey();
       Path source = entry.getValue();
-      try (SimplePerfEvent.Scope ignored =
-          SimplePerfEvent.scope(eventBus.isolated(), "install_" + filesType)) {
+      try (AutoCloseable ignored = getEventScope(eventBus, "install_" + filesType)) {
         // Slurp the file into RAM to make sure we know how many bytes we are getting.
         byte[] bytes = Files.readAllBytes(source);
         byte[] restOfHeader =
@@ -1242,5 +1249,12 @@ public class RealAndroidDevice implements AndroidDevice {
 
     stream.write("000D 0 --complete\n".getBytes(StandardCharsets.UTF_8));
     stream.flush();
+  }
+
+  private AutoCloseable getEventScope(Optional<BuckEventBus> eventBus, String name) {
+    if (eventBus.isPresent()) {
+      return SimplePerfEvent.scope(eventBus.get().isolated(), name);
+    }
+    return EMPTY;
   }
 }

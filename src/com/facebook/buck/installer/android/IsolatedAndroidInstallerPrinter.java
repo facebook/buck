@@ -39,6 +39,11 @@ class IsolatedAndroidInstallerPrinter implements AndroidInstallPrinter {
   }
 
   @Override
+  public void printWarning(String message) {
+    logger.log(Level.WARNING, message);
+  }
+
+  @Override
   public void printError(String failureMessage) {
     logger.log(Level.WARNING, failureMessage);
   }

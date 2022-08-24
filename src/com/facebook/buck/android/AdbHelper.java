@@ -85,6 +85,8 @@ public class AdbHelper implements AndroidDevicesHelper {
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
+  private static final AutoCloseable EMPTY = () -> {};
+
   /** Pattern that matches safe package names. (Must be a full string match). */
   public static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
 
@@ -106,7 +108,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
   private final Optional<String> adbExecutableHelper;
-  private final Supplier<ExecutionContext> contextSupplier;
+  private final AdbExecutionContext adbExecutionContext;
   private final boolean restartAdbOnFailure;
   // Caches the list of android devices for this execution
   private final Supplier<GetDevicesResult> devicesSupplier;
@@ -130,7 +132,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       int agentPortBase) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
-    this.contextSupplier = contextSupplier;
+    this.adbExecutionContext = new DefaultAdbExecutionContext(contextSupplier);
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
     this.androidPrinter = androidPrinter;
@@ -176,8 +178,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       throws InterruptedException {
     List<AndroidDevice> devices;
 
-    try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(getBuckEventBus().isolated(), "set_up_adb_call")) {
+    try (AutoCloseable ignored = getEventScope(getBuckEventBus(), "set_up_adb_call")) {
       GetDevicesResult result = devicesSupplier.get();
       if (!quiet && result.devices.size() > 1) {
         // Report if multiple devices are matching the filter.
@@ -189,6 +190,10 @@ public class AdbHelper implements AndroidDevicesHelper {
         throw new HumanReadableException("Didn't find any attached Android devices/emulators.");
       }
       devices = result.devices;
+    } catch (HumanReadableException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException(e.getMessage());
     }
 
     // Start executions on all matching devices.
@@ -198,9 +203,9 @@ public class AdbHelper implements AndroidDevicesHelper {
           getExecutorService()
               .submit(
                   () -> {
-                    try (SimplePerfEvent.Scope ignored =
-                        SimplePerfEvent.scope(
-                            getBuckEventBus().isolated(),
+                    try (AutoCloseable ignored =
+                        getEventScope(
+                            getBuckEventBus(),
                             SimplePerfEvent.PerfEventTitle.of("adbCall " + description),
                             "device_serial",
                             device.getSerialNumber())) {
@@ -244,6 +249,24 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
   }
 
+  private AutoCloseable getEventScope(
+      Optional<BuckEventBus> eventBus,
+      SimplePerfEvent.PerfEventTitle perfEventTitle,
+      String k1,
+      Object v1) {
+    if (eventBus.isPresent()) {
+      return SimplePerfEvent.scope(eventBus.get().isolated(), perfEventTitle, k1, v1);
+    }
+    return EMPTY;
+  }
+
+  private AutoCloseable getEventScope(Optional<BuckEventBus> eventBus, String name) {
+    if (eventBus.isPresent()) {
+      return SimplePerfEvent.scope(eventBus.get().isolated(), name);
+    }
+    return EMPTY;
+  }
+
   private synchronized ListeningExecutorService getExecutorService() {
     if (executorService != null) {
       return executorService;
@@ -285,9 +308,6 @@ public class AdbHelper implements AndroidDevicesHelper {
       optionalIsolatedExopackageInfo = Optional.of(isolatedExopackageInfo);
     }
 
-    Optional<BuckEventBus> optionalBuckEventBus =
-        Optional.of(contextSupplier.get().getBuckEventBus());
-
     HasInstallableApk.IsolatedApkInfo isolatedApkInfo =
         HasInstallableApk.toIsolatedApkInfo(pathResolver, apkInfo);
 
@@ -297,8 +317,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         rootPath,
         installViaSd,
         quiet,
-        fullyQualifiedName,
-        optionalBuckEventBus);
+        fullyQualifiedName);
   }
 
   /** install method called from buck2 */
@@ -320,8 +339,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         rootPath,
         installViaSd,
         quiet,
-        installableTargetFullyQualifiedName,
-        Optional.empty());
+        installableTargetFullyQualifiedName);
   }
 
   private void installApk(
@@ -330,12 +348,11 @@ public class AdbHelper implements AndroidDevicesHelper {
       AbsPath rootPath,
       boolean installViaSd,
       boolean quiet,
-      String fullyQualifiedName,
-      Optional<BuckEventBus> optionalBuckEventBus)
+      String fullyQualifiedName)
       throws InterruptedException {
     InstallEvent.Started started = InstallEvent.started(fullyQualifiedName);
     if (!quiet) {
-      getBuckEventBus().post(started);
+      getBuckEventBus().ifPresent(beb -> beb.post(started));
     }
 
     String manifest =
@@ -348,16 +365,18 @@ public class AdbHelper implements AndroidDevicesHelper {
           if (!quiet) {
             ImmutableMap<String, String> deviceInfoMap = convertToMap(deviceInfos);
             getBuckEventBus()
-                .post(
-                    InstallEvent.finished(
-                        started,
-                        success.get(),
-                        Optional.empty(),
-                        Optional.of(manifest),
-                        deviceInfoMap,
-                        AndroidDebugBridge.getSocketAddress() != null
-                            ? Optional.of(AndroidDebugBridge.getSocketAddress().getPort())
-                            : Optional.empty()));
+                .ifPresent(
+                    beb ->
+                        beb.post(
+                            InstallEvent.finished(
+                                started,
+                                success.get(),
+                                Optional.empty(),
+                                Optional.of(manifest),
+                                deviceInfoMap,
+                                AndroidDebugBridge.getSocketAddress() != null
+                                    ? Optional.of(AndroidDebugBridge.getSocketAddress().getPort())
+                                    : Optional.empty())));
           }
         }) {
 
@@ -382,13 +401,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
       if (optionalIsolatedExopackageInfo.isPresent()) {
         IsolatedExopackageInfo isolatedExopackageInfo = optionalIsolatedExopackageInfo.get();
-        installApkExopackage(
-            rootPath,
-            isolatedExopackageInfo,
-            isolatedApkInfo,
-            manifest,
-            quiet,
-            optionalBuckEventBus);
+        installApkExopackage(rootPath, isolatedExopackageInfo, isolatedApkInfo, manifest, quiet);
       } else {
         installApkDirectly(installViaSd, quiet, isolatedApkInfo, fullyQualifiedName);
       }
@@ -522,7 +535,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
     StartActivityEvent.Started started =
         StartActivityEvent.started(hasInstallableApk.getBuildTarget(), intentTargetNiceName);
-    getBuckEventBus().post(started);
+    getBuckEventBus().ifPresent(beb -> beb.post(started));
     try {
       adbCallOrThrow(
           "start activity",
@@ -531,9 +544,9 @@ public class AdbHelper implements AndroidDevicesHelper {
             return true;
           },
           false);
-      getBuckEventBus().post(StartActivityEvent.finished(started, true));
+      getBuckEventBus().ifPresent(beb -> beb.post(StartActivityEvent.finished(started, true)));
     } catch (Exception e) {
-      getBuckEventBus().post(StartActivityEvent.finished(started, false));
+      getBuckEventBus().ifPresent(beb -> beb.post(StartActivityEvent.finished(started, false)));
     }
   }
 
@@ -548,7 +561,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     Preconditions.checkArgument(AdbHelper.PACKAGE_NAME_PATTERN.matcher(packageName).matches());
 
     UninstallEvent.Started started = UninstallEvent.started(packageName);
-    getBuckEventBus().post(started);
+    getBuckEventBus().ifPresent(beb -> beb.post(started));
     try {
       adbCall(
           "uninstall apk",
@@ -558,10 +571,10 @@ public class AdbHelper implements AndroidDevicesHelper {
           },
           false);
     } catch (RuntimeException e) {
-      getBuckEventBus().post(UninstallEvent.finished(started, false));
+      getBuckEventBus().ifPresent(beb -> beb.post(UninstallEvent.finished(started, false)));
       throw e;
     }
-    getBuckEventBus().post(UninstallEvent.finished(started, true));
+    getBuckEventBus().ifPresent(beb -> beb.post(UninstallEvent.finished(started, true)));
   }
 
   public static String tryToExtractPackageNameFromManifest(
@@ -585,8 +598,8 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
   }
 
-  private BuckEventBus getBuckEventBus() {
-    return contextSupplier.get().getBuckEventBus();
+  private Optional<BuckEventBus> getBuckEventBus() {
+    return adbExecutionContext.getBuckEventBus();
   }
 
   /**
@@ -657,12 +670,13 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private ImmutableMap<String, String> getEnvironment() {
-    return contextSupplier.get().getEnvironment();
+    return adbExecutionContext.getEnvironment();
   }
 
   private RealAndroidDevice createDevice(IDevice device) {
     return new RealAndroidDevice(
         getBuckEventBus(),
+        androidPrinter,
         device,
         getConsole(),
         getApkFilePathFromProperties().orElse(null),
@@ -782,7 +796,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private Console getConsole() {
-    return contextSupplier.get().getConsole();
+    return adbExecutionContext.getConsole();
   }
 
   private static Optional<Path> getApkFilePathFromProperties() {
@@ -824,15 +838,14 @@ public class AdbHelper implements AndroidDevicesHelper {
       IsolatedExopackageInfo isolatedExopackageInfo,
       HasInstallableApk.IsolatedApkInfo isolatedApkInfo,
       String manifest,
-      boolean quiet,
-      Optional<BuckEventBus> optionalBuckEventBus)
+      boolean quiet)
       throws InterruptedException {
     adbCall(
         "install exopackage apk",
         device -> {
           new ExopackageInstaller(
                   isolatedExopackageInfo,
-                  optionalBuckEventBus,
+                  adbExecutionContext.getBuckEventBus(),
                   androidPrinter,
                   rootPath,
                   manifest,

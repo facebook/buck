@@ -34,10 +34,12 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,6 +55,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class AdbHelperTest {
+
   private static final int AGENT_PORT_BASE = 2828;
 
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
@@ -602,10 +605,16 @@ public class AdbHelperTest {
             () ->
                 deviceList.stream()
                     .map(
-                        id ->
-                            (AndroidDevice)
-                                new RealAndroidDevice(
-                                    testContext.getBuckEventBus(), id, testConsole))
+                        id -> {
+                          BuckEventBus buckEventBus = testContext.getBuckEventBus();
+                          return (AndroidDevice)
+                              new RealAndroidDevice(
+                                  Optional.of(buckEventBus),
+                                  new DefaultAndroidInstallerPrinter(
+                                      Ansi.withoutTty(), buckEventBus),
+                                  id,
+                                  testConsole);
+                        })
                     .collect(ImmutableList.toImmutableList())));
 
     return new AdbHelper(

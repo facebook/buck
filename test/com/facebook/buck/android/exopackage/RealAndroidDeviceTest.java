@@ -25,17 +25,22 @@ import static org.junit.Assert.assertTrue;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
+import com.facebook.buck.android.DefaultAndroidInstallerPrinter;
 import com.facebook.buck.android.TestDevice;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.Ansi;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
 public class RealAndroidDeviceTest {
+
   private TestDevice createDeviceForShellCommandTest(String output) {
     return new TestDevice() {
       @Override
@@ -49,8 +54,10 @@ public class RealAndroidDeviceTest {
   }
 
   private static RealAndroidDevice createAndroidDevice(IDevice device) {
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     return new RealAndroidDevice(
-        BuckEventBusForTests.newInstance(),
+        Optional.of(buckEventBus),
+        new DefaultAndroidInstallerPrinter(Ansi.withoutTty(), buckEventBus),
         device,
         TestConsole.createNullConsole(),
         null,
