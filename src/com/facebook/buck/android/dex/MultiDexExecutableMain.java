@@ -166,7 +166,37 @@ public class MultiDexExecutableMain {
         Files.move(createdPrimaryDex, primaryDexPath);
       }
 
-      rawSecondaryDexesDirPath = d8OutputDir;
+      // Our d8 command created N secondary dexes. We need to add a "canary class" to each of them,
+      // so for each of them we create a canary class and then re-run d8 with the original secondary
+      // dex and the canary class path.
+      // The canary class does not contribute any fields or methods, so this shouldn't cause a DEX
+      // overflow.
+      Path secondaryDexesWithCanaries = Files.createTempDirectory("secondary_dexes_with_canaries");
+      Path canaryClassDirectory = Files.createTempDirectory("canary_classes");
+      long secondaryDexCount = Files.list(d8OutputDir).count();
+      for (int i = 0; i < secondaryDexCount; i++) {
+        String secondaryDexName = getRawSecondaryDexName(module, i);
+        Path rawSecondaryDexPath = d8OutputDir.resolve(secondaryDexName);
+        Preconditions.checkState(
+            Files.exists(rawSecondaryDexPath), "Expected file to exist at: " + rawSecondaryDexPath);
+        Path canaryClass = createCanaryClass(canaryClassDirectory, i);
+
+        try {
+          D8Utils.runD8Command(
+              new D8Utils.D8DiagnosticsHandler(),
+              secondaryDexesWithCanaries.resolve(secondaryDexName),
+              ImmutableList.of(rawSecondaryDexPath, canaryClass),
+              getD8Options(),
+              Optional.empty(),
+              Paths.get(androidJar),
+              ImmutableList.of(),
+              minSdkVersion);
+        } catch (CompilationFailedException e) {
+          throw new IOException(e);
+        }
+      }
+
+      rawSecondaryDexesDirPath = secondaryDexesWithCanaries;
     } else {
       rawSecondaryDexesDirPath = Paths.get(rawSecondaryDexesDir);
     }
@@ -174,6 +204,17 @@ public class MultiDexExecutableMain {
     postprocessSecondaryDexFiles(rawSecondaryDexesDirPath);
 
     System.exit(0);
+  }
+
+  private Path createCanaryClass(Path directory, int index) throws IOException {
+    String className = getCanaryClassName(index).replace('.', '/');
+    byte[] canaryClassBytes = CanaryUtils.createCanaryClassByteCode(className);
+
+    Path canaryClassPath = directory.resolve(className + ".class");
+    Files.createDirectories(canaryClassPath.getParent());
+    Files.write(canaryClassPath, canaryClassBytes);
+
+    return canaryClassPath;
   }
 
   private void postprocessSecondaryDexFiles(Path rawSecondaryDexesDirPath) throws IOException {
@@ -209,9 +250,7 @@ public class MultiDexExecutableMain {
         Path secondaryDexSubDir = secondaryDexOutputDir.resolve(getRawSecondaryDexSubDir(module));
         Path movedDex = secondaryDexSubDir.resolve(secondaryDexName);
         Files.move(rawSecondaryDexesDirPath.resolve(secondaryDexName), movedDex);
-        metadataLines.add(
-            D8Utils.getSecondaryDexMetadataString(
-                movedDex, String.format("%s.dex%d.Canary", canaryClassName, i + 1)));
+        metadataLines.add(D8Utils.getSecondaryDexMetadataString(movedDex, getCanaryClassName(i)));
       }
     } else {
       ImmutableList.Builder<Path> secondaryDexJarPaths = ImmutableList.builder();
@@ -251,6 +290,10 @@ public class MultiDexExecutableMain {
     }
 
     Files.write(secondaryDexSubdir.resolve("metadata.txt"), metadataLines.build());
+  }
+
+  private String getCanaryClassName(int index) {
+    return String.format("%s.dex%d.Canary", canaryClassName, index + 1);
   }
 
   private String getRawSecondaryDexSubDir(String module) {

@@ -64,6 +64,7 @@ buck_java_library(
         "PUBLIC",
     ],
     deps = [
+        ":canary",
         ":dex",
         "//src/com/facebook/buck/android/apkmodule:module-only",
         "//src/com/facebook/buck/android/proguard:translator",
