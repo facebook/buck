@@ -26,5 +26,5 @@ import java.nio.file.Path;
 public interface InstallCommand {
 
   /** Installs an artifact from a given path/location. */
-  InstallResult install(String name, Path appPath);
+  InstallResult install(String artifact, Path artifactPath, InstallId installId);
 }

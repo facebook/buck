@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.installer;
+package com.facebook.buck.installer.android;
 
 import com.google.common.annotations.VisibleForTesting;
 import javax.annotation.Nullable;
@@ -80,7 +80,27 @@ class AndroidCommandLineOptions {
   @Nullable
   public String unixDomainSocket;
 
-  public int adbTimeout = 60_000;
+  public final int adbTimeout = 60_000;
+
+  @Option(
+      name = "--tcp-port",
+      usage = "TCP port used for connection in case TCP protocol is chosen")
+  private int tcpPort;
+
+  @Option(name = "--log-path", usage = "Use this option to set the log path for the install")
+  private String logPath;
 
   public AndroidCommandLineOptions() {}
+
+  public String getUnixDomainSocket() {
+    return unixDomainSocket;
+  }
+
+  public int getTcpPort() {
+    return tcpPort;
+  }
+
+  public String getLogPath() {
+    return logPath;
+  }
 }

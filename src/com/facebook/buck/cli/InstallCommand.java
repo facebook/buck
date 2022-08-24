@@ -422,13 +422,12 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params)
       throws InterruptedException {
     AndroidDevicesHelper adbHelper = executionContext.getAndroidDevicesHelper().get();
+    HasInstallableApk.ApkInfo apkInfo = hasInstallableApk.getApkInfo();
 
+    String packageName = AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apkInfo);
     if (!hasInstallableApk.isConcurrentInstallEnabled()) {
       // Uninstall the app first, if requested.
       if (shouldUninstallFirst()) {
-        String packageName =
-            AdbHelper.tryToExtractPackageNameFromManifest(
-                pathResolver, hasInstallableApk.getApkInfo());
         adbHelper.uninstallApp(packageName, uninstallOptions().shouldKeepUserData());
         // Perhaps the app wasn't installed to begin with, shouldn't stop us.
       }
@@ -448,13 +447,7 @@ public class InstallCommand extends BuildCommand {
       params.getBuckEventBus().post(started);
       adbHelper.adbCallOrThrow("concurrent install", (device) -> true, false);
       InstallEvent.Finished finished =
-          InstallEvent.finished(
-              started,
-              true,
-              Optional.empty(),
-              Optional.of(
-                  AdbHelper.tryToExtractPackageNameFromManifest(
-                      pathResolver, hasInstallableApk.getApkInfo())));
+          InstallEvent.finished(started, true, Optional.empty(), Optional.of(packageName));
       params.getBuckEventBus().post(finished);
     }
 

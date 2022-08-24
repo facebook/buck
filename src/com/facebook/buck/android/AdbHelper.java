@@ -107,7 +107,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
-  private final Optional<String> adbExecutableHelper;
+  private final Optional<String> adbExecutable;
   private final AdbExecutionContext adbExecutionContext;
   private final boolean restartAdbOnFailure;
   // Caches the list of android devices for this execution
@@ -130,13 +130,37 @@ public class AdbHelper implements AndroidDevicesHelper {
       boolean alwaysUseJavaAgent,
       boolean isZstdCompressionEnabled,
       int agentPortBase) {
+    this(
+        adbOptions,
+        deviceOptions,
+        new DefaultAdbExecutionContext(contextSupplier),
+        androidPrinter,
+        adbExecutable,
+        restartAdbOnFailure,
+        skipMetadataIfNoInstalls,
+        alwaysUseJavaAgent,
+        isZstdCompressionEnabled,
+        agentPortBase);
+  }
+
+  public AdbHelper(
+      AdbOptions adbOptions,
+      TargetDeviceOptions deviceOptions,
+      AdbExecutionContext adbExecutionContext,
+      AndroidInstallPrinter androidPrinter,
+      Optional<String> adbExecutable,
+      boolean restartAdbOnFailure,
+      boolean skipMetadataIfNoInstalls,
+      boolean alwaysUseJavaAgent,
+      boolean isZstdCompressionEnabled,
+      int agentPortBase) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
-    this.adbExecutionContext = new DefaultAdbExecutionContext(contextSupplier);
+    this.adbExecutionContext = adbExecutionContext;
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
     this.androidPrinter = androidPrinter;
-    this.adbExecutableHelper = adbExecutable;
+    this.adbExecutable = adbExecutable;
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
     this.alwaysUseJavaAgent = alwaysUseJavaAgent;
     this.isZstdCompressionEnabled = isZstdCompressionEnabled;
@@ -231,7 +255,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     }
 
     int successCount = 0;
-    for (Boolean result : results) {
+    for (boolean result : results) {
       if (result) {
         successCount++;
       }
@@ -722,8 +746,8 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private String getAdbExecutable() {
-    return this.adbExecutableHelper.orElseThrow(
-        () -> new HumanReadableException("No AdbExectuable set"));
+    return this.adbExecutable.orElseThrow(
+        () -> new HumanReadableException("No Adb executable set"));
   }
 
   private static class GetDevicesResult {
@@ -913,11 +937,11 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   private class AndroidDebugBridgeFacadeImpl extends AndroidDebugBridgeFacade {
 
-    private final String adbExecutable;
+    private final String adbExecutablePath;
     private @Nullable AndroidDebugBridge bridge;
 
     AndroidDebugBridgeFacadeImpl(String adbExecutable) {
-      this.adbExecutable = adbExecutable;
+      this.adbExecutablePath = adbExecutable;
     }
 
     @Override
@@ -930,8 +954,8 @@ public class AdbHelper implements AndroidDevicesHelper {
         // ADB was already initialized, we're fine, so just ignore.
       }
 
-      LOG.debug("Using %s to create AndroidDebugBridge", adbExecutable);
-      this.bridge = AndroidDebugBridge.createBridge(adbExecutable, false);
+      LOG.debug("Using %s to create AndroidDebugBridge", adbExecutablePath);
+      this.bridge = AndroidDebugBridge.createBridge(adbExecutablePath, false);
       return this.bridge != null;
     }
 

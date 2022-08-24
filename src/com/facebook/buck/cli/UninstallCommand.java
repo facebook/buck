@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -46,6 +47,7 @@ import org.kohsuke.args4j.Option;
 public class UninstallCommand extends AbstractCommand {
 
   public static class UninstallOptions {
+
     @VisibleForTesting static final String KEEP_LONG_ARG = "--keep";
     @VisibleForTesting static final String KEEP_SHORT_ARG = "-k";
 
@@ -135,12 +137,13 @@ public class UninstallCommand extends AbstractCommand {
     }
     HasInstallableApk hasInstallableApk = (HasInstallableApk) buildRule;
 
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
+
     AndroidDevicesHelper adbHelper = getExecutionContext().getAndroidDevicesHelper().get();
+    HasInstallableApk.ApkInfo apkInfo = hasInstallableApk.getApkInfo();
 
     // Find application package name from manifest and uninstall from matching devices.
-    String appId =
-        AdbHelper.tryToExtractPackageNameFromManifest(
-            graphBuilder.getSourcePathResolver(), hasInstallableApk.getApkInfo());
+    String appId = AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apkInfo);
     adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData());
     return ExitCode.SUCCESS;
   }

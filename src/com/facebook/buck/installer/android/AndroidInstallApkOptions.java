@@ -14,47 +14,48 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.installer;
+package com.facebook.buck.installer.android;
 
-import com.google.common.util.concurrent.SettableFuture;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.TreeMap;
 
 /**
  * Constructs configurations for an android install that are set in install_android_options.json and
  * sent to the AndroidInstaller
  */
-class AndroidInstallApkOptions {
-  public boolean restartAdbOnFailure;
-  public boolean skipInstallMetadata;
-  public boolean alwayUseJavaAgent;
-  public boolean isZstdCompressionEnabled;
-  public int agentPortBase;
-  private final SettableFuture<Path> androidManifestPath;
+public class AndroidInstallApkOptions {
 
-  AndroidInstallApkOptions(Map<String, String> options) throws RuntimeException {
-    this.restartAdbOnFailure =
-        Boolean.parseBoolean(
-            options.getOrDefault("adb_restart_on_failure", Boolean.FALSE.toString()));
-    this.skipInstallMetadata =
-        Boolean.parseBoolean(
-            options.getOrDefault("skip_install_metadata", Boolean.FALSE.toString()));
-    this.alwayUseJavaAgent =
-        Boolean.parseBoolean(
-            options.getOrDefault("skip_install_metadata", Boolean.FALSE.toString()));
-    this.isZstdCompressionEnabled =
-        Boolean.parseBoolean(
-            options.getOrDefault("is_zstd_compression_enabled", Boolean.FALSE.toString()));
-    this.agentPortBase = Integer.parseInt(options.getOrDefault("agent_port_base", "2828"));
-    this.androidManifestPath = SettableFuture.create();
+  public final boolean restartAdbOnFailure;
+  public final boolean skipInstallMetadata;
+  public final boolean alwayUseJavaAgent;
+  public final boolean isZstdCompressionEnabled;
+  public final int agentPortBase;
+
+  AndroidInstallApkOptions(Path jsonArtifactPath) throws RuntimeException, IOException {
+    JsonParser parser = ObjectMappers.createParser(jsonArtifactPath);
+    Map<String, String> jsonData =
+        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+    this.restartAdbOnFailure = readBoolean(jsonData, "adb_restart_on_failure");
+    this.skipInstallMetadata = readBoolean(jsonData, "skip_install_metadata");
+    this.alwayUseJavaAgent = readBoolean(jsonData, "skip_install_metadata");
+    this.isZstdCompressionEnabled = readBoolean(jsonData, "is_zstd_compression_enabled");
+    this.agentPortBase = readInt(jsonData, "agent_port_base", 2828);
   }
 
-  public void setAndroidManifestPath(Path androidManifestPath) {
-    this.androidManifestPath.set(androidManifestPath);
+  private boolean readBoolean(Map<String, String> jsonData, String name) {
+    return Boolean.parseBoolean(jsonData.getOrDefault(name, Boolean.FALSE.toString()));
   }
 
-  public Path getAndroidManifestPath() throws InterruptedException, ExecutionException {
-    return this.androidManifestPath.get();
+  private int readInt(Map<String, String> jsonData, String name, int defaultValue) {
+    String readValue = jsonData.getOrDefault(name, "");
+    if (readValue.isEmpty()) {
+      return defaultValue;
+    }
+    return Integer.parseInt(readValue);
   }
 }

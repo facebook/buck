@@ -18,6 +18,7 @@ package com.facebook.buck.installer.apple;
 
 import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.installer.InstallCommand;
+import com.facebook.buck.installer.InstallId;
 import com.facebook.buck.installer.InstallResult;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -45,7 +46,7 @@ class AppleInstallerManager implements InstallCommand {
   private AppleCommandLineOptions cliOpts;
 
   @Override
-  public InstallResult install(String name, Path appPath) {
+  public InstallResult install(String name, Path appPath, InstallId installId) {
     SettableFuture<AppleInstallAppOptions> appInstallOptions;
     if (appPath.endsWith(Paths.get("install_apple_data.json"))) {
       name = name.replaceAll("options_", "");

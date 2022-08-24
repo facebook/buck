@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library")
 
 buck_java_library(
     name = "installer_android_lib",
@@ -6,11 +6,25 @@ buck_java_library(
     visibility = [
         "PUBLIC",
     ],
- deps = [
-        "//src/com/facebook/buck/core/sourcepath:sourcepath",
-        "//src/com/facebook/buck/core/sourcepath:types",
-        "//src/com/facebook/buck/android/packageable:packageable",
+    deps = [
         "//third-party/java/args4j:args4j",
-         "//src/com/facebook/buck/android:helpers",
-    ]
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/guava:guava",
+        "//src/com/facebook/buck/installer:installer_server",
+        "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/step:step",
+    ],
+)
+
+buck_java_binary(
+    name = "android_installer",
+    main_class = "com.facebook.buck.installer.android.AndroidInstallerMain",
+    deps = [
+        ":installer_android_lib",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

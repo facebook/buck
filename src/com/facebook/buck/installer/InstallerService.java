@@ -205,7 +205,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
       Path path = fileEntry.getValue();
 
       ListenableFuture<InstallResult> future =
-          LISTENING_EXECUTOR_SERVICE.submit(() -> install(name, path));
+          LISTENING_EXECUTOR_SERVICE.submit(() -> install(name, path, installId));
       Futures.addCallback(
           future, getInstallResultCallback(latch, errorMessages, name, path), directExecutor());
       futureList.add(future);
@@ -265,9 +265,9 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
     };
   }
 
-  private InstallResult install(String name, Path path) {
+  private InstallResult install(String name, Path path, InstallId installId) {
     logger.info(String.format("Starting install for file name: %s and path: %s", name, path));
-    return installer.install(name, path);
+    return installer.install(name, path, installId);
   }
 
   @Override

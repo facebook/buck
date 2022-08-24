@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.installer;
+package com.facebook.buck.installer.android;
 
 import com.facebook.buck.android.AndroidInstallPrinter;
 import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
-/** Handles logging for buckv2 android installs */
+/** Handles logging for android installs */
 class IsolatedAndroidInstallerPrinter implements AndroidInstallPrinter {
-  private Logger logger;
+
+  private final Logger logger;
 
   public IsolatedAndroidInstallerPrinter(Logger logger) {
     this.logger = logger;

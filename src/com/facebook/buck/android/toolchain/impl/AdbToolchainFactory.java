@@ -35,7 +35,7 @@ import java.util.Optional;
 /** Toolchain for the adb Android tool. */
 public class AdbToolchainFactory implements ToolchainFactory<AdbToolchain> {
 
-  private static final Logger log = Logger.get(AdbToolchainFactory.class);
+  private static final Logger LOG = Logger.get(AdbToolchainFactory.class);
 
   @Override
   public Optional<AdbToolchain> createToolchain(
@@ -46,8 +46,7 @@ public class AdbToolchainFactory implements ToolchainFactory<AdbToolchain> {
     AndroidBuckConfig config = new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
     FileSystem fileSystem = context.getFilesystem().getRootPath().getFileSystem();
 
-    return resolveAdbPath(config, context.getEnvironment(), fileSystem)
-        .map(path -> AdbToolchain.of(path));
+    return resolveAdbPath(config, context.getEnvironment(), fileSystem).map(AdbToolchain::of);
   }
 
   private Optional<Path> resolveAdbPath(
@@ -84,7 +83,7 @@ public class AdbToolchainFactory implements ToolchainFactory<AdbToolchain> {
           }
         }
       } else {
-        log.warn("Unrecognized search order item for AdbToolchain: %s", searchItem);
+        LOG.warn("Unrecognized search order item for AdbToolchain: %s", searchItem);
       }
     }
     return Optional.empty();
