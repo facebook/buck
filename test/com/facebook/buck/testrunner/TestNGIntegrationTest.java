@@ -137,4 +137,14 @@ public class TestNGIntegrationTest {
 
     assertThat(filteredTestNGTestResult.getStderr(), not(containsString("SimpleFailingTest")));
   }
+
+  @Test
+  public void simpleBeforeAnnotationsTest() {
+
+    ProcessResult result =
+        workspace.runBuckCommand("test", "//test:simple-before-annotations-test").assertSuccess();
+    assertThat(result.getStderr(), containsString("SimpleBeforeAnnotationsTest"));
+    assertThat(result.getStderr(), containsString(" 1 Passed"));
+    assertThat(result.getStderr(), containsString(" 0 Failed"));
+  }
 }
