@@ -65,6 +65,9 @@ public class MultiDexExecutableMain {
   @Option(name = "--module", required = true)
   private String module;
 
+  @Option(name = "--module-deps")
+  private String moduleDepsPathString;
+
   @Option(name = "--canary-class-name", required = true)
   private String canaryClassName;
 
@@ -189,6 +192,13 @@ public class MultiDexExecutableMain {
     long secondaryDexCount = Files.list(rawSecondaryDexesDirPath).count();
     ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
     metadataLines.add(String.format(".id %s", module));
+    Preconditions.checkState((moduleDepsPathString == null) == APKModule.isRootModule(module));
+    if (moduleDepsPathString != null) {
+      metadataLines.addAll(
+          Files.readAllLines(Paths.get(moduleDepsPathString)).stream()
+              .map(moduleDep -> String.format(".requires %s", moduleDep))
+              .collect(ImmutableList.toImmutableList()));
+    }
 
     if (compression.equals("raw")) {
       if (APKModule.isRootModule(module)) {
