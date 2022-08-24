@@ -65,6 +65,9 @@ public class MultiDexExecutableMain {
   @Option(name = "--module", required = true)
   private String module;
 
+  @Option(name = "--canary-class-name", required = true)
+  private String canaryClassName;
+
   @Option(name = "--android-jar")
   private String androidJar;
 
@@ -198,7 +201,7 @@ public class MultiDexExecutableMain {
         Files.move(rawSecondaryDexesDirPath.resolve(secondaryDexName), movedDex);
         metadataLines.add(
             D8Utils.getSecondaryDexMetadataString(
-                movedDex, String.format("secondary.dex%d.Canary", i + 1)));
+                movedDex, String.format("%s.dex%d.Canary", canaryClassName, i + 1)));
       }
     } else {
       ImmutableList.Builder<Path> secondaryDexJarPaths = ImmutableList.builder();
@@ -229,7 +232,7 @@ public class MultiDexExecutableMain {
 
         metadataLines.add(
             D8Utils.getSecondaryDexMetadataString(
-                secondaryDexOutput, String.format("secondary.dex%d.Canary", i + 1)));
+                secondaryDexOutput, String.format("%s.dex%d.Canary", canaryClassName, i + 1)));
       }
 
       if (compression.equals("xzs")) {
