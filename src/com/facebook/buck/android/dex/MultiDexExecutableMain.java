@@ -118,16 +118,22 @@ public class MultiDexExecutableMain {
               .map(Paths::get)
               .collect(ImmutableSet.toImmutableSet());
 
-      List<String> primaryDexPatterns = Files.readAllLines(Paths.get(primaryDexPatternsPathString));
-      Path primaryDexClassNamesPath = Files.createTempFile("primary_dex_class_names", "txt");
-      ProguardTranslatorFactory proguardTranslatorFactory =
-          ProguardTranslatorFactory.create(
-              Optional.ofNullable(proguardConfigurationFileString).map(Paths::get),
-              Optional.ofNullable(proguardMappingFileString).map(Paths::get),
-              false);
-      Files.write(
-          primaryDexClassNamesPath,
-          getPrimaryDexClassNames(filesToDex, primaryDexPatterns, proguardTranslatorFactory));
+      Path primaryDexClassNamesPath = null;
+      Preconditions.checkState(
+          (primaryDexPatternsPathString != null) == APKModule.isRootModule(module));
+      if (primaryDexPatternsPathString != null) {
+        List<String> primaryDexPatterns =
+            Files.readAllLines(Paths.get(primaryDexPatternsPathString));
+        primaryDexClassNamesPath = Files.createTempFile("primary_dex_class_names", "txt");
+        ProguardTranslatorFactory proguardTranslatorFactory =
+            ProguardTranslatorFactory.create(
+                Optional.ofNullable(proguardConfigurationFileString).map(Paths::get),
+                Optional.ofNullable(proguardMappingFileString).map(Paths::get),
+                false);
+        Files.write(
+            primaryDexClassNamesPath,
+            getPrimaryDexClassNames(filesToDex, primaryDexPatterns, proguardTranslatorFactory));
+      }
 
       Optional<Integer> minSdkVersion =
           Optional.ofNullable(minSdkVersionString).map(Integer::parseInt);
@@ -138,7 +144,7 @@ public class MultiDexExecutableMain {
             d8OutputDir,
             filesToDex,
             getD8Options(),
-            Optional.of(primaryDexClassNamesPath),
+            Optional.ofNullable(primaryDexClassNamesPath),
             Paths.get(androidJar),
             ImmutableList.of(),
             minSdkVersion);
@@ -146,10 +152,13 @@ public class MultiDexExecutableMain {
         throw new IOException(e);
       }
 
-      Path createdPrimaryDex = d8OutputDir.resolve("classes.dex");
-      Preconditions.checkState(Files.exists(createdPrimaryDex));
-      Path primaryDexPath = Paths.get(primaryDexString);
-      Files.move(createdPrimaryDex, primaryDexPath);
+      Preconditions.checkState((primaryDexString != null) == APKModule.isRootModule(module));
+      if (primaryDexString != null) {
+        Path createdPrimaryDex = d8OutputDir.resolve("classes.dex");
+        Preconditions.checkState(Files.exists(createdPrimaryDex));
+        Path primaryDexPath = Paths.get(primaryDexString);
+        Files.move(createdPrimaryDex, primaryDexPath);
+      }
 
       rawSecondaryDexesDirPath = d8OutputDir;
     } else {
@@ -183,8 +192,9 @@ public class MultiDexExecutableMain {
         metadataLines.add(".root_relative");
       }
       for (int i = 0; i < secondaryDexCount; i++) {
-        String secondaryDexName = String.format("classes%s.dex", i + 2);
-        Path movedDex = secondaryDexOutputDir.resolve(secondaryDexName);
+        String secondaryDexName = getRawSecondaryDexName(module, i);
+        Path secondaryDexSubDir = secondaryDexOutputDir.resolve(getRawSecondaryDexSubDir(module));
+        Path movedDex = secondaryDexSubDir.resolve(secondaryDexName);
         Files.move(rawSecondaryDexesDirPath.resolve(secondaryDexName), movedDex);
         metadataLines.add(
             D8Utils.getSecondaryDexMetadataString(
@@ -228,6 +238,14 @@ public class MultiDexExecutableMain {
     }
 
     Files.write(secondaryDexSubdir.resolve("metadata.txt"), metadataLines.build());
+  }
+
+  private String getRawSecondaryDexSubDir(String module) {
+    if (APKModule.isRootModule(module)) {
+      return "";
+    } else {
+      return String.format("assets/%s", module);
+    }
   }
 
   private String getRawSecondaryDexName(String module, int index) {
