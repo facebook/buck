@@ -53,8 +53,6 @@ public class MultiDexExecutableMain {
   /** name suffix that identifies it as a Java class file. */
   private static final String CLASS_NAME_SUFFIX = ".class";
 
-  private static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
-
   @Option(name = "--primary-dex")
   private String primaryDexString;
 
@@ -173,7 +171,7 @@ public class MultiDexExecutableMain {
 
     Path secondaryDexOutputDir = Paths.get(secondaryDexOutputDirString);
     Files.createDirectories(secondaryDexOutputDir);
-    Path secondaryDexSubdir = secondaryDexOutputDir.resolve(SECONDARY_DEX_SUBDIR);
+    Path secondaryDexSubdir = secondaryDexOutputDir.resolve(getSecondaryDexSubDir(module));
     Files.createDirectories(secondaryDexSubdir);
 
     long secondaryDexCount = Files.list(rawSecondaryDexesDirPath).count();
@@ -195,13 +193,15 @@ public class MultiDexExecutableMain {
     } else {
       ImmutableList.Builder<Path> secondaryDexJarPaths = ImmutableList.builder();
       for (int i = 0; i < secondaryDexCount; i++) {
-        String secondaryDexName = String.format("classes%s.dex", i + 2);
+        String secondaryDexName = getRawSecondaryDexName(module, i);
         Path rawSecondaryDexPath = rawSecondaryDexesDirPath.resolve(secondaryDexName);
-        Preconditions.checkState(Files.exists(rawSecondaryDexPath));
+        Preconditions.checkState(
+            Files.exists(rawSecondaryDexPath), "Expected file to exist at: " + rawSecondaryDexPath);
         Path secondaryDexOutputJarPath =
             compression.equals("xzs")
-                ? secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar.xzs.tmp~", i + 1))
-                : secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar", i + 1));
+                ? secondaryDexSubdir.resolve(
+                    String.format("%s.xzs.tmp~", getSecondaryDexJarName(module, i)))
+                : secondaryDexSubdir.resolve(getSecondaryDexJarName(module, i));
         secondaryDexJarPaths.add(secondaryDexOutputJarPath);
 
         Path metadataPath =
@@ -230,6 +230,29 @@ public class MultiDexExecutableMain {
     Files.write(secondaryDexSubdir.resolve("metadata.txt"), metadataLines.build());
   }
 
+  private String getRawSecondaryDexName(String module, int index) {
+    if (APKModule.isRootModule(module)) {
+      return String.format("classes%d.dex", index + 2);
+    } else if (index == 0) {
+      return "classes.dex";
+    } else {
+      return String.format("classes%d.dex", index + 1);
+    }
+  }
+
+  private String getSecondaryDexSubDir(String module) {
+    if (APKModule.isRootModule(module)) {
+      return "assets/secondary-program-dex-jars";
+    } else {
+      return String.format("assets/%s", module);
+    }
+  }
+
+  private String getSecondaryDexJarName(String module, int index) {
+    return String.format(
+        "%s-%d.dex.jar", APKModule.isRootModule(module) ? "secondary" : module, index + 1);
+  }
+
   private Path doXzCompression(Path secondaryDexOutputJarPath) throws IOException {
     Path xzCompressedOutputJarPath =
         secondaryDexOutputJarPath.resolveSibling(secondaryDexOutputJarPath.getFileName() + ".xz");
@@ -253,7 +276,12 @@ public class MultiDexExecutableMain {
     try (OutputStream secondaryDexOutput =
             new BufferedOutputStream(
                 new FileOutputStream(
-                    secondaryDexSubdir.resolve("secondary.dex.jar.xzs").toFile()));
+                    secondaryDexSubdir
+                        .resolve(
+                            String.format(
+                                "%s.dex.jar.xzs",
+                                APKModule.isRootModule(module) ? "secondary" : module))
+                        .toFile()));
         XZOutputStream xzOutputStream =
             new XZOutputStream(
                 secondaryDexOutput, new LZMA2Options(xzCompressionLevel), XZ.CHECK_CRC32)) {
