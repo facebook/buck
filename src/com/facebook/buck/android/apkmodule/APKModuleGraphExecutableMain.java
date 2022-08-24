@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.function.Function;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -69,8 +71,8 @@ public class APKModuleGraphExecutableMain {
   @Option(name = "--targets-to-so-names")
   private String targetsToSoNamesPath;
 
-  @Option(name = "--output-target-to-module-only")
-  private boolean outputTargetToModuleOnly;
+  @Option(name = "--output-module-info-and-target-to-module-only")
+  private boolean outputModuleInfoAndTargetToModuleOnly;
 
   public static void main(String[] args) throws IOException {
     APKModuleGraphExecutableMain main = new APKModuleGraphExecutableMain();
@@ -130,8 +132,9 @@ public class APKModuleGraphExecutableMain {
             Optional.of(appModuleDependenciesMap),
             alwaysInMainApkSeeds);
 
-    if (outputTargetToModuleOnly) {
-      Files.write(Paths.get(outputPath), getTargetToModuleMappingLines(apkModuleGraph));
+    if (outputModuleInfoAndTargetToModuleOnly) {
+      Files.write(
+          Paths.get(outputPath), getModuleInfoAndTargetToModuleMappingLines(apkModuleGraph));
       return;
     }
 
@@ -209,8 +212,30 @@ public class APKModuleGraphExecutableMain {
     return new ExternalTargetGraph(underlyingMap, buildTargetMap);
   }
 
-  private List<String> getTargetToModuleMappingLines(
+  /**
+   * API is: first line contains single integer N, the number of modules next N lines contain
+   * 'module_name canary_class_name module_dep1 module_dep2 ... module_depN' all other lines contain
+   * 'target module_containing_target'
+   */
+  private List<String> getModuleInfoAndTargetToModuleMappingLines(
       APKModuleGraph<ExternalTargetGraph.ExternalBuildTarget> apkModuleGraph) {
+    // Module to module deps map is already sorted
+    SortedMap<APKModule, ? extends SortedSet<APKModule>> moduleToDepsMap =
+        apkModuleGraph.toOutgoingEdgesMap();
+    LinkedList<String> metadataLines = new LinkedList<>();
+    metadataLines.add(Integer.toString(moduleToDepsMap.size()));
+    for (Map.Entry<APKModule, ? extends SortedSet<APKModule>> entry : moduleToDepsMap.entrySet()) {
+      APKModule module = entry.getKey();
+      ImmutableList<String> moduleDeps =
+          entry.getValue().stream()
+              .map(APKModule::getName)
+              .collect(ImmutableList.toImmutableList());
+      metadataLines.add(
+          String.format(
+              "%s %s %s",
+              module.getName(), module.getCanaryClassName(), String.join(" ", moduleDeps)));
+    }
+
     TreeMultimap<APKModule, String> orderedModuleToTargetsMap =
         TreeMultimap.create(Comparator.comparing(APKModule::getName), Ordering.natural());
     for (APKModule module : apkModuleGraph.getAPKModules()) {
@@ -219,7 +244,6 @@ public class APKModuleGraphExecutableMain {
         orderedModuleToTargetsMap.put(module, target.getName());
       }
     }
-    LinkedList<String> metadataLines = new LinkedList<>();
     for (APKModule module : orderedModuleToTargetsMap.keySet()) {
       String moduleName = module.getName();
       for (String target : orderedModuleToTargetsMap.get(module)) {
