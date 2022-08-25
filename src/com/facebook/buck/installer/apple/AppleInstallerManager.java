@@ -24,97 +24,77 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.json.ObjectMappers;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.SettableFuture;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
 /** Apple install manager */
 class AppleInstallerManager implements InstallCommand {
 
-  private static volatile AppleInstallerManager instance;
-  public final ConcurrentHashMap<String, SettableFuture<AppleInstallAppOptions>> chm =
-      new ConcurrentHashMap<>();
-  private Logger log;
-  private AppleCommandLineOptions cliOpts;
+  private static final Console CONSOLE =
+      new Console(Verbosity.STANDARD_INFORMATION, System.out, System.err, Ansi.withoutTty());
+
+  public final Map<InstallId, SettableFuture<AppleInstallAppOptions>> installIdToOptionsMap =
+      new HashMap<>();
+  private final Logger logger;
+  private final AppleCommandLineOptions options;
+
+  public AppleInstallerManager(Logger logger, AppleCommandLineOptions options) {
+    this.logger = logger;
+    this.options = options;
+  }
 
   @Override
   public InstallResult install(String name, Path appPath, InstallId installId) {
-    SettableFuture<AppleInstallAppOptions> appInstallOptions;
-    if (appPath.endsWith(Paths.get("install_apple_data.json"))) {
-      name = name.replaceAll("options_", "");
-      synchronized (chm) {
-        appInstallOptions = getOrMakeAppleInstallAppOptions(name);
-      }
+    SettableFuture<AppleInstallAppOptions> appInstallOptionsFuture = getOptionsFuture(installId);
+    // if options file
+    if (appPath.endsWith("install_apple_data.json")) {
       try {
-        JsonParser parser = ObjectMappers.createParser(appPath);
-        Map<String, String> jsonData =
-            parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
-        appInstallOptions.set(new AppleInstallAppOptions(jsonData));
+        appInstallOptionsFuture.set(new AppleInstallAppOptions(appPath));
         return InstallResult.success();
       } catch (Exception err) {
-        log.log(Level.SEVERE, "Error creating AppleInstallAppOptions from `install_apple_data`");
-        return InstallResult.error(err.toString());
+        String errMsg = Throwables.getStackTraceAsString(err);
+        logger.log(
+            Level.SEVERE,
+            String.format(
+                "Error creating AppleInstallAppOptions from `install_apple_data`. Error message: %s",
+                errMsg),
+            err);
+        return InstallResult.error(errMsg);
       }
-    } else {
-      try {
-        synchronized (chm) {
-          appInstallOptions = getOrMakeAppleInstallAppOptions(name);
-        }
-        appInstallOptions.get();
-        Console console =
-            new Console(Verbosity.STANDARD_INFORMATION, System.out, System.err, new Ansi(false));
-        DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(console);
-        AppleDeviceController appleDeviceController =
-            new AppleDeviceController(processExecutor, Paths.get("/usr/local/bin/idb"));
-        AppleInstall appleInstall =
-            new AppleInstall(
-                processExecutor,
-                this.cliOpts,
-                appleDeviceController,
-                appInstallOptions.get(),
-                this.log,
-                appPath);
-        return appleInstall.installAppleBundle(appPath);
-      } catch (Exception err) {
-        return InstallResult.error(err.toString());
-      }
+    }
+
+    // process app installation
+    try {
+      // wait till ready
+      AppleInstallAppOptions appleInstallAppOptions = appInstallOptionsFuture.get();
+
+      DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(CONSOLE);
+      AppleDeviceController appleDeviceController =
+          new AppleDeviceController(processExecutor, Paths.get("/usr/local/bin/idb"));
+      AppleInstall appleInstall =
+          new AppleInstall(
+              processExecutor,
+              options,
+              appleDeviceController,
+              appleInstallAppOptions,
+              logger,
+              appPath);
+      return appleInstall.installAppleBundle(appPath);
+    } catch (Exception err) {
+      String errMsg = Throwables.getStackTraceAsString(err);
+      return InstallResult.error(errMsg);
     }
   }
 
-  private SettableFuture<AppleInstallAppOptions> getOrMakeAppleInstallAppOptions(String name) {
-    if (chm.get(name) != null) {
-      return chm.get(name);
-    } else {
-      SettableFuture<AppleInstallAppOptions> opts = SettableFuture.create();
-      chm.put(name, opts);
-      return opts;
+  private SettableFuture<AppleInstallAppOptions> getOptionsFuture(InstallId installId) {
+    synchronized (installIdToOptionsMap) {
+      return installIdToOptionsMap.computeIfAbsent(installId, ignore -> SettableFuture.create());
     }
-  }
-
-  static AppleInstallerManager getInstance() {
-    if (instance == null) {
-      synchronized (AppleInstallerManager.class) {
-        if (instance == null) {
-          instance = new AppleInstallerManager();
-        }
-      }
-    }
-    return instance;
-  }
-
-  void setLogger(Logger log) {
-    this.log = log;
-  }
-
-  void setCLIOptions(AppleCommandLineOptions cliOpts) {
-    this.cliOpts = cliOpts;
   }
 }

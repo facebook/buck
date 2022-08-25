@@ -287,7 +287,7 @@ public class AppleInstall {
         String errMsg =
             String.format(
                 "Cannot install %s (could not get bundle ID from %s)",
-                appInstallOptions.fullyQualifiedName, appInstallOptions.infoPlistpath);
+                appInstallOptions.fullyQualifiedName, appInstallOptions.infoPlistPath);
         log.severe(errMsg);
         return InstallResult.error(errMsg);
       }
@@ -639,7 +639,7 @@ public class AppleInstall {
         String errMsg =
             String.format(
                 "Cannot install %s (could not get bundle ID from %s)",
-                appInstallOptions.fullyQualifiedName, appInstallOptions.infoPlistpath);
+                appInstallOptions.fullyQualifiedName, appInstallOptions.infoPlistPath);
         log.severe(errMsg);
         return InstallResult.error(errMsg);
       }
@@ -736,7 +736,7 @@ public class AppleInstall {
           String errMsg =
               String.format(
                   "Cannot run %s (could not get bundle ID from %s)",
-                  appInstallOptions.fullyQualifiedName, appInstallOptions.infoPlistpath);
+                  appInstallOptions.fullyQualifiedName, appInstallOptions.infoPlistPath);
           log.severe(errMsg);
           return InstallResult.error(errMsg);
         }
@@ -772,7 +772,7 @@ public class AppleInstall {
 
   private void setAppleBundleID(Path appPath) {
     this.appleBundleId = Optional.empty();
-    Path plistPath = appPath.resolve(appInstallOptions.infoPlistpath.getFileName());
+    Path plistPath = appPath.resolve(appInstallOptions.infoPlistPath.getFileName());
     try (InputStream bundlePlistStream = Files.newInputStream(plistPath)) {
       log.info(String.format("Getting Apple Bundle ID from %s", plistPath));
       this.appleBundleId =

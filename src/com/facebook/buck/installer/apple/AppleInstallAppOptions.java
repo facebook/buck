@@ -16,46 +16,51 @@
 
 package com.facebook.buck.installer.apple;
 
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.TreeMap;
 
 /** Apple install application options. */
 class AppleInstallAppOptions {
 
-  String fullyQualifiedName;
-  boolean useIdb = true;
+  final String fullyQualifiedName;
+  final boolean useIdb;
   // "Use this option to set the platform an apple install"
-  String platformName = "iphonesimulator";
-  String xcodeDeveloperPath;
-  String deviceHelperPath;
-  Path infoPlistpath;
+  final String platformName;
+  final String xcodeDeveloperPath;
+  final String deviceHelperPath;
+  final Path infoPlistPath;
 
   /*
    *  Constructs options for an Apple Install that are set in apple_install_data.json artifact pass to the Installer
    */
-  AppleInstallAppOptions(Map<String, String> options) throws RuntimeException {
-    if (options.get("label") != null) {
-      this.fullyQualifiedName = options.get("label");
-    }
-    if (options.get("use_idb") != null) {
-      this.useIdb = Boolean.parseBoolean(options.get("use_idb"));
-    }
-    if (options.get("platform_name") != null) {
-      this.platformName = options.get("platform_name");
-    }
-    if (options.get("device_helper_path") != null) {
-      this.deviceHelperPath = options.get("device_helper_path");
-    }
-    if (options.get("xcode_developer_path") == null) {
+  AppleInstallAppOptions(Path settingPath) throws IOException {
+    JsonParser parser = ObjectMappers.createParser(settingPath);
+    Map<String, String> jsonData =
+        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+
+    this.fullyQualifiedName = jsonData.getOrDefault("label", "");
+    this.useIdb = readBoolean(jsonData, "use_idb", true);
+    this.platformName = jsonData.getOrDefault("platform_name", "iphonesimulator");
+    this.deviceHelperPath = jsonData.getOrDefault("device_helper_path", "");
+    this.xcodeDeveloperPath = jsonData.getOrDefault("xcode_developer_path", "");
+    if (xcodeDeveloperPath.isEmpty()) {
       throw new RuntimeException("xcode_developer_path must be set in apple_install_info.json");
-    } else {
-      this.xcodeDeveloperPath = options.get("xcode_developer_path");
     }
-    if (options.get("info_plist") == null) {
+
+    String infoPlist = jsonData.getOrDefault("info_plist", "");
+    if (infoPlist.isEmpty()) {
       throw new RuntimeException("info_plist_path must be set in apple_install_info.json");
-    } else {
-      this.infoPlistpath = Paths.get(options.get("info_plist"));
     }
+    this.infoPlistPath = Paths.get(infoPlist);
+  }
+
+  private boolean readBoolean(Map<String, String> jsonData, String name, boolean defaultValue) {
+    return Boolean.parseBoolean(jsonData.getOrDefault(name, Boolean.toString(defaultValue)));
   }
 }

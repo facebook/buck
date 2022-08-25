@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android.exopackage;
 
+import static com.facebook.buck.android.exopackage.ScopeUtils.getEventScope;
+
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.CollectingOutputReceiver;
@@ -31,7 +33,6 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreSuppliers;
@@ -77,8 +78,6 @@ import javax.annotation.Nullable;
 public class RealAndroidDevice implements AndroidDevice {
 
   private static final Logger LOG = Logger.get(RealAndroidDevice.class);
-
-  private static final AutoCloseable EMPTY = () -> {};
 
   private static final String ECHO_COMMAND_SUFFIX = " ; echo -n :$?";
   // Taken from ddms source code.
@@ -882,7 +881,7 @@ public class RealAndroidDevice implements AndroidDevice {
     return array;
   }
 
-  private byte[] readResp(SocketChannel chan, int length) throws Exception {
+  private byte[] readResp(SocketChannel chan, int length) {
     byte[] reply = new byte[length];
     ByteBuffer b_reply = ByteBuffer.wrap(reply);
     readAllFromChannel(chan, b_reply);
@@ -919,11 +918,10 @@ public class RealAndroidDevice implements AndroidDevice {
                 .filter(path -> path.endsWith("libzstd-jni.so"))
                 .findFirst()
                 .map(Path::getParent);
-        if (!zstdRelativePath.isPresent()) {
+        if (zstdRelativePath.isEmpty()) {
           doZstdCompression = false;
         } else {
-          javaLibraryPath =
-              agent.get().getNativePath() + File.separator + zstdRelativePath.get().toString();
+          javaLibraryPath = agent.get().getNativePath() + File.separator + zstdRelativePath.get();
         }
       } catch (IOException e) {
         LOG.info(e, "Couldn't list agent's native libs");
@@ -1005,7 +1003,7 @@ public class RealAndroidDevice implements AndroidDevice {
     private boolean wrotePayload;
     @Nullable private OutputStream outToDevice;
     private Optional<Exception> error;
-    private boolean doZstdCompression;
+    private final boolean doZstdCompression;
 
     BuckInitiatedInstallReceiver(
         Closer closer, String filesType, Map<Path, Path> installPaths, boolean doZstdCompression) {
@@ -1048,13 +1046,10 @@ public class RealAndroidDevice implements AndroidDevice {
           LOG.verbose("Wrote key");
           if (doZstdCompression) {
             CountingOutputStream countingOutputStream = new CountingOutputStream(outToDevice);
-            ZstdOutputStream zstdOutputStream = new ZstdOutputStream(countingOutputStream);
-            zstdOutputStream.setCloseFrameOnFlush(true);
-            try {
+            try (ZstdOutputStream zstdOutputStream = new ZstdOutputStream(countingOutputStream)) {
+              zstdOutputStream.setCloseFrameOnFlush(true);
               multiInstallFilesToStream(zstdOutputStream, filesType, installPaths);
               LOG.info("Size of compressed bytes is %,d", countingOutputStream.getCount());
-            } finally {
-              zstdOutputStream.close();
             }
           } else {
             multiInstallFilesToStream(outToDevice, filesType, installPaths);
@@ -1145,15 +1140,13 @@ public class RealAndroidDevice implements AndroidDevice {
   public void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception {
     StringBuilder commandBuilder = new StringBuilder();
     commandBuilder.append("am broadcast -a ").append(action);
-    stringExtras
-        .entrySet()
-        .forEach(
-            entry ->
-                commandBuilder
-                    .append(" --es ")
-                    .append(Escaper.escapeAsShellString(entry.getKey()))
-                    .append(" ")
-                    .append(Escaper.escapeAsShellString(entry.getValue())));
+    stringExtras.forEach(
+        (key, value) ->
+            commandBuilder
+                .append(" --es ")
+                .append(Escaper.escapeAsShellString(key))
+                .append(" ")
+                .append(Escaper.escapeAsShellString(value)));
     try {
       executeCommandWithErrorChecking(commandBuilder.toString());
       androidInstallPrinter.printWarning("Successfully sent broadcast " + action);
@@ -1249,12 +1242,5 @@ public class RealAndroidDevice implements AndroidDevice {
 
     stream.write("000D 0 --complete\n".getBytes(StandardCharsets.UTF_8));
     stream.flush();
-  }
-
-  private AutoCloseable getEventScope(Optional<BuckEventBus> eventBus, String name) {
-    if (eventBus.isPresent()) {
-      return SimplePerfEvent.scope(eventBus.get().isolated(), name);
-    }
-    return EMPTY;
   }
 }

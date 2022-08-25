@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.exopackage.ScopeUtils.getEventScope;
 import static com.facebook.buck.util.concurrent.MostExecutors.newMultiThreadExecutor;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
@@ -84,8 +85,6 @@ public class AdbHelper implements AndroidDevicesHelper {
   private static final Logger LOG = Logger.get(AdbHelper.class);
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
-
-  private static final AutoCloseable EMPTY = () -> {};
 
   /** Pattern that matches safe package names. (Must be a full string match). */
   public static final Pattern PACKAGE_NAME_PATTERN = Pattern.compile("[\\w.-]+");
@@ -271,24 +270,6 @@ public class AdbHelper implements AndroidDevicesHelper {
     if (failureCount != 0) {
       throw new HumanReadableException("Failed to %s on %d device(s).", description, failureCount);
     }
-  }
-
-  private AutoCloseable getEventScope(
-      Optional<BuckEventBus> eventBus,
-      SimplePerfEvent.PerfEventTitle perfEventTitle,
-      String k1,
-      Object v1) {
-    if (eventBus.isPresent()) {
-      return SimplePerfEvent.scope(eventBus.get().isolated(), perfEventTitle, k1, v1);
-    }
-    return EMPTY;
-  }
-
-  private AutoCloseable getEventScope(Optional<BuckEventBus> eventBus, String name) {
-    if (eventBus.isPresent()) {
-      return SimplePerfEvent.scope(eventBus.get().isolated(), name);
-    }
-    return EMPTY;
   }
 
   private synchronized ListeningExecutorService getExecutorService() {

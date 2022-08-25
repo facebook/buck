@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android.exopackage;
 
+import static com.facebook.buck.android.exopackage.ScopeUtils.getEventScope;
+
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.AndroidInstallPrinter;
 import com.facebook.buck.android.DefaultAndroidInstallerPrinter;
@@ -74,8 +76,6 @@ public class ExopackageInstaller {
   private static final int RM_GROUPING_THRESHOLD = 10;
 
   public static final Path EXOPACKAGE_INSTALL_ROOT = Paths.get("/data/local/tmp/exopackage/");
-
-  private static final AutoCloseable EMPTY = () -> {};
 
   private final IsolatedExopackageInfo exoInfo;
   private final AndroidInstallPrinter androidPrinter;
@@ -145,7 +145,7 @@ public class ExopackageInstaller {
     File apk = isolatedApkInfo.getApkPath().toFile();
 
     if (shouldAppBeInstalled(isolatedApkInfo)) {
-      try (AutoCloseable ignored = getEventScope("install_exo_apk")) {
+      try (AutoCloseable ignored = getEventScope(eventBus, "install_exo_apk")) {
         boolean success = device.installApkOnDevice(apk, /*installViaSd=*/ false, false);
         if (!success) {
           throw new RuntimeException("Installing Apk failed.");
@@ -154,15 +154,8 @@ public class ExopackageInstaller {
     }
   }
 
-  private AutoCloseable getEventScope(String name) {
-    if (eventBus.isPresent()) {
-      return SimplePerfEvent.scope(eventBus.get().isolated(), name);
-    }
-    return EMPTY;
-  }
-
   private void killApp() throws Exception {
-    try (AutoCloseable ignored = getEventScope("kill_app")) {
+    try (AutoCloseable ignored = getEventScope(eventBus, "kill_app")) {
       device.stopPackage(packageName);
     }
   }
@@ -294,14 +287,8 @@ public class ExopackageInstaller {
   }
 
   private AutoCloseable getPackageInfoScope(String packageName) {
-    if (eventBus.isPresent()) {
-      return SimplePerfEvent.scope(
-          eventBus.get().isolated(),
-          SimplePerfEvent.PerfEventTitle.of("get_package_info"),
-          "package",
-          packageName);
-    }
-    return EMPTY;
+    return getEventScope(
+        eventBus, SimplePerfEvent.PerfEventTitle.of("get_package_info"), "package", packageName);
   }
 
   private boolean shouldAppBeInstalled(HasInstallableApk.IsolatedApkInfo apkInfo) throws Exception {
@@ -327,7 +314,7 @@ public class ExopackageInstaller {
   }
 
   private String getInstalledAppSignature(String packagePath) throws Exception {
-    try (AutoCloseable ignored = getEventScope("get_app_signature")) {
+    try (AutoCloseable ignored = getEventScope(eventBus, "get_app_signature")) {
       String output = device.getSignature(packagePath);
 
       String result = output.trim();
@@ -385,7 +372,7 @@ public class ExopackageInstaller {
 
   private void installFiles(String filesType, ImmutableMap<Path, Path> filesToInstall)
       throws Exception {
-    try (AutoCloseable ignored = getEventScope("multi_install_" + filesType);
+    try (AutoCloseable ignored = getEventScope(eventBus, "multi_install_" + filesType);
         AutoCloseable ignored1 = device.createForward()) {
       // Make sure all the directories exist.
       filesToInstall.keySet().stream()

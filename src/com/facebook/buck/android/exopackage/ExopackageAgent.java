@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android.exopackage;
 
+import static com.facebook.buck.android.exopackage.ScopeUtils.getEventScope;
+
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.core.util.log.Logger;
@@ -30,8 +32,6 @@ import javax.annotation.Nullable;
 class ExopackageAgent {
 
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
-
-  private static final AutoCloseable EMPTY = () -> {};
 
   private final boolean useNativeAgent;
   private final String classPath;
@@ -129,15 +129,16 @@ class ExopackageAgent {
         uninstallAgent(eventBus, device);
         agentInfo = Optional.empty();
       }
-      if (!agentInfo.isPresent()) {
+      if (agentInfo.isEmpty()) {
         LOG.debug("Installing agent.");
         installAgentApk(eventBus, device, agentApkPath);
         agentInfo = device.getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       }
+      PackageInfo packageInfo = agentInfo.get();
       return new ExopackageAgent(
           useNativeAgent(eventBus, device, alwaysUseJavaAgent),
-          agentInfo.get().apkPath,
-          agentInfo.get().nativeLibPath);
+          packageInfo.apkPath,
+          packageInfo.nativeLibPath);
     } catch (Exception e) {
       Throwables.throwIfUnchecked(e);
       throw new RuntimeException(e);
@@ -165,12 +166,5 @@ class ExopackageAgent {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private static AutoCloseable getEventScope(Optional<BuckEventBus> eventBus, String name) {
-    if (eventBus.isPresent()) {
-      return SimplePerfEvent.scope(eventBus.get().isolated(), name);
-    }
-    return EMPTY;
   }
 }

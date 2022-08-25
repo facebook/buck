@@ -73,7 +73,7 @@ class AndroidInstall {
             Optional.of(adbExecutable),
             apkOptions.restartAdbOnFailure,
             apkOptions.skipInstallMetadata,
-            apkOptions.alwayUseJavaAgent,
+            apkOptions.alwaysUseJavaAgent,
             apkOptions.isZstdCompressionEnabled,
             apkOptions.agentPortBase);
   }

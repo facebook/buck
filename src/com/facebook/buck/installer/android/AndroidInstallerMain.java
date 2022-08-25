@@ -71,9 +71,7 @@ public class AndroidInstallerMain {
 
   private void run(AndroidCommandLineOptions options, Logger logger)
       throws IOException, InterruptedException {
-    AndroidInstallerManager androidInstallerManager = AndroidInstallerManager.getInstance();
-    androidInstallerManager.setLogger(logger);
-    androidInstallerManager.setCLIOptions(options);
+    AndroidInstallerManager androidInstallerManager = new AndroidInstallerManager(logger, options);
     /** Starts the GRPC Server */
     new InstallerServer(
         options.getUnixDomainSocket(), androidInstallerManager, logger, options.getTcpPort());

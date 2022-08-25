@@ -33,11 +33,14 @@ import java.util.logging.Logger; // NOPMD
  */
 class AndroidInstallerManager implements InstallCommand {
 
-  private static volatile AndroidInstallerManager instance;
-  private AndroidCommandLineOptions options;
-  private Logger logger;
+  private final AndroidCommandLineOptions options;
+  private final Logger logger;
+  private final Map<InstallId, AndroidArtifacts> installIdToFutureMap = new HashMap<>();
 
-  public final Map<InstallId, AndroidArtifacts> installIdToFutureMap = new HashMap<>();
+  AndroidInstallerManager(Logger logger, AndroidCommandLineOptions options) {
+    this.logger = logger;
+    this.options = options;
+  }
 
   /**
    * Coordinates the install artifacts needed for an install. The install_android_options.json is
@@ -91,28 +94,9 @@ class AndroidInstallerManager implements InstallCommand {
     }
   }
 
-  public static AndroidInstallerManager getInstance() {
-    if (instance == null) {
-      synchronized (AndroidInstallerManager.class) {
-        if (instance == null) {
-          instance = new AndroidInstallerManager();
-        }
-      }
-    }
-    return instance;
-  }
-
   private AndroidArtifacts getOrMakeAndroidArtifacts(InstallId install_id) {
     synchronized (installIdToFutureMap) {
       return installIdToFutureMap.computeIfAbsent(install_id, ignore -> new AndroidArtifacts());
     }
-  }
-
-  public void setCLIOptions(AndroidCommandLineOptions options) {
-    this.options = options;
-  }
-
-  public void setLogger(Logger logger) {
-    this.logger = logger;
   }
 }

@@ -373,6 +373,7 @@ HELPERS_SRCS = [
     "exopackage/NativeExoHelper.java",
     "exopackage/RealAndroidDevice.java",
     "exopackage/ResourcesExoHelper.java",
+    "exopackage/ScopeUtils.java",
 ]
 
 java_immutables_library(

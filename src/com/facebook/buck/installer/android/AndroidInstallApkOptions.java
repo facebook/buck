@@ -32,7 +32,7 @@ public class AndroidInstallApkOptions {
 
   public final boolean restartAdbOnFailure;
   public final boolean skipInstallMetadata;
-  public final boolean alwayUseJavaAgent;
+  public final boolean alwaysUseJavaAgent;
   public final boolean isZstdCompressionEnabled;
   public final int agentPortBase;
 
@@ -42,7 +42,7 @@ public class AndroidInstallApkOptions {
         parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
     this.restartAdbOnFailure = readBoolean(jsonData, "adb_restart_on_failure");
     this.skipInstallMetadata = readBoolean(jsonData, "skip_install_metadata");
-    this.alwayUseJavaAgent = readBoolean(jsonData, "skip_install_metadata");
+    this.alwaysUseJavaAgent = readBoolean(jsonData, "skip_install_metadata");
     this.isZstdCompressionEnabled = readBoolean(jsonData, "is_zstd_compression_enabled");
     this.agentPortBase = readInt(jsonData, "agent_port_base", 2828);
   }
