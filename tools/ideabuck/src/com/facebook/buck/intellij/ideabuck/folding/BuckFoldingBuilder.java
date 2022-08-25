@@ -249,6 +249,10 @@ public class BuckFoldingBuilder extends CustomFoldingBuilder {
   private static TextRange rangeExcludingWhitespace(PsiElement first, PsiElement last) {
     first = deepFirst(first);
     last = deepLast(last);
+    if (first == last) {
+      return new TextRange(
+          first.getTextRange().getStartOffset(), last.getTextRange().getEndOffset());
+    }
     while (WHITESPACE_TOKENS.contains(first.getNode().getElementType())) {
       PsiElement next = nextInTree(first);
       if (next == null) {
