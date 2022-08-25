@@ -50,12 +50,12 @@ class AppleInstallerManager implements InstallCommand {
   }
 
   @Override
-  public InstallResult install(String name, Path appPath, InstallId installId) {
+  public InstallResult install(String artifactName, Path artifactPath, InstallId installId) {
     SettableFuture<AppleInstallAppOptions> appInstallOptionsFuture = getOptionsFuture(installId);
     // if options file
-    if (appPath.endsWith("install_apple_data.json")) {
+    if (artifactName.equals("options")) {
       try {
-        appInstallOptionsFuture.set(new AppleInstallAppOptions(appPath));
+        appInstallOptionsFuture.set(new AppleInstallAppOptions(artifactPath));
         return InstallResult.success();
       } catch (Exception err) {
         String errMsg = Throwables.getStackTraceAsString(err);
@@ -84,8 +84,8 @@ class AppleInstallerManager implements InstallCommand {
               appleDeviceController,
               appleInstallAppOptions,
               logger,
-              appPath);
-      return appleInstall.installAppleBundle(appPath);
+              artifactPath);
+      return appleInstall.installAppleBundle(artifactPath);
     } catch (Exception err) {
       String errMsg = Throwables.getStackTraceAsString(err);
       return InstallResult.error(errMsg);
