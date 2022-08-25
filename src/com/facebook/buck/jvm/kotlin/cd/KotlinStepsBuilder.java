@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.kotlin;
+package com.facebook.buck.jvm.kotlin.cd;
 
 import com.facebook.buck.cd.model.java.BaseJarCommand;
 import com.facebook.buck.cd.model.java.FilesystemParams;
@@ -37,7 +37,10 @@ import com.facebook.buck.jvm.cd.serialization.java.CompilerOutputPathsValueSeria
 import com.facebook.buck.jvm.cd.serialization.java.JarParametersSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.JavaAbiInfoSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacSerializer;
+import com.facebook.buck.jvm.cd.serialization.kotlin.KotlinExtraParamsSerializer;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.kotlin.DaemonKotlincToJarStepFactory;
+import com.facebook.buck.jvm.kotlin.KotlinExtraParams;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -149,7 +152,8 @@ public class KotlinStepsBuilder {
             ? Optional.of(RelPathSerializer.deserialize(libraryJarBaseCommand.getPathToClasses()))
             : Optional.empty(),
         ResolvedJavacSerializer.deserialize(baseJarCommand.getResolvedJavac()),
-        null); // TODO: Deserialize KotlinExtraParams
+        KotlinExtraParamsSerializer.deserialize(
+            baseJarCommand.getResolvedJavacOptions(), libraryJarCommand.getKotlinExtraParams()));
 
     if (libraryJarBaseCommand.hasUnusedDependenciesParams()) {
       libraryStepsBuilder.addUnusedDependencyStep(
@@ -200,7 +204,8 @@ public class KotlinStepsBuilder {
             : null,
         AbsPathSerializer.deserialize(baseJarCommand.getBuildCellRootPath()),
         ResolvedJavacSerializer.deserialize(baseJarCommand.getResolvedJavac()),
-        null); // TODO: Deserialize KotlinExtraParams
+        KotlinExtraParamsSerializer.deserialize(
+            baseJarCommand.getResolvedJavacOptions(), abiJarCommand.getKotlinExtraParams()));
 
     return abiStepsBuilder.buildIsolatedSteps();
   }

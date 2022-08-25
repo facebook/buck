@@ -48,11 +48,40 @@ message BaseCommandParams {
 }
 
 message LibraryJarCommand {
-    javacd.api.v1.BaseJarCommand baseJarCommand = 1;
-    javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;
+    KotlinExtraParams kotlinExtraParams = 1;
+    javacd.api.v1.BaseJarCommand baseJarCommand = 2;
+    javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;
 }
 
 message AbiJarCommand {
-    javacd.api.v1.BaseJarCommand baseJarCommand = 1;
-    javacd.api.v1.JarParameters abiJarParameters = 2;
+    KotlinExtraParams kotlinExtraParams = 1;
+    javacd.api.v1.BaseJarCommand baseJarCommand = 2;
+    javacd.api.v1.JarParameters abiJarParameters = 3;
+}
+
+message KotlinExtraParams {
+    AbsPath pathToKotlinc = 1;
+    repeated AbsPath extraClassPaths = 2;
+    AbsPath standardLibraryClassPath = 3;
+    AbsPath annotationProcessingClassPath = 4;
+    AnnotationProcessingTool annotationProcessingTool = 5;
+    repeated string extraKotlincArguments = 6;
+    // kotlinCompilerPlugin keys are AbsPaths encoded as strings due to limitations in proto3.
+    map<string, PluginParams> kotlinCompilerPlugins = 7;
+    map<string, AbsPath> kosabiPluginOptions = 8;
+    repeated AbsPath friendPaths = 9;
+    repeated AbsPath kotlinHomeLibraries = 10;
+    string jvmTarget = 11;
+    bool shouldGenerateAnnotationProcessingStats = 12;
+    bool shouldVerifySourceOnlyAbiConstraints = 13;
+}
+
+message PluginParams {
+    map<string, string> params = 1;
+}
+
+/** Model for KotlinLibraryDescription.AnnotationProcessingTool */
+enum AnnotationProcessingTool {
+    KAPT = 0;
+    JAVAC = 1;
 }

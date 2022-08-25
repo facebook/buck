@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+buck_java_library(
+    name = "kotlin",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/jvm/kotlin/...",
+    ],
+    deps = [
+        "//src-gen:javacd-model",
+        "//src-gen:kotlincd-model",
+        "//src/com/facebook/buck/jvm/cd/serialization:util",
+        "//src/com/facebook/buck/jvm/cd/serialization:serialization",
+        "//src/com/facebook/buck/jvm/cd/serialization/java:java",
+        "//src/com/facebook/buck/jvm/kotlin:kotlin",
+        "//third-party/java/guava:guava",
+    ],
+)

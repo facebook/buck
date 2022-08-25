@@ -10,28 +10,41 @@ public interface LibraryJarCommandOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+   */
+  boolean hasKotlinExtraParams();
+  /**
+   * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+   */
+  com.facebook.buck.cd.model.kotlin.KotlinExtraParams getKotlinExtraParams();
+  /**
+   * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+   */
+  com.facebook.buck.cd.model.kotlin.KotlinExtraParamsOrBuilder getKotlinExtraParamsOrBuilder();
+
+  /**
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
    */
   boolean hasBaseJarCommand();
   /**
-   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
    */
   com.facebook.buck.cd.model.java.BaseJarCommand getBaseJarCommand();
   /**
-   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
    */
   com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder getBaseJarCommandOrBuilder();
 
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
    */
   boolean hasLibraryJarBaseCommand();
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
    */
   com.facebook.buck.cd.model.java.LibraryJarBaseCommand getLibraryJarBaseCommand();
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
    */
   com.facebook.buck.cd.model.java.LibraryJarBaseCommandOrBuilder getLibraryJarBaseCommandOrBuilder();
 }

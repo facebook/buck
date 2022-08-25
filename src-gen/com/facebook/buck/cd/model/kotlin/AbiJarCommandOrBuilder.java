@@ -10,28 +10,41 @@ public interface AbiJarCommandOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+   */
+  boolean hasKotlinExtraParams();
+  /**
+   * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+   */
+  com.facebook.buck.cd.model.kotlin.KotlinExtraParams getKotlinExtraParams();
+  /**
+   * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+   */
+  com.facebook.buck.cd.model.kotlin.KotlinExtraParamsOrBuilder getKotlinExtraParamsOrBuilder();
+
+  /**
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
    */
   boolean hasBaseJarCommand();
   /**
-   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
    */
   com.facebook.buck.cd.model.java.BaseJarCommand getBaseJarCommand();
   /**
-   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
    */
   com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder getBaseJarCommandOrBuilder();
 
   /**
-   * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+   * <code>.javacd.api.v1.JarParameters abiJarParameters = 3;</code>
    */
   boolean hasAbiJarParameters();
   /**
-   * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+   * <code>.javacd.api.v1.JarParameters abiJarParameters = 3;</code>
    */
   com.facebook.buck.cd.model.java.JarParameters getAbiJarParameters();
   /**
-   * <code>.javacd.api.v1.JarParameters abiJarParameters = 2;</code>
+   * <code>.javacd.api.v1.JarParameters abiJarParameters = 3;</code>
    */
   com.facebook.buck.cd.model.java.JarParametersOrBuilder getAbiJarParametersOrBuilder();
 }

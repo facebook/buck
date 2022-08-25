@@ -45,6 +45,19 @@ private static final long serialVersionUID = 0L;
             done = true;
             break;
           case 10: {
+            com.facebook.buck.cd.model.kotlin.KotlinExtraParams.Builder subBuilder = null;
+            if (kotlinExtraParams_ != null) {
+              subBuilder = kotlinExtraParams_.toBuilder();
+            }
+            kotlinExtraParams_ = input.readMessage(com.facebook.buck.cd.model.kotlin.KotlinExtraParams.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(kotlinExtraParams_);
+              kotlinExtraParams_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
+          case 18: {
             com.facebook.buck.cd.model.java.BaseJarCommand.Builder subBuilder = null;
             if (baseJarCommand_ != null) {
               subBuilder = baseJarCommand_.toBuilder();
@@ -57,7 +70,7 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
-          case 18: {
+          case 26: {
             com.facebook.buck.cd.model.java.LibraryJarBaseCommand.Builder subBuilder = null;
             if (libraryJarBaseCommand_ != null) {
               subBuilder = libraryJarBaseCommand_.toBuilder();
@@ -102,43 +115,64 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.cd.model.kotlin.LibraryJarCommand.class, com.facebook.buck.cd.model.kotlin.LibraryJarCommand.Builder.class);
   }
 
-  public static final int BASEJARCOMMAND_FIELD_NUMBER = 1;
+  public static final int KOTLINEXTRAPARAMS_FIELD_NUMBER = 1;
+  private com.facebook.buck.cd.model.kotlin.KotlinExtraParams kotlinExtraParams_;
+  /**
+   * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+   */
+  public boolean hasKotlinExtraParams() {
+    return kotlinExtraParams_ != null;
+  }
+  /**
+   * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+   */
+  public com.facebook.buck.cd.model.kotlin.KotlinExtraParams getKotlinExtraParams() {
+    return kotlinExtraParams_ == null ? com.facebook.buck.cd.model.kotlin.KotlinExtraParams.getDefaultInstance() : kotlinExtraParams_;
+  }
+  /**
+   * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+   */
+  public com.facebook.buck.cd.model.kotlin.KotlinExtraParamsOrBuilder getKotlinExtraParamsOrBuilder() {
+    return getKotlinExtraParams();
+  }
+
+  public static final int BASEJARCOMMAND_FIELD_NUMBER = 2;
   private com.facebook.buck.cd.model.java.BaseJarCommand baseJarCommand_;
   /**
-   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
    */
   public boolean hasBaseJarCommand() {
     return baseJarCommand_ != null;
   }
   /**
-   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
    */
   public com.facebook.buck.cd.model.java.BaseJarCommand getBaseJarCommand() {
     return baseJarCommand_ == null ? com.facebook.buck.cd.model.java.BaseJarCommand.getDefaultInstance() : baseJarCommand_;
   }
   /**
-   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+   * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
    */
   public com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder getBaseJarCommandOrBuilder() {
     return getBaseJarCommand();
   }
 
-  public static final int LIBRARYJARBASECOMMAND_FIELD_NUMBER = 2;
+  public static final int LIBRARYJARBASECOMMAND_FIELD_NUMBER = 3;
   private com.facebook.buck.cd.model.java.LibraryJarBaseCommand libraryJarBaseCommand_;
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
    */
   public boolean hasLibraryJarBaseCommand() {
     return libraryJarBaseCommand_ != null;
   }
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
    */
   public com.facebook.buck.cd.model.java.LibraryJarBaseCommand getLibraryJarBaseCommand() {
     return libraryJarBaseCommand_ == null ? com.facebook.buck.cd.model.java.LibraryJarBaseCommand.getDefaultInstance() : libraryJarBaseCommand_;
   }
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
    */
   public com.facebook.buck.cd.model.java.LibraryJarBaseCommandOrBuilder getLibraryJarBaseCommandOrBuilder() {
     return getLibraryJarBaseCommand();
@@ -158,11 +192,14 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
+    if (kotlinExtraParams_ != null) {
+      output.writeMessage(1, getKotlinExtraParams());
+    }
     if (baseJarCommand_ != null) {
-      output.writeMessage(1, getBaseJarCommand());
+      output.writeMessage(2, getBaseJarCommand());
     }
     if (libraryJarBaseCommand_ != null) {
-      output.writeMessage(2, getLibraryJarBaseCommand());
+      output.writeMessage(3, getLibraryJarBaseCommand());
     }
     unknownFields.writeTo(output);
   }
@@ -173,13 +210,17 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
+    if (kotlinExtraParams_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(1, getKotlinExtraParams());
+    }
     if (baseJarCommand_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(1, getBaseJarCommand());
+        .computeMessageSize(2, getBaseJarCommand());
     }
     if (libraryJarBaseCommand_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(2, getLibraryJarBaseCommand());
+        .computeMessageSize(3, getLibraryJarBaseCommand());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -196,6 +237,11 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.cd.model.kotlin.LibraryJarCommand other = (com.facebook.buck.cd.model.kotlin.LibraryJarCommand) obj;
 
+    if (hasKotlinExtraParams() != other.hasKotlinExtraParams()) return false;
+    if (hasKotlinExtraParams()) {
+      if (!getKotlinExtraParams()
+          .equals(other.getKotlinExtraParams())) return false;
+    }
     if (hasBaseJarCommand() != other.hasBaseJarCommand()) return false;
     if (hasBaseJarCommand()) {
       if (!getBaseJarCommand()
@@ -217,6 +263,10 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    if (hasKotlinExtraParams()) {
+      hash = (37 * hash) + KOTLINEXTRAPARAMS_FIELD_NUMBER;
+      hash = (53 * hash) + getKotlinExtraParams().hashCode();
+    }
     if (hasBaseJarCommand()) {
       hash = (37 * hash) + BASEJARCOMMAND_FIELD_NUMBER;
       hash = (53 * hash) + getBaseJarCommand().hashCode();
@@ -358,6 +408,12 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      if (kotlinExtraParamsBuilder_ == null) {
+        kotlinExtraParams_ = null;
+      } else {
+        kotlinExtraParams_ = null;
+        kotlinExtraParamsBuilder_ = null;
+      }
       if (baseJarCommandBuilder_ == null) {
         baseJarCommand_ = null;
       } else {
@@ -396,6 +452,11 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.facebook.buck.cd.model.kotlin.LibraryJarCommand buildPartial() {
       com.facebook.buck.cd.model.kotlin.LibraryJarCommand result = new com.facebook.buck.cd.model.kotlin.LibraryJarCommand(this);
+      if (kotlinExtraParamsBuilder_ == null) {
+        result.kotlinExtraParams_ = kotlinExtraParams_;
+      } else {
+        result.kotlinExtraParams_ = kotlinExtraParamsBuilder_.build();
+      }
       if (baseJarCommandBuilder_ == null) {
         result.baseJarCommand_ = baseJarCommand_;
       } else {
@@ -454,6 +515,9 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(com.facebook.buck.cd.model.kotlin.LibraryJarCommand other) {
       if (other == com.facebook.buck.cd.model.kotlin.LibraryJarCommand.getDefaultInstance()) return this;
+      if (other.hasKotlinExtraParams()) {
+        mergeKotlinExtraParams(other.getKotlinExtraParams());
+      }
       if (other.hasBaseJarCommand()) {
         mergeBaseJarCommand(other.getBaseJarCommand());
       }
@@ -489,17 +553,134 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
+    private com.facebook.buck.cd.model.kotlin.KotlinExtraParams kotlinExtraParams_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.kotlin.KotlinExtraParams, com.facebook.buck.cd.model.kotlin.KotlinExtraParams.Builder, com.facebook.buck.cd.model.kotlin.KotlinExtraParamsOrBuilder> kotlinExtraParamsBuilder_;
+    /**
+     * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+     */
+    public boolean hasKotlinExtraParams() {
+      return kotlinExtraParamsBuilder_ != null || kotlinExtraParams_ != null;
+    }
+    /**
+     * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+     */
+    public com.facebook.buck.cd.model.kotlin.KotlinExtraParams getKotlinExtraParams() {
+      if (kotlinExtraParamsBuilder_ == null) {
+        return kotlinExtraParams_ == null ? com.facebook.buck.cd.model.kotlin.KotlinExtraParams.getDefaultInstance() : kotlinExtraParams_;
+      } else {
+        return kotlinExtraParamsBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+     */
+    public Builder setKotlinExtraParams(com.facebook.buck.cd.model.kotlin.KotlinExtraParams value) {
+      if (kotlinExtraParamsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        kotlinExtraParams_ = value;
+        onChanged();
+      } else {
+        kotlinExtraParamsBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+     */
+    public Builder setKotlinExtraParams(
+        com.facebook.buck.cd.model.kotlin.KotlinExtraParams.Builder builderForValue) {
+      if (kotlinExtraParamsBuilder_ == null) {
+        kotlinExtraParams_ = builderForValue.build();
+        onChanged();
+      } else {
+        kotlinExtraParamsBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+     */
+    public Builder mergeKotlinExtraParams(com.facebook.buck.cd.model.kotlin.KotlinExtraParams value) {
+      if (kotlinExtraParamsBuilder_ == null) {
+        if (kotlinExtraParams_ != null) {
+          kotlinExtraParams_ =
+            com.facebook.buck.cd.model.kotlin.KotlinExtraParams.newBuilder(kotlinExtraParams_).mergeFrom(value).buildPartial();
+        } else {
+          kotlinExtraParams_ = value;
+        }
+        onChanged();
+      } else {
+        kotlinExtraParamsBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+     */
+    public Builder clearKotlinExtraParams() {
+      if (kotlinExtraParamsBuilder_ == null) {
+        kotlinExtraParams_ = null;
+        onChanged();
+      } else {
+        kotlinExtraParams_ = null;
+        kotlinExtraParamsBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+     */
+    public com.facebook.buck.cd.model.kotlin.KotlinExtraParams.Builder getKotlinExtraParamsBuilder() {
+      
+      onChanged();
+      return getKotlinExtraParamsFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+     */
+    public com.facebook.buck.cd.model.kotlin.KotlinExtraParamsOrBuilder getKotlinExtraParamsOrBuilder() {
+      if (kotlinExtraParamsBuilder_ != null) {
+        return kotlinExtraParamsBuilder_.getMessageOrBuilder();
+      } else {
+        return kotlinExtraParams_ == null ?
+            com.facebook.buck.cd.model.kotlin.KotlinExtraParams.getDefaultInstance() : kotlinExtraParams_;
+      }
+    }
+    /**
+     * <code>.kotlincd.api.v1.KotlinExtraParams kotlinExtraParams = 1;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.cd.model.kotlin.KotlinExtraParams, com.facebook.buck.cd.model.kotlin.KotlinExtraParams.Builder, com.facebook.buck.cd.model.kotlin.KotlinExtraParamsOrBuilder> 
+        getKotlinExtraParamsFieldBuilder() {
+      if (kotlinExtraParamsBuilder_ == null) {
+        kotlinExtraParamsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.cd.model.kotlin.KotlinExtraParams, com.facebook.buck.cd.model.kotlin.KotlinExtraParams.Builder, com.facebook.buck.cd.model.kotlin.KotlinExtraParamsOrBuilder>(
+                getKotlinExtraParams(),
+                getParentForChildren(),
+                isClean());
+        kotlinExtraParams_ = null;
+      }
+      return kotlinExtraParamsBuilder_;
+    }
+
     private com.facebook.buck.cd.model.java.BaseJarCommand baseJarCommand_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.cd.model.java.BaseJarCommand, com.facebook.buck.cd.model.java.BaseJarCommand.Builder, com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder> baseJarCommandBuilder_;
     /**
-     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
      */
     public boolean hasBaseJarCommand() {
       return baseJarCommandBuilder_ != null || baseJarCommand_ != null;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
      */
     public com.facebook.buck.cd.model.java.BaseJarCommand getBaseJarCommand() {
       if (baseJarCommandBuilder_ == null) {
@@ -509,7 +690,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
      */
     public Builder setBaseJarCommand(com.facebook.buck.cd.model.java.BaseJarCommand value) {
       if (baseJarCommandBuilder_ == null) {
@@ -525,7 +706,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
      */
     public Builder setBaseJarCommand(
         com.facebook.buck.cd.model.java.BaseJarCommand.Builder builderForValue) {
@@ -539,7 +720,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
      */
     public Builder mergeBaseJarCommand(com.facebook.buck.cd.model.java.BaseJarCommand value) {
       if (baseJarCommandBuilder_ == null) {
@@ -557,7 +738,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
      */
     public Builder clearBaseJarCommand() {
       if (baseJarCommandBuilder_ == null) {
@@ -571,7 +752,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
      */
     public com.facebook.buck.cd.model.java.BaseJarCommand.Builder getBaseJarCommandBuilder() {
       
@@ -579,7 +760,7 @@ private static final long serialVersionUID = 0L;
       return getBaseJarCommandFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
      */
     public com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder getBaseJarCommandOrBuilder() {
       if (baseJarCommandBuilder_ != null) {
@@ -590,7 +771,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 1;</code>
+     * <code>.javacd.api.v1.BaseJarCommand baseJarCommand = 2;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.cd.model.java.BaseJarCommand, com.facebook.buck.cd.model.java.BaseJarCommand.Builder, com.facebook.buck.cd.model.java.BaseJarCommandOrBuilder> 
@@ -610,13 +791,13 @@ private static final long serialVersionUID = 0L;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.cd.model.java.LibraryJarBaseCommand, com.facebook.buck.cd.model.java.LibraryJarBaseCommand.Builder, com.facebook.buck.cd.model.java.LibraryJarBaseCommandOrBuilder> libraryJarBaseCommandBuilder_;
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     public boolean hasLibraryJarBaseCommand() {
       return libraryJarBaseCommandBuilder_ != null || libraryJarBaseCommand_ != null;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     public com.facebook.buck.cd.model.java.LibraryJarBaseCommand getLibraryJarBaseCommand() {
       if (libraryJarBaseCommandBuilder_ == null) {
@@ -626,7 +807,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     public Builder setLibraryJarBaseCommand(com.facebook.buck.cd.model.java.LibraryJarBaseCommand value) {
       if (libraryJarBaseCommandBuilder_ == null) {
@@ -642,7 +823,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     public Builder setLibraryJarBaseCommand(
         com.facebook.buck.cd.model.java.LibraryJarBaseCommand.Builder builderForValue) {
@@ -656,7 +837,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     public Builder mergeLibraryJarBaseCommand(com.facebook.buck.cd.model.java.LibraryJarBaseCommand value) {
       if (libraryJarBaseCommandBuilder_ == null) {
@@ -674,7 +855,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     public Builder clearLibraryJarBaseCommand() {
       if (libraryJarBaseCommandBuilder_ == null) {
@@ -688,7 +869,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     public com.facebook.buck.cd.model.java.LibraryJarBaseCommand.Builder getLibraryJarBaseCommandBuilder() {
       
@@ -696,7 +877,7 @@ private static final long serialVersionUID = 0L;
       return getLibraryJarBaseCommandFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     public com.facebook.buck.cd.model.java.LibraryJarBaseCommandOrBuilder getLibraryJarBaseCommandOrBuilder() {
       if (libraryJarBaseCommandBuilder_ != null) {
@@ -707,7 +888,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.cd.model.java.LibraryJarBaseCommand, com.facebook.buck.cd.model.java.LibraryJarBaseCommand.Builder, com.facebook.buck.cd.model.java.LibraryJarBaseCommandOrBuilder> 

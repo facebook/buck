@@ -129,7 +129,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
    * factory in a KotlinCD worker, and in the buck main process. Everything else necessary to create
    * compile steps should come in via {@link KotlinExtraParams}.
    */
-  DaemonKotlincToJarStepFactory(boolean hasAnnotationProcessing, boolean withDownwardApi) {
+  public DaemonKotlincToJarStepFactory(boolean hasAnnotationProcessing, boolean withDownwardApi) {
     super(hasAnnotationProcessing, withDownwardApi);
   }
 

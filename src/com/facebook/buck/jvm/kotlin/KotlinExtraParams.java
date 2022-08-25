@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
@@ -94,7 +95,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       Optional<String> jvmTarget,
       boolean shouldGenerateAnnotationProcessingStats,
       boolean shouldVerifySourceOnlyAbiConstraints) {
-    return ImmutableKotlinExtraParams.ofImpl(
+    return of(
         pathToKotlinc.map(path -> resolver.getAbsolutePath(path)),
         extraClassPaths,
         resolver.getAbsolutePath(standardLibraryClassPath),
@@ -114,6 +115,39 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
         resolver.getAllAbsolutePaths(friendPaths),
         resolver.getAllAbsolutePaths(kotlinHomeLibraries),
         ResolvedJavacOptions.of(javacOptions, resolver, rootPath),
+        jvmTarget,
+        shouldGenerateAnnotationProcessingStats,
+        shouldVerifySourceOnlyAbiConstraints);
+  }
+
+  /** Package extra params that were resolved before. */
+  public static KotlinExtraParams of(
+      Optional<AbsPath> pathToKotlinc,
+      ImmutableList<AbsPath> extraClassPaths,
+      AbsPath standardLibraryClassPath,
+      AbsPath annotationProcessingClassPath,
+      KotlinLibraryDescription.AnnotationProcessingTool annotationProcessingTool,
+      ImmutableList<String> extraKotlincArguments,
+      Map<AbsPath, ImmutableMap<String, String>> kotlinCompilerPlugins,
+      Map<String, AbsPath> kosabiPluginOptions,
+      ImmutableSortedSet<AbsPath> friendPaths,
+      ImmutableSortedSet<AbsPath> kotlinHomeLibraries,
+      ResolvedJavacOptions resolvedJavacOptions,
+      Optional<String> jvmTarget,
+      boolean shouldGenerateAnnotationProcessingStats,
+      boolean shouldVerifySourceOnlyAbiConstraints) {
+    return ImmutableKotlinExtraParams.ofImpl(
+        pathToKotlinc,
+        extraClassPaths,
+        standardLibraryClassPath,
+        annotationProcessingClassPath,
+        annotationProcessingTool,
+        extraKotlincArguments,
+        kotlinCompilerPlugins,
+        kosabiPluginOptions,
+        friendPaths,
+        kotlinHomeLibraries,
+        resolvedJavacOptions,
         jvmTarget,
         shouldGenerateAnnotationProcessingStats,
         shouldVerifySourceOnlyAbiConstraints);
