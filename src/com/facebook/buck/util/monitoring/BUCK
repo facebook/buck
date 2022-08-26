@@ -6,6 +6,7 @@ buck_java_library(
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/main:main_lib",
+        "//src/com/facebook/buck/jvm/kotlin/cd/workertool:main_lib",
         "//test/com/facebook/buck/...",
     ],
     deps = [

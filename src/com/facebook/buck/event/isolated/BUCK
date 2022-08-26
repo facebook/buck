@@ -5,6 +5,7 @@ buck_java_library(
     visibility = [
         "//src/com/facebook/buck/external/...",
         "//src/com/facebook/buck/jvm/java/...",
+        "//src/com/facebook/buck/jvm/kotlin/...",
         "//test/com/facebook/buck/...",
     ],
     deps = [
