@@ -104,6 +104,7 @@ public class LibraryBuildContext implements IjProjectElement {
 
     for (IjLibrary library : libraries) {
       aggregatedLibraryBuilder.addAllTargets(library.getTargets());
+      aggregatedLibraryBuilder.addAllAnnotationJars(library.getAnnotationJars());
       aggregatedLibraryBuilder.addAllBinaryJars(library.getBinaryJars());
       aggregatedLibraryBuilder.addAllClassPaths(library.getClassPaths());
       aggregatedLibraryBuilder.addAllSourceJars(library.getSourceJars());

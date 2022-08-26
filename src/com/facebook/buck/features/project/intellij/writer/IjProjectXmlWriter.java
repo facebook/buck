@@ -136,6 +136,7 @@ public class IjProjectXmlWriter extends IjProjectWriter {
     library = prepareLibraryToBeWritten(library, null);
 
     contents.add("name", library.getName());
+    contents.add("annotationJars", library.getAnnotationJars());
     contents.add("binaryJars", library.getBinaryJars());
     contents.add("classPaths", library.getClassPaths());
     contents.add("sourceJars", library.getSourceJars());

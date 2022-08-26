@@ -57,6 +57,11 @@ public abstract class IjLibrary implements IjProjectElement {
   @Value.Auxiliary
   public abstract ImmutableSet<BuildTarget> getTargets();
 
+  /** @return path to the jars for external annotations. */
+  @Value.NaturalOrder
+  @Value.Auxiliary
+  public abstract ImmutableSortedSet<Path> getAnnotationJars();
+
   /** @return path to the binary (.jar or .aar) the library represents. */
   @Value.NaturalOrder
   @Value.Auxiliary
@@ -143,6 +148,7 @@ public abstract class IjLibrary implements IjProjectElement {
       @Nullable Function<String, String> stringTransformer) {
     return builder()
         .from(this)
+        .setAnnotationJars(transform(getAnnotationJars(), pathTransformer))
         .setBinaryJars(transform(getBinaryJars(), pathTransformer))
         .setClassPaths(transform(getClassPaths(), pathTransformer))
         .setSourceJars(transform(getSourceJars(), pathTransformer))

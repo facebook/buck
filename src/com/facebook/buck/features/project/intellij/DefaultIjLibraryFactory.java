@@ -192,6 +192,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       // the AAR library is required to have a resources folder.
       library.addClassPaths(Paths.get(aarUnpackPath.toString(), "res"));
       library.addBinaryJars(Paths.get(aarUnpackPath.toString(), "classes.jar"));
+      library.addAnnotationJars(Paths.get(aarUnpackPath.toString(), "annotations.zip"));
     }
   }
 

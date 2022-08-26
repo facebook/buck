@@ -34,9 +34,15 @@ public final class %className% {
 
 >>
 
-ij_library(name, binaryJars, classPaths, javadocUrls, sourceJars) ::= <<
+ij_library(name, annotationJars, binaryJars, classPaths, javadocUrls, sourceJars) ::= <<
 <component name="libraryTable">
   <library name="%name%">
+%if(annotationJars)%
+    <ANNOTATIONS>
+%annotationJars:{annotationJar |
+      <root url="jar://$PROJECT_DIR$/%annotationJar%!/" />
+}%    </ANNOTATIONS>
+%endif%
     <CLASSES>
 %if(binaryJars)%
 %binaryJars:{binaryJar |
