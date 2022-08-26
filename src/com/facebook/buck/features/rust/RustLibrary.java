@@ -16,16 +16,41 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
+import java.util.function.Supplier;
 
 public abstract class RustLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements RustLinkable, NativeLinkableGroup {
+    implements RustLinkable, NativeLinkableGroup, AndroidPackageable {
   public RustLibrary(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
     super(buildTarget, projectFilesystem, params);
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
+    if (!isProcMacro()) {
+      return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
+    } else {
+      return ImmutableList.of();
+    }
+  }
+
+  @Override
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
+    if (!isProcMacro()) {
+      collector.addNativeLinkableAsset(this);
+    }
   }
 }
