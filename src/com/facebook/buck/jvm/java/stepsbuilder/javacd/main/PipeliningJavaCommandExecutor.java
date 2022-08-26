@@ -40,6 +40,7 @@ import com.facebook.buck.jvm.cd.serialization.java.CompilerOutputPathsValueSeria
 import com.facebook.buck.jvm.cd.serialization.java.JarParametersSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacSerializer;
+import com.facebook.buck.jvm.cd.workertool.StepExecutionUtils;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;

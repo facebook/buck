@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
+package com.facebook.buck.jvm.cd.workertool;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.Console;
@@ -24,13 +24,13 @@ import com.facebook.buck.util.unit.SizeUnit;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/** Shared utilities for the javacd entry points. */
+/** Shared utilities for the compiler daemon entry points. */
 public class MainUtils {
   private static final Logger LOG = Logger.get(MainUtils.class);
 
   private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
-  static void logCurrentJavacdState() {
+  public static void logCurrentCDState() {
     PerfStatsTracking.MemoryPerfStatsEvent memory = PerfStatsTracking.getMemoryPerfStatsEvent();
     long totalMemoryBytes = memory.getTotalMemoryBytes();
     long freeMemoryBytes = memory.getFreeMemoryBytes();
@@ -45,7 +45,7 @@ public class MainUtils {
             .collect(Collectors.joining(", "));
 
     LOG.info(
-        "Javacd state: executing tasks: %s, completed tasks: %s, largest pool size: %s, task count: %s. Available processors: %s, Time spend in GC: %s seconds, "
+        "CD state: executing tasks: %s, completed tasks: %s, largest pool size: %s, task count: %s. Available processors: %s, Time spend in GC: %s seconds, "
             + "Used Memory: %s, Free Memory: %s, Total Memory: %s, Max Memory: %s, Pools: %s",
         0,
         0,
@@ -60,7 +60,8 @@ public class MainUtils {
         pools);
   }
 
-  static void handleExceptionAndTerminate(Thread thread, Console console, Throwable throwable) {
+  public static void handleExceptionAndTerminate(
+      Thread thread, Console console, Throwable throwable) {
     // Remove an existing `ExternalLogHandler` handler that depend on the closed event pipe stream.
     Logger logger = Logger.get("");
     logger.cleanHandlers();
@@ -69,7 +70,7 @@ public class MainUtils {
     // this method logs the message with log.warn that would be noop as all logger handlers have
     // been cleaned and prints the message into a std err.
     console.printErrorText(
-        "Failed to execute java compilation action. Thread: "
+        "Failed to execute compilation action. Thread: "
             + thread
             + System.lineSeparator()
             + errorMessage);

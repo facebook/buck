@@ -26,6 +26,7 @@ import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.isolated.DefaultIsolatedEventBus;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.jvm.cd.workertool.MainUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -102,7 +103,7 @@ public class JavaCDMain {
           (t, e) -> MainUtils.handleExceptionAndTerminate(t, console, e));
 
       MONITORING_THREAD_POOL.scheduleAtFixedRate(
-          MainUtils::logCurrentJavacdState, 1, 10, TimeUnit.SECONDS);
+          MainUtils::logCurrentCDState, 1, 10, TimeUnit.SECONDS);
 
       try (NamedPipeWriter eventNamedPipe =
               NAMED_PIPE_FACTORY.connectAsWriter(

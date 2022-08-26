@@ -23,6 +23,7 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/cd:cd",
         "//src/com/facebook/buck/jvm/cd/serialization:serialization",
         "//src/com/facebook/buck/jvm/cd/serialization/java:java",
+        "//src/com/facebook/buck/jvm/cd/workertool:workertool",
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",

@@ -1,0 +1,26 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "workertool",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/jvm/...",
+        "//test/com/facebook/buck/jvm/...",
+    ],
+    deps = [
+        "//src-gen:downward-model",
+        "//src/com/facebook/buck/core/build/execution/context:context",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/downwardapi/protocol:protocol",
+        "//src/com/facebook/buck/downwardapi/utils:utils",
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/perf:perf",
+        "//src/com/facebook/buck/util/unit:unit",
+        "//src/com/facebook/buck/workertool/utils:utils",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

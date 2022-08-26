@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.jvm.cd.workertool.StepExecutionUtils;
 import com.facebook.buck.jvm.java.JavaStepsBuilder;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;

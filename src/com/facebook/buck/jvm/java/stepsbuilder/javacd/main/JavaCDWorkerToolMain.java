@@ -33,6 +33,9 @@ import com.facebook.buck.external.log.ExternalLogHandler;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.jvm.cd.workertool.MainUtils;
+import com.facebook.buck.jvm.cd.workertool.StepExecutionUtils;
+import com.facebook.buck.jvm.cd.workertool.WorkerToolParsedEnvs;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
@@ -344,7 +347,7 @@ public class JavaCDWorkerToolMain {
     int largestPoolSize = THREAD_POOL.getLargestPoolSize();
     long taskCount = THREAD_POOL.getTaskCount();
 
-    MainUtils.logCurrentJavacdState();
+    MainUtils.logCurrentCDState();
     LOG.info(
         "Javacd task state: executing tasks: %s, completed tasks: %s, largest pool size: %s, task count: %s.",
         activeCount, completedTaskCount, largestPoolSize, taskCount);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
+package com.facebook.buck.jvm.cd.workertool;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
@@ -42,20 +42,20 @@ import java.io.IOException;
 import java.io.OutputStream;
 import javax.annotation.Nonnull;
 
-/** Common methods used by java and pipelining java command executors */
-class StepExecutionUtils {
+/** Common methods used by CD worker command executors */
+public class StepExecutionUtils {
 
   private static final Logger LOG = Logger.get(StepExecutionUtils.class);
 
   private StepExecutionUtils() {}
 
-  static StepExecutionResult executeSteps(
+  public static StepExecutionResult executeSteps(
       ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext) {
     return IsolatedStepsRunner.executeWithDefaultExceptionHandling(steps, executionContext);
   }
 
   @Nonnull
-  static IsolatedExecutionContext createExecutionContext(
+  public static IsolatedExecutionContext createExecutionContext(
       ClassLoaderCache classLoaderCache,
       IsolatedEventBus eventBus,
       Platform platform,
@@ -75,7 +75,8 @@ class StepExecutionUtils {
         clock);
   }
 
-  static ResultEvent getResultEvent(ActionId actionId, StepExecutionResult stepExecutionResult) {
+  public static ResultEvent getResultEvent(
+      ActionId actionId, StepExecutionResult stepExecutionResult) {
     int exitCode = stepExecutionResult.getExitCode();
     ResultEvent.Builder resultEventBuilder =
         ResultEvent.newBuilder().setActionId(actionId.getValue()).setExitCode(exitCode);
@@ -107,13 +108,13 @@ class StepExecutionUtils {
     return resultEventBuilder.build();
   }
 
-  static void writeResultEvent(
+  public static void writeResultEvent(
       DownwardProtocol downwardProtocol, OutputStream eventsOutputStream, ResultEvent resultEvent)
       throws IOException {
     writeEvent(EventType.RESULT_EVENT, resultEvent, eventsOutputStream, downwardProtocol);
   }
 
-  static void writePipelineFinishedEvent(
+  public static void writePipelineFinishedEvent(
       DownwardProtocol downwardProtocol,
       OutputStream eventsOutputStream,
       ImmutableList<ActionId> actionIds)
@@ -139,7 +140,7 @@ class StepExecutionUtils {
         EventTypeMessage.newBuilder().setEventType(eventType).build(), event, eventsOutputStream);
   }
 
-  static void sendResultEvent(
+  public static void sendResultEvent(
       StepExecutionResult stepExecutionResult,
       ActionId actionId,
       DownwardProtocol downwardProtocol,

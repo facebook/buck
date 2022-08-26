@@ -54,6 +54,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
+import com.facebook.buck.jvm.cd.workertool.StepExecutionUtils;
 import com.facebook.buck.jvm.java.JavaCDWorkerStepUtils;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
