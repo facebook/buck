@@ -222,9 +222,11 @@ public class KotlincStep extends IsolatedStep {
         AbsPath jvmAbiPlugin =
             resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN);
         builder.add(X_PLUGIN_ARG + jvmAbiPlugin);
+        builder.add(PLUGIN);
+        builder.add("plugin:com.facebook.jvm.abi.gen:outputDir=" + outputPaths.getClassesDir());
+        builder.add(PLUGIN);
+        builder.add("plugin:com.facebook.jvm.abi.gen:earlyTermination=true");
       }
-      builder.add(PLUGIN);
-      builder.add("plugin:com.facebook.jvm.abi.gen:outputDir=" + outputPaths.getClassesDir());
 
       addClasspath(builder, this.sourceOnlyAbiClasspath);
     } else if (invokingRule.isSourceAbi()) {
