@@ -422,6 +422,13 @@ public class PythonBinaryDescription
                   cellRoots.getCellNameResolver(),
                   graphBuilder,
                   PythonUtil.macroExpanders(context.getTargetGraph()));
+          ImmutableSet<BuildTarget> preloadDeps =
+              ImmutableSet.copyOf(
+                  PythonUtil.getParamForPlatform(
+                      pythonPlatform,
+                      cxxPlatform,
+                      args.getPreloadDeps(),
+                      args.getPlatformPreloadDeps()));
           PythonPackageComponents allPackageComponents =
               PythonUtil.getAllComponents(
                   cellRoots,
@@ -443,7 +450,7 @@ public class PythonBinaryDescription
                       .map(macrosConverter::convert)
                       .collect(ImmutableList.toImmutableList()),
                   args.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy()),
-                  args.getPreloadDeps(),
+                  preloadDeps,
                   args.getCompile().orElse(false),
                   args.getPreferStrippedNativeObjects(),
                   args.getDeduplicateMergedLinkRoots(),
@@ -461,7 +468,7 @@ public class PythonBinaryDescription
               allPackageComponents,
               args.getBuildArgs(),
               getPackageStyle(buildTarget, args),
-              PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
+              PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, preloadDeps));
         }
       default:
         throw new IllegalStateException();
@@ -539,6 +546,11 @@ public class PythonBinaryDescription
     Optional<PythonBuckConfig.PackageStyle> getPackageStyle();
 
     ImmutableSet<BuildTarget> getPreloadDeps();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSet<BuildTarget>> getPlatformPreloadDeps() {
+      return PatternMatchedCollection.of();
+    }
 
     Optional<BuildTarget> getDummyOmnibus();
 

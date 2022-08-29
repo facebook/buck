@@ -409,6 +409,13 @@ public class PythonTestDescription
                   cellRoots.getCellNameResolver(),
                   graphBuilder,
                   PythonUtil.macroExpanders(context.getTargetGraph()));
+          ImmutableSet<BuildTarget> preloadDeps =
+              ImmutableSet.copyOf(
+                  PythonUtil.getParamForPlatform(
+                      pythonPlatform,
+                      cxxPlatform,
+                      args.getPreloadDeps(),
+                      args.getPlatformPreloadDeps()));
           PythonPackageComponents allComponents =
               PythonUtil.getAllComponents(
                   cellRoots,
@@ -430,7 +437,7 @@ public class PythonTestDescription
                       .map(macrosConverter::convert)
                       .collect(ImmutableList.toImmutableList()),
                   args.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy()),
-                  args.getPreloadDeps(),
+                  preloadDeps,
                   args.getCompile().orElse(false),
                   args.getPreferStrippedNativeObjects(),
                   args.getDeduplicateMergedLinkRoots(),
@@ -451,7 +458,7 @@ public class PythonTestDescription
                   allComponents,
                   args.getBuildArgs(),
                   getPackageStyle(buildTarget, args),
-                  PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
+                  PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, preloadDeps));
           graphBuilder.addToIndex(binary);
 
           if (testRunner.isPresent()) {
@@ -623,6 +630,11 @@ public class PythonTestDescription
     Optional<PythonBuckConfig.PackageStyle> getPackageStyle();
 
     ImmutableSet<BuildTarget> getPreloadDeps();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSet<BuildTarget>> getPlatformPreloadDeps() {
+      return PatternMatchedCollection.of();
+    }
 
     ImmutableList<StringWithMacros> getLinkerFlags();
 
