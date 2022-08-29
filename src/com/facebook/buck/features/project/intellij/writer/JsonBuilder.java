@@ -24,6 +24,7 @@ import com.facebook.buck.features.project.intellij.model.folders.IjSourceFolder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /** This is a utility class to build the json data for serialization of intellij project files. */
@@ -116,18 +117,17 @@ public class JsonBuilder {
 
   /** Extract the fields from IjLibrary and put into map. */
   public static void addLibraryFields(IjLibrary lib, JsonMap map) {
-    map.put(
-        "binaryJars",
-        lib.getBinaryJars().stream().map(Object::toString).collect(Collectors.toList()));
+    map.put("annotationJars", mapToString(lib.getAnnotationJars()));
+    map.put("binaryJars", mapToString(lib.getBinaryJars()));
 
-    map.put(
-        "classPaths",
-        lib.getClassPaths().stream().map(Object::toString).collect(Collectors.toList()));
+    map.put("classPaths", mapToString(lib.getClassPaths()));
 
     map.put("javadocUrls", lib.getJavadocUrls());
 
-    map.put(
-        "sourceJars",
-        lib.getSourceJars().stream().map(Object::toString).collect(Collectors.toList()));
+    map.put("sourceJars", mapToString(lib.getSourceJars()));
+  }
+
+  private static <T> List<String> mapToString(Collection<T> items) {
+    return items.stream().map(Object::toString).collect(Collectors.toList());
   }
 }
