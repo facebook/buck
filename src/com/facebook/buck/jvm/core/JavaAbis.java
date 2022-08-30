@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.core;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -87,5 +88,9 @@ public class JavaAbis {
     Preconditions.checkArgument(isAbiTarget(abiTarget));
     return abiTarget.withoutFlavors(
         CLASS_ABI_FLAVOR, SOURCE_ABI_FLAVOR, SOURCE_ONLY_ABI_FLAVOR, VERIFIED_SOURCE_ABI_FLAVOR);
+  }
+
+  public static RelPath getGenPathForClassAbiPartFromLibraryTarget(RelPath libraryTargetGenDir) {
+    return libraryTargetGenDir.resolveRel("__class_abi_part_tmp__");
   }
 }

@@ -22,6 +22,7 @@ import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.transform;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.cd.model.java.FilesystemParams;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
@@ -39,6 +40,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.BuildTargetValueExtraParams;
 import com.facebook.buck.jvm.core.FilesystemParamsUtils;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
@@ -235,6 +237,9 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
               .addAll(extraParams.getResolvedKotlinHomeLibraries())
               .build();
 
+      ImmutableMap<String, AbsPath> resolvedKosabiPluginOptionPath =
+          extraParams.getResolvedKosabiPluginOptionPath();
+
       String friendPathsArg = getFriendsPath(friendAbsPaths);
       String moduleName = getModuleName(invokingRule);
       String kotlinPluginGeneratedFullPath =
@@ -285,7 +290,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
           allClasspaths,
           extraParams.getResolvedKotlinHomeLibraries(),
           extraParams.getResolvedKotlinCompilerPlugins(),
-          extraParams.getResolvedKosabiPluginOptionPath(),
+          resolvedKosabiPluginOptionPath,
           kotlinPluginGeneratedFullPath,
           buildTargetValueExtraParams.getCellRelativeBasePath(),
           sourceFilePaths,
@@ -326,6 +331,28 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
               .addAll(extraParams.getResolvedKotlinHomeLibraries())
               .build();
 
+      // Use jvm-abi-gen for the kotlin part of class-abi, in order to get more accurate class-abi.
+      // But since it is a kotlinc plugin, we produce it during library build.
+      if (extraParams.shouldUseJvmAbiGen()
+          && invokingRule.isLibraryJar()
+          && parameters.getAbiGenerationMode() == AbiGenerationMode.CLASS
+          && resolvedKosabiPluginOptionPath.containsKey(
+              KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN)) {
+        // Acquiring jvm-abi-gen plugin's path from KosabiConfig as we are using their fork of
+        // jvm-abi-gen
+        AbsPath jvmAbiPlugin =
+            resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN);
+        extraArguments.add(X_PLUGIN_ARG + jvmAbiPlugin);
+        extraArguments.add(PLUGIN);
+        extraArguments.add(
+            "plugin:com.facebook.jvm.abi.gen:outputDir="
+                + rootPath.resolve(
+                    JavaAbis.getGenPathForClassAbiPartFromLibraryTarget(
+                        getGenPath(buckPaths, invokingRule))));
+        extraArguments.add(PLUGIN);
+        extraArguments.add("plugin:com.facebook.jvm.abi.gen:earlyTermination=false");
+      }
+
       steps.add(
           new KotlincStep(
               invokingRule,
@@ -343,7 +370,7 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
               parameters.shouldTrackClassUsage(),
               RelPath.get(filesystemParams.getConfiguredBuckOut().getPath()),
               cellToPathMappings,
-              extraParams.getResolvedKosabiPluginOptionPath(),
+              resolvedKosabiPluginOptionPath,
               sourceOnlyAbiClasspath,
               extraParams.shouldVerifySourceOnlyAbiConstraints()));
 
@@ -1020,16 +1047,12 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
 
   private static RelPath getKaptAnnotationGenPath(
       BuckPaths buckPaths, BuildTargetValue buildTargetValue) {
-    BuildTargetValueExtraParams extraParams = getBuildTargetValueExtraParams(buildTargetValue);
-    String format = extraParams.isFlavored() ? "%s" : "%s__";
-    return getGenPath(buckPaths, buildTargetValue, format).resolveRel("__kapt_generated__");
+    return getGenPath(buckPaths, buildTargetValue).resolveRel("__kapt_generated__");
   }
 
   private static RelPath getKspAnnotationGenPath(
       BuckPaths buckPaths, BuildTargetValue buildTargetValue) {
-    BuildTargetValueExtraParams extraParams = getBuildTargetValueExtraParams(buildTargetValue);
-    String format = extraParams.isFlavored() ? "%s" : "%s__";
-    return getGenPath(buckPaths, buildTargetValue, format).resolveRel("__ksp_generated__");
+    return getGenPath(buckPaths, buildTargetValue).resolveRel("__ksp_generated__");
   }
 
   /** Returns annotation path for the given {@code target} and {@code format} */
@@ -1037,6 +1060,13 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
       BuckPaths buckPaths, BuildTargetValue target, String format) {
     checkArgument(!format.startsWith("/"), "format string should not start with a slash");
     return getRelativePath(target, format, buckPaths.getAnnotationDir());
+  }
+
+  /** Returns `gen` directory path for the given {@code target} */
+  private static RelPath getGenPath(BuckPaths buckPaths, BuildTargetValue buildTargetValue) {
+    BuildTargetValueExtraParams extraParams = getBuildTargetValueExtraParams(buildTargetValue);
+    String format = extraParams.isFlavored() ? "%s" : "%s__";
+    return getGenPath(buckPaths, buildTargetValue, format);
   }
 
   /** Returns `gen` directory path for the given {@code target} and {@code format} */
