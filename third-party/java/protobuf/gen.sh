@@ -61,6 +61,10 @@ PROTOC_VERSION="3.7.0"
 #----------------------------------------------
 #  Sync protoc version with library version used.
 #----------------------------------------------
+#
+# If protoc is not installed on your machine, or you have a different version,
+# uncomment or manally run following code to install this version
+#
 #   PROTOC_ZIP=protoc-${PROTOC_VERSION}-${OS}-x86_64.zip
 #   curl -OL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/$PROTOC_ZIP"
 #   sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
