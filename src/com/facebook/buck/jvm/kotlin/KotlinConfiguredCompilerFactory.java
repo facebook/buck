@@ -102,6 +102,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         javacOptions,
         downwardApiConfig.isEnabledForKotlin(),
         kotlinBuckConfig.shouldGenerateAnnotationProcessingStats(),
+        kotlinBuckConfig.shouldUseJvmAbiGen(),
         Kosabi.getPluginOptionsMappings(
             targetConfiguration, KosabiConfig.of(kotlinBuckConfig.getDelegate())),
         kotlinArgs

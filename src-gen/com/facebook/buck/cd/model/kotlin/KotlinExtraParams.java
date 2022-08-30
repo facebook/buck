@@ -170,6 +170,11 @@ private static final long serialVersionUID = 0L;
           }
           case 104: {
 
+            shouldUseJvmAbiGen_ = input.readBool();
+            break;
+          }
+          case 112: {
+
             shouldVerifySourceOnlyAbiConstraints_ = input.readBool();
             break;
           }
@@ -657,10 +662,19 @@ private static final long serialVersionUID = 0L;
     return shouldGenerateAnnotationProcessingStats_;
   }
 
-  public static final int SHOULDVERIFYSOURCEONLYABICONSTRAINTS_FIELD_NUMBER = 13;
+  public static final int SHOULDUSEJVMABIGEN_FIELD_NUMBER = 13;
+  private boolean shouldUseJvmAbiGen_;
+  /**
+   * <code>bool shouldUseJvmAbiGen = 13;</code>
+   */
+  public boolean getShouldUseJvmAbiGen() {
+    return shouldUseJvmAbiGen_;
+  }
+
+  public static final int SHOULDVERIFYSOURCEONLYABICONSTRAINTS_FIELD_NUMBER = 14;
   private boolean shouldVerifySourceOnlyAbiConstraints_;
   /**
-   * <code>bool shouldVerifySourceOnlyAbiConstraints = 13;</code>
+   * <code>bool shouldVerifySourceOnlyAbiConstraints = 14;</code>
    */
   public boolean getShouldVerifySourceOnlyAbiConstraints() {
     return shouldVerifySourceOnlyAbiConstraints_;
@@ -722,8 +736,11 @@ private static final long serialVersionUID = 0L;
     if (shouldGenerateAnnotationProcessingStats_ != false) {
       output.writeBool(12, shouldGenerateAnnotationProcessingStats_);
     }
+    if (shouldUseJvmAbiGen_ != false) {
+      output.writeBool(13, shouldUseJvmAbiGen_);
+    }
     if (shouldVerifySourceOnlyAbiConstraints_ != false) {
-      output.writeBool(13, shouldVerifySourceOnlyAbiConstraints_);
+      output.writeBool(14, shouldVerifySourceOnlyAbiConstraints_);
     }
     unknownFields.writeTo(output);
   }
@@ -797,9 +814,13 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeBoolSize(12, shouldGenerateAnnotationProcessingStats_);
     }
+    if (shouldUseJvmAbiGen_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(13, shouldUseJvmAbiGen_);
+    }
     if (shouldVerifySourceOnlyAbiConstraints_ != false) {
       size += com.google.protobuf.CodedOutputStream
-        .computeBoolSize(13, shouldVerifySourceOnlyAbiConstraints_);
+        .computeBoolSize(14, shouldVerifySourceOnlyAbiConstraints_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -848,6 +869,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getJvmTarget())) return false;
     if (getShouldGenerateAnnotationProcessingStats()
         != other.getShouldGenerateAnnotationProcessingStats()) return false;
+    if (getShouldUseJvmAbiGen()
+        != other.getShouldUseJvmAbiGen()) return false;
     if (getShouldVerifySourceOnlyAbiConstraints()
         != other.getShouldVerifySourceOnlyAbiConstraints()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
@@ -904,6 +927,9 @@ private static final long serialVersionUID = 0L;
     hash = (37 * hash) + SHOULDGENERATEANNOTATIONPROCESSINGSTATS_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
         getShouldGenerateAnnotationProcessingStats());
+    hash = (37 * hash) + SHOULDUSEJVMABIGEN_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getShouldUseJvmAbiGen());
     hash = (37 * hash) + SHOULDVERIFYSOURCEONLYABICONSTRAINTS_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
         getShouldVerifySourceOnlyAbiConstraints());
@@ -1115,6 +1141,8 @@ private static final long serialVersionUID = 0L;
 
       shouldGenerateAnnotationProcessingStats_ = false;
 
+      shouldUseJvmAbiGen_ = false;
+
       shouldVerifySourceOnlyAbiConstraints_ = false;
 
       return this;
@@ -1199,6 +1227,7 @@ private static final long serialVersionUID = 0L;
       }
       result.jvmTarget_ = jvmTarget_;
       result.shouldGenerateAnnotationProcessingStats_ = shouldGenerateAnnotationProcessingStats_;
+      result.shouldUseJvmAbiGen_ = shouldUseJvmAbiGen_;
       result.shouldVerifySourceOnlyAbiConstraints_ = shouldVerifySourceOnlyAbiConstraints_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
@@ -1359,6 +1388,9 @@ private static final long serialVersionUID = 0L;
       }
       if (other.getShouldGenerateAnnotationProcessingStats() != false) {
         setShouldGenerateAnnotationProcessingStats(other.getShouldGenerateAnnotationProcessingStats());
+      }
+      if (other.getShouldUseJvmAbiGen() != false) {
+        setShouldUseJvmAbiGen(other.getShouldUseJvmAbiGen());
       }
       if (other.getShouldVerifySourceOnlyAbiConstraints() != false) {
         setShouldVerifySourceOnlyAbiConstraints(other.getShouldVerifySourceOnlyAbiConstraints());
@@ -2972,15 +3004,41 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
+    private boolean shouldUseJvmAbiGen_ ;
+    /**
+     * <code>bool shouldUseJvmAbiGen = 13;</code>
+     */
+    public boolean getShouldUseJvmAbiGen() {
+      return shouldUseJvmAbiGen_;
+    }
+    /**
+     * <code>bool shouldUseJvmAbiGen = 13;</code>
+     */
+    public Builder setShouldUseJvmAbiGen(boolean value) {
+      
+      shouldUseJvmAbiGen_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>bool shouldUseJvmAbiGen = 13;</code>
+     */
+    public Builder clearShouldUseJvmAbiGen() {
+      
+      shouldUseJvmAbiGen_ = false;
+      onChanged();
+      return this;
+    }
+
     private boolean shouldVerifySourceOnlyAbiConstraints_ ;
     /**
-     * <code>bool shouldVerifySourceOnlyAbiConstraints = 13;</code>
+     * <code>bool shouldVerifySourceOnlyAbiConstraints = 14;</code>
      */
     public boolean getShouldVerifySourceOnlyAbiConstraints() {
       return shouldVerifySourceOnlyAbiConstraints_;
     }
     /**
-     * <code>bool shouldVerifySourceOnlyAbiConstraints = 13;</code>
+     * <code>bool shouldVerifySourceOnlyAbiConstraints = 14;</code>
      */
     public Builder setShouldVerifySourceOnlyAbiConstraints(boolean value) {
       
@@ -2989,7 +3047,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>bool shouldVerifySourceOnlyAbiConstraints = 13;</code>
+     * <code>bool shouldVerifySourceOnlyAbiConstraints = 14;</code>
      */
     public Builder clearShouldVerifySourceOnlyAbiConstraints() {
       

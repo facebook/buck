@@ -51,6 +51,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROPERTY_ABI_GENERATION_MODE = "abi_generation_mode";
   public static final String PROPERTY_GENERATE_ANNOTATION_PROCESSING_STATS =
       "generate_annotation_processing_stats";
+  public static final String PROPERTY_USE_JVM_ABI_GEN = "use_jvm_abi_gen";
   public static final String PROPERTY_KOTLINCD_ENABLED = "kotlincd_enabled";
   static final String PROPERTY_KOTLINCD_DISABLED_FOR_WINDOWS = "kotlincd_disabled_for_windows";
 
@@ -139,6 +140,11 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldGenerateAnnotationProcessingStats() {
     return delegate.getBooleanValue(SECTION, PROPERTY_GENERATE_ANNOTATION_PROCESSING_STATS, false);
+  }
+
+  /** Whether to use Jvm-Abi-Gen kotlin compiler plugin for kotlin rules' class abi generation */
+  public boolean shouldUseJvmAbiGen() {
+    return delegate.getBooleanValue(SECTION, PROPERTY_USE_JVM_ABI_GEN, false);
   }
 
   public boolean isKotlinCDEnabled() {

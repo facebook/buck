@@ -83,6 +83,8 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
 
   @AddToRuleKey private final boolean shouldGenerateAnnotationProcessingStats;
 
+  @AddToRuleKey private final boolean shouldUseJvmAbiGen;
+
   @AddToRuleKey private final boolean shouldVerifySourceOnlyAbiConstraints;
 
   KotlincToJarStepFactory(
@@ -99,6 +101,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
       JavacOptions javacOptions,
       boolean withDownwardApi,
       boolean shouldGenerateAnnotationProcessingStats,
+      boolean shouldUseJvmAbiGen,
       ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings,
       boolean shouldVerifySourceOnlyAbiConstraints) {
     super(BaseCompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
@@ -115,6 +118,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
     this.extraClasspathProvider = extraClasspathProvider;
     this.kosabiPluginOptionsMappings = kosabiPluginOptionsMappings;
     this.shouldGenerateAnnotationProcessingStats = shouldGenerateAnnotationProcessingStats;
+    this.shouldUseJvmAbiGen = shouldUseJvmAbiGen;
     this.shouldVerifySourceOnlyAbiConstraints = shouldVerifySourceOnlyAbiConstraints;
   }
 
@@ -136,6 +140,7 @@ public class KotlincToJarStepFactory extends DaemonKotlincToJarStepFactory
         javacOptions.withBootclasspathFromContext(extraClasspathProvider),
         jvmTarget,
         shouldGenerateAnnotationProcessingStats,
+        shouldUseJvmAbiGen,
         shouldVerifySourceOnlyAbiConstraints);
   }
 

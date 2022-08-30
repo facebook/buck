@@ -90,7 +90,7 @@ public final class KotlinCDProto {
       "d.api.v1.KotlinExtraParams\0225\n\016baseJarCom" +
       "mand\030\002 \001(\0132\035.javacd.api.v1.BaseJarComman" +
       "d\0226\n\020abiJarParameters\030\003 \001(\0132\034.javacd.api" +
-      ".v1.JarParameters\"\263\006\n\021KotlinExtraParams\022" +
+      ".v1.JarParameters\"\317\006\n\021KotlinExtraParams\022" +
       "\037\n\rpathToKotlinc\030\001 \001(\0132\010.AbsPath\022!\n\017extr" +
       "aClassPaths\030\002 \003(\0132\010.AbsPath\022*\n\030standardL" +
       "ibraryClassPath\030\003 \001(\0132\010.AbsPath\022/\n\035annot" +
@@ -105,18 +105,19 @@ public final class KotlinCDProto {
       "OptionsEntry\022\035\n\013friendPaths\030\t \003(\0132\010.AbsP" +
       "ath\022%\n\023kotlinHomeLibraries\030\n \003(\0132\010.AbsPa" +
       "th\022\021\n\tjvmTarget\030\013 \001(\t\022/\n\'shouldGenerateA" +
-      "nnotationProcessingStats\030\014 \001(\010\022,\n$should" +
-      "VerifySourceOnlyAbiConstraints\030\r \001(\010\032[\n\032" +
-      "KotlinCompilerPluginsEntry\022\013\n\003key\030\001 \001(\t\022" +
-      ",\n\005value\030\002 \001(\0132\035.kotlincd.api.v1.PluginP" +
-      "arams:\0028\001\032D\n\030KosabiPluginOptionsEntry\022\013\n" +
-      "\003key\030\001 \001(\t\022\027\n\005value\030\002 \001(\0132\010.AbsPath:\0028\001\"" +
-      "x\n\014PluginParams\0229\n\006params\030\001 \003(\0132).kotlin" +
-      "cd.api.v1.PluginParams.ParamsEntry\032-\n\013Pa" +
-      "ramsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028" +
-      "\001*/\n\030AnnotationProcessingTool\022\010\n\004KAPT\020\000\022" +
-      "\t\n\005JAVAC\020\001B4\n!com.facebook.buck.cd.model" +
-      ".kotlinB\rKotlinCDProtoP\001b\006proto3"
+      "nnotationProcessingStats\030\014 \001(\010\022\032\n\022should" +
+      "UseJvmAbiGen\030\r \001(\010\022,\n$shouldVerifySource" +
+      "OnlyAbiConstraints\030\016 \001(\010\032[\n\032KotlinCompil" +
+      "erPluginsEntry\022\013\n\003key\030\001 \001(\t\022,\n\005value\030\002 \001" +
+      "(\0132\035.kotlincd.api.v1.PluginParams:\0028\001\032D\n" +
+      "\030KosabiPluginOptionsEntry\022\013\n\003key\030\001 \001(\t\022\027" +
+      "\n\005value\030\002 \001(\0132\010.AbsPath:\0028\001\"x\n\014PluginPar" +
+      "ams\0229\n\006params\030\001 \003(\0132).kotlincd.api.v1.Pl" +
+      "uginParams.ParamsEntry\032-\n\013ParamsEntry\022\013\n" +
+      "\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001*/\n\030Annotat" +
+      "ionProcessingTool\022\010\n\004KAPT\020\000\022\t\n\005JAVAC\020\001B4" +
+      "\n!com.facebook.buck.cd.model.kotlinB\rKot" +
+      "linCDProtoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -161,7 +162,7 @@ public final class KotlinCDProto {
     internal_static_kotlincd_api_v1_KotlinExtraParams_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_kotlincd_api_v1_KotlinExtraParams_descriptor,
-        new java.lang.String[] { "PathToKotlinc", "ExtraClassPaths", "StandardLibraryClassPath", "AnnotationProcessingClassPath", "AnnotationProcessingTool", "ExtraKotlincArguments", "KotlinCompilerPlugins", "KosabiPluginOptions", "FriendPaths", "KotlinHomeLibraries", "JvmTarget", "ShouldGenerateAnnotationProcessingStats", "ShouldVerifySourceOnlyAbiConstraints", });
+        new java.lang.String[] { "PathToKotlinc", "ExtraClassPaths", "StandardLibraryClassPath", "AnnotationProcessingClassPath", "AnnotationProcessingTool", "ExtraKotlincArguments", "KotlinCompilerPlugins", "KosabiPluginOptions", "FriendPaths", "KotlinHomeLibraries", "JvmTarget", "ShouldGenerateAnnotationProcessingStats", "ShouldUseJvmAbiGen", "ShouldVerifySourceOnlyAbiConstraints", });
     internal_static_kotlincd_api_v1_KotlinExtraParams_KotlinCompilerPluginsEntry_descriptor =
       internal_static_kotlincd_api_v1_KotlinExtraParams_descriptor.getNestedTypes().get(0);
     internal_static_kotlincd_api_v1_KotlinExtraParams_KotlinCompilerPluginsEntry_fieldAccessorTable = new

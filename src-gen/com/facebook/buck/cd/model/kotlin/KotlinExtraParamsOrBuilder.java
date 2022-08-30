@@ -252,7 +252,12 @@ public interface KotlinExtraParamsOrBuilder extends
   boolean getShouldGenerateAnnotationProcessingStats();
 
   /**
-   * <code>bool shouldVerifySourceOnlyAbiConstraints = 13;</code>
+   * <code>bool shouldUseJvmAbiGen = 13;</code>
+   */
+  boolean getShouldUseJvmAbiGen();
+
+  /**
+   * <code>bool shouldVerifySourceOnlyAbiConstraints = 14;</code>
    */
   boolean getShouldVerifySourceOnlyAbiConstraints();
 }

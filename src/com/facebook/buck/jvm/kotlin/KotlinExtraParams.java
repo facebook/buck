@@ -62,6 +62,8 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
 
   public abstract boolean shouldGenerateAnnotationProcessingStats();
 
+  public abstract boolean shouldUseJvmAbiGen();
+
   public abstract boolean shouldVerifySourceOnlyAbiConstraints();
 
   /**
@@ -94,6 +96,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       JavacOptions javacOptions,
       Optional<String> jvmTarget,
       boolean shouldGenerateAnnotationProcessingStats,
+      boolean shouldUseJvmAbiGen,
       boolean shouldVerifySourceOnlyAbiConstraints) {
     return of(
         pathToKotlinc.map(path -> resolver.getAbsolutePath(path)),
@@ -117,6 +120,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
         ResolvedJavacOptions.of(javacOptions, resolver, rootPath),
         jvmTarget,
         shouldGenerateAnnotationProcessingStats,
+        shouldUseJvmAbiGen,
         shouldVerifySourceOnlyAbiConstraints);
   }
 
@@ -135,6 +139,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       ResolvedJavacOptions resolvedJavacOptions,
       Optional<String> jvmTarget,
       boolean shouldGenerateAnnotationProcessingStats,
+      boolean shouldUseJvmAbiGen,
       boolean shouldVerifySourceOnlyAbiConstraints) {
     return ImmutableKotlinExtraParams.ofImpl(
         pathToKotlinc,
@@ -150,6 +155,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
         resolvedJavacOptions,
         jvmTarget,
         shouldGenerateAnnotationProcessingStats,
+        shouldUseJvmAbiGen,
         shouldVerifySourceOnlyAbiConstraints);
   }
 }

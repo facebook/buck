@@ -73,7 +73,8 @@ message KotlinExtraParams {
     repeated AbsPath kotlinHomeLibraries = 10;
     string jvmTarget = 11;
     bool shouldGenerateAnnotationProcessingStats = 12;
-    bool shouldVerifySourceOnlyAbiConstraints = 13;
+    bool shouldUseJvmAbiGen = 13;
+    bool shouldVerifySourceOnlyAbiConstraints = 14;
 }
 
 message PluginParams {

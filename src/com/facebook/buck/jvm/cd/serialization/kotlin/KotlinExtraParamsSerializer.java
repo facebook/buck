@@ -77,6 +77,7 @@ public class KotlinExtraParamsSerializer {
             ? Optional.empty()
             : Optional.of(kotlinExtraParams.getJvmTarget()),
         kotlinExtraParams.getShouldGenerateAnnotationProcessingStats(),
+        kotlinExtraParams.getShouldUseJvmAbiGen(),
         kotlinExtraParams.getShouldVerifySourceOnlyAbiConstraints());
   }
 }
