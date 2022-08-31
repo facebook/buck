@@ -146,8 +146,7 @@ public class PreDexedFilesSorter {
       int index,
       Path canaryDirectory,
       ImmutableList.Builder<Step> steps) {
-    String canaryIndex =
-        dexStore.getCanaryClassIndexName(groupIndex, index, apkModule.isRootModule());
+    String canaryIndex = dexStore.getCanaryClassIndexName(groupIndex, index, apkModule);
     FileLike fileLike = CanaryFactory.create(apkModule.getCanaryClassName(), canaryIndex);
     String canaryDirName =
         String.format("canary_%s_%s", apkModule.getCanaryClassName(), canaryIndex);
