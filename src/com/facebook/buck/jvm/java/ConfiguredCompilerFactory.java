@@ -90,6 +90,10 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
+  public boolean shouldProduceClassAbiPartFromLibraryTarget() {
+    return false;
+  }
+
   public boolean shouldGenerateSourceOnlyAbi() {
     return false;
   }

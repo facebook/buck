@@ -167,6 +167,16 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     return true;
   }
 
+  /**
+   * For ABI accuracy, we are experimenting using jvm-abi-gen for the kotlin sources. Jvm-abi-gen
+   * can only be called in kotlin compiler though, so part of the class abi is produced and need to
+   * be inherited from library target.
+   */
+  @Override
+  public boolean shouldProduceClassAbiPartFromLibraryTarget() {
+    return kotlinBuckConfig.shouldUseJvmAbiGen();
+  }
+
   @Override
   public boolean trackClassUsage(JavacOptions javacOptions) {
     JavacPluginParams annotationProcessorParams = javacOptions.getJavaAnnotationProcessorParams();

@@ -114,6 +114,12 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     return isSourceOnlyAbi(javaBuckConfig.getAbiGenerationMode());
   }
 
+  /** No need to generate part of class-abi from library target for java */
+  @Override
+  public boolean shouldProduceClassAbiPartFromLibraryTarget() {
+    return false;
+  }
+
   @Override
   public BaseCompileToJarStepFactory<JavaExtraParams> configure(
       @Nullable JvmLibraryArg arg,

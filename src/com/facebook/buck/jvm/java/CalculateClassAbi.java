@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
@@ -29,6 +30,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -50,14 +52,17 @@ public class CalculateClassAbi extends ModernBuildRule<CalculateClassAbi.Impl>
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       SourcePath binaryJar,
-      AbiGenerationMode compatibilityMode) {
+      AbiGenerationMode compatibilityMode,
+      boolean producePartFromLibraryTarget) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
         new Impl(
             binaryJar,
+            JavaAbis.getLibraryTarget(buildTarget),
             compatibilityMode,
+            producePartFromLibraryTarget,
             projectFilesystem,
             String.format("%s-abi.jar", buildTarget.getShortName())));
     this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
@@ -69,7 +74,7 @@ public class CalculateClassAbi extends ModernBuildRule<CalculateClassAbi.Impl>
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       SourcePath library) {
-    return of(target, ruleFinder, projectFilesystem, library, AbiGenerationMode.CLASS);
+    return of(target, ruleFinder, projectFilesystem, library, AbiGenerationMode.CLASS, false);
   }
 
   public static CalculateClassAbi of(
@@ -77,29 +82,46 @@ public class CalculateClassAbi extends ModernBuildRule<CalculateClassAbi.Impl>
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       SourcePath library,
-      AbiGenerationMode compatibilityMode) {
-    return new CalculateClassAbi(target, projectFilesystem, ruleFinder, library, compatibilityMode);
+      AbiGenerationMode compatibilityMode,
+      boolean produceAbiPartFromLibraryTarget) {
+    return new CalculateClassAbi(
+        target,
+        projectFilesystem,
+        ruleFinder,
+        library,
+        compatibilityMode,
+        produceAbiPartFromLibraryTarget);
   }
 
   /** CalculateClassAbi's buildable implementation required by MBR */
   static class Impl implements Buildable {
 
     @AddToRuleKey private final SourcePath binaryJar;
+
+    @AddToRuleKey private final BuildTarget libraryTarget;
+
     /**
      * Controls whether we strip out things that are intentionally not included in other forms of
      * ABI generation, so that we can still detect bugs by binary comparison.
      */
     @AddToRuleKey private final AbiGenerationMode compatibilityMode;
 
+    /** Whether a part of class abi will be produced and need to be inherited from library target */
+    @AddToRuleKey private final boolean produceAbiPartFromLibraryTarget;
+
     @AddToRuleKey private final OutputPath output;
 
     Impl(
         SourcePath binaryJar,
+        BuildTarget libraryTarget,
         AbiGenerationMode compatibilityMode,
+        boolean produceAbiPartFromLibraryTarget,
         ProjectFilesystem projectFilesystem,
         String outputFileName) {
       this.binaryJar = binaryJar;
+      this.libraryTarget = libraryTarget;
       this.compatibilityMode = compatibilityMode;
+      this.produceAbiPartFromLibraryTarget = produceAbiPartFromLibraryTarget;
       this.output = new OutputPath(projectFilesystem.getPath(outputFileName));
     }
 
@@ -112,6 +134,10 @@ public class CalculateClassAbi extends ModernBuildRule<CalculateClassAbi.Impl>
       return ImmutableList.of(
           new CalculateClassAbiStep(
               buildContext.getSourcePathResolver().getRelativePath(filesystem, binaryJar),
+              produceAbiPartFromLibraryTarget
+                  ? JavaAbis.getGenPathForClassAbiPartFromLibraryTarget(
+                      BuildPaths.getGenDir(filesystem.getBuckPaths(), libraryTarget))
+                  : null,
               outputPathResolver.resolvePath(output),
               compatibilityMode));
     }

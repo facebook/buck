@@ -51,10 +51,11 @@ public class CalculateClassAbiStepTest {
     RelPath binJar = RelPath.get("source.jar");
     Files.copy(source, outDir.resolve(binJar).getPath());
     RelPath abiJar = RelPath.get("abi.jar");
+    RelPath jvmAbiGenDir = RelPath.get("abi_tmp");
 
     AbsPath rootPath = filesystem.getRootPath();
     StepExecutionContext executionContext = TestExecutionContext.newInstance(rootPath);
-    new CalculateClassAbiStep(binJar, abiJar, AbiGenerationMode.CLASS)
+    new CalculateClassAbiStep(binJar, jvmAbiGenDir, abiJar, AbiGenerationMode.CLASS)
         .executeIsolatedStep(executionContext);
 
     Path abiJarPath = outDir.resolve(abiJar).getPath();

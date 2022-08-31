@@ -82,7 +82,7 @@ public class CalculateClassAbiTest {
     filesystem.writeContentsToPath(
         "stuff", pathResolver.getCellUnsafeRelPath(javaLibrary.getSourcePathToOutput()));
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
+    BuildTarget target = BuildTargetFactory.newInstance("//:library#class-abi");
     CalculateClassAbi calculateAbi =
         CalculateClassAbi.of(
             target, graphBuilder, filesystem, DefaultBuildTargetSourcePath.of(javaLibraryTarget));
@@ -138,7 +138,7 @@ public class CalculateClassAbiTest {
             .getSourcePathResolver()
             .getCellUnsafeRelPath(javaLibrary.getSourcePathToOutput()));
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
+    BuildTarget target = BuildTargetFactory.newInstance("//:library#class-abi");
     CalculateClassAbi calculateAbi =
         CalculateClassAbi.of(
             target, ruleFinder, filesystem, DefaultBuildTargetSourcePath.of(javaLibraryTarget));

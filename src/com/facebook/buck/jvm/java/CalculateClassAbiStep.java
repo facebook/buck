@@ -28,17 +28,23 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 /** Calculates class abi from the library.jar */
 public class CalculateClassAbiStep extends IsolatedStep {
 
   private final RelPath binaryJar;
+  @Nullable private final RelPath existingAbiDir;
   private final RelPath abiJar;
   private final AbiGenerationMode compatibilityMode;
 
   public CalculateClassAbiStep(
-      RelPath binaryJar, RelPath abiJar, AbiGenerationMode compatibilityMode) {
+      RelPath binaryJar,
+      @Nullable RelPath existingAbiDir,
+      RelPath abiJar,
+      AbiGenerationMode compatibilityMode) {
     this.binaryJar = binaryJar;
+    this.existingAbiDir = existingAbiDir;
     this.abiJar = abiJar;
     this.compatibilityMode = compatibilityMode;
   }
@@ -50,9 +56,13 @@ public class CalculateClassAbiStep extends IsolatedStep {
     AbsPath output = toAbsOutputPath(ruleCellRoot, abiJar);
 
     try {
-      new StubJar(ruleCellRoot.resolve(binaryJar))
-          .setCompatibilityMode(compatibilityMode)
-          .writeTo(output);
+      StubJar stubJar =
+          new StubJar(ruleCellRoot.resolve(binaryJar)).setCompatibilityMode(compatibilityMode);
+      if (existingAbiDir != null
+          && ProjectFilesystemUtils.exists(ruleCellRoot, existingAbiDir.getPath())) {
+        stubJar = stubJar.setExistingAbiDir(ruleCellRoot.resolve(existingAbiDir));
+      }
+      stubJar.writeTo(output);
     } catch (IllegalArgumentException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
       return StepExecutionResults.ERROR;

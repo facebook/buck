@@ -36,6 +36,7 @@ import javax.lang.model.util.Types;
 public class StubJar {
   private final Supplier<LibraryReader> libraryReaderSupplier;
   @Nullable private AbiGenerationMode compatibilityMode = null;
+  @Nullable private AbsPath existingAbiDir = null;
 
   public StubJar(AbsPath jarPath) {
     libraryReaderSupplier = () -> LibraryReader.of(jarPath.getPath());
@@ -68,6 +69,12 @@ public class StubJar {
    */
   public StubJar setCompatibilityMode(AbiGenerationMode compatibilityMode) {
     this.compatibilityMode = compatibilityMode;
+    return this;
+  }
+
+  /** Specify a directory of existing abi we need to inherit */
+  public StubJar setExistingAbiDir(AbsPath existingAbiDir) {
+    this.existingAbiDir = existingAbiDir;
     return this;
   }
 

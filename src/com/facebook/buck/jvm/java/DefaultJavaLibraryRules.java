@@ -379,6 +379,11 @@ public abstract class DefaultJavaLibraryRules {
         && ((!willProduceSourceAbi() && !willProduceSourceOnlyAbi()) || willProduceCompareAbis());
   }
 
+  private boolean willProduceClassAbiPartFromLibraryTarget() {
+    return willProduceClassAbi()
+        && getConfiguredCompilerFactory().shouldProduceClassAbiPartFromLibraryTarget();
+  }
+
   private boolean willProduceCompareAbis() {
     return willProduceSourceAbi()
         && getSourceAbiVerificationMode() != JavaBuckConfig.SourceAbiVerificationMode.OFF;
@@ -586,7 +591,8 @@ public abstract class DefaultJavaLibraryRules {
                 getActionGraphBuilder(),
                 getProjectFilesystem(),
                 libraryRule.getSourcePathToOutput(),
-                getAbiCompatibilityMode()));
+                getAbiCompatibilityMode(),
+                willProduceClassAbiPartFromLibraryTarget()));
   }
 
   @Value.Lazy
