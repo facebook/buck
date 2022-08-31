@@ -22,6 +22,7 @@ buck_java_library(
         "//src-gen:javacd-model",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/event/api:api",
+        "//src/com/facebook/buck/io/filesystem/impl:utils",
         "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java/abi/kotlin:kotlin",

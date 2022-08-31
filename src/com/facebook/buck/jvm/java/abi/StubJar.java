@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.abi.kotlin.InlineFunctionScope;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.zip.JarBuilder;
@@ -106,7 +107,15 @@ public class StubJar {
         isKotlinModule(relativePaths) ? new InlineFunctionScope() : null;
 
     for (Path path : paths) {
-      StubJarEntry entry = StubJarEntry.of(input, path, compatibilityMode, inlineFunctionScope);
+      StubJarEntry entry =
+          StubJarEntry.of(
+              input,
+              path,
+              existingAbiDir != null
+                  ? ProjectFilesystemUtils.getPathForRelativePath(existingAbiDir, path)
+                  : null,
+              compatibilityMode,
+              inlineFunctionScope);
       if (entry == null) {
         continue;
       }

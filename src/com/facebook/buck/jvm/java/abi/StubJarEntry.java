@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi;
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.kotlin.InlineFunctionScope;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -28,10 +29,13 @@ public abstract class StubJarEntry {
   static StubJarEntry of(
       LibraryReader input,
       Path path,
+      @Nullable Path existingAbiPath,
       AbiGenerationMode compatibilityMode,
       @Nullable InlineFunctionScope inlineFunctionScope)
       throws IOException {
-    if (isStubbableResource(input, path)) {
+    if (existingAbiPath != null && Files.exists(existingAbiPath)) {
+      return StubJarExistingEntry.of(existingAbiPath, path);
+    } else if (isStubbableResource(input, path)) {
       return StubJarResourceEntry.of(input, path);
     } else if (input.isClass(path)) {
       return StubJarClassEntry.of(input, path, compatibilityMode, inlineFunctionScope);
