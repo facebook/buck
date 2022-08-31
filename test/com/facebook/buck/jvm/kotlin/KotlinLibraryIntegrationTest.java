@@ -54,6 +54,7 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -342,6 +343,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  @Ignore("T130370064")
   public void shouldDetectUnusedDependencies() {
     ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/deps/binary:binary");
@@ -363,6 +365,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  @Ignore("T130370064")
   public void shouldGenerateClassUsageFile() throws IOException {
     String bizTargetFqn = "//com/example/classusage:biz";
     ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
@@ -407,6 +410,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  @Ignore("T130370064")
   public void shouldNotGenerateClassUsageFileForKaptTarget() throws IOException {
     String bizTargetFqn = "//com/example/classusage:biz_with_kapt";
     ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
@@ -430,6 +434,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  @Ignore("T130370064")
   public void shouldGenerateClassUsageFileForKaptTargetIfEnabled() throws IOException {
     String bizTargetFqn = "//com/example/classusage:biz_with_kapt";
     workspace.addBuckConfigLocalOption("kotlin", "track_class_usage_for_kapt_targets", true);
@@ -485,6 +490,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  @Ignore("T130370064")
   public void shouldNotGenerateClassUsageFileForKaptTargetIfBlocklisted() throws IOException {
     String bizTargetFqn = "//com/example/classusage:biz_with_kapt";
     workspace.addBuckConfigLocalOption("kotlin", "track_class_usage_for_kapt_targets", true);
@@ -513,6 +519,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  @Ignore("T130370064")
   public void shouldNotGenerateClassUsageFileForKspTarget() throws IOException {
     String bizTargetFqn = "//com/example/classusage:biz_with_ksp";
     ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
@@ -536,6 +543,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  @Ignore("T130370064")
   public void shouldGenerateClassUsageFileForKspTargetIfEnabled() throws IOException {
     String bizTargetFqn = "//com/example/classusage:biz_with_ksp";
     workspace.addBuckConfigLocalOption("kotlin", "track_class_usage_for_ksp_targets", true);
@@ -588,6 +596,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  @Ignore("T130370064")
   public void shouldNotGenerateClassUsageFileForKspTargetIfBlocklisted() throws IOException {
     String bizTargetFqn = "//com/example/classusage:biz_with_ksp";
     workspace.addBuckConfigLocalOption("kotlin", "track_class_usage_for_ksp_targets", true);
