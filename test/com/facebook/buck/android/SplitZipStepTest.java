@@ -113,12 +113,16 @@ public class SplitZipStepTest {
     try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
       ImmutableSet<APKModule> requires = ImmutableSet.of(APKModule.of("dependency"));
       SplitZipStep.writeMetaList(
-          writer, APKModule.of("module"), requires, ImmutableList.of(outJar), DexStore.JAR);
+          writer,
+          APKModule.of("some_module_name"),
+          requires,
+          ImmutableList.of(outJar),
+          DexStore.JAR);
     }
     List<String> lines = CharStreams.readLines(new StringReader(stringWriter.toString()));
     assertEquals(3, lines.size());
 
-    assertEquals(lines.get(0), ".id module");
+    assertEquals(lines.get(0), ".id some_module_name");
     assertEquals(lines.get(1), ".requires dependency");
 
     String line = Iterables.getLast(lines, null);
@@ -127,7 +131,7 @@ public class SplitZipStepTest {
 
     // Note that we cannot test data[1] (the hash) because zip files change their hash each
     // time they are written due to timestamps written into the file.
-    assertEquals("module-1.dex.jar", data[0]);
+    assertEquals("secondary-1.dex.jar", data[0]);
     assertTrue(
         String.format("Unexpected class: %s", data[2]), fileToClassName.containsValue(data[2]));
   }

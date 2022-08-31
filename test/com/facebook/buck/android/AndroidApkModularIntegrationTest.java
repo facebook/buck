@@ -151,7 +151,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
                 filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
-    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
+    zipInspector.assertFileExists("assets/" + module + "/" + "classes.dex");
     zipInspector.assertFileExists("assets/" + module + "/AndroidManifest.xml");
   }
 
@@ -170,7 +170,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
                 filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
-    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
+    zipInspector.assertFileExists("assets/" + module + "/" + "classes.dex");
     zipInspector.assertFileExists("assets/" + module + "/AndroidManifest.xml");
   }
 
@@ -184,7 +184,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
                 filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
-    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
+    zipInspector.assertFileExists("assets/" + module + "/" + "classes.dex");
   }
 
   @Test
@@ -197,7 +197,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
                 filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
-    zipInspector.assertFileExists("assets/" + module + "/" + module + "-1_1.dex.jar");
+    zipInspector.assertFileExists("assets/" + module + "/" + "secondary-1_1.dex.jar");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1_1.dex.jar");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-2_1.dex.jar");
   }
@@ -207,7 +207,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     String target = "//apps/multidex:app_modular_manifest_debug_with_shared";
     workspace.runBuckCommand("build", target).assertSuccess();
     String module = "small_with_shared_with_no_resource_deps";
-    String modulePath = "assets/" + module + "/" + module + "2.dex";
+    String modulePath = "assets/" + module + "/" + "classes.dex";
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
@@ -222,7 +222,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     String target = "//apps/multidex:app_modular_manifest_debug_blacklist_shared";
     workspace.runBuckCommand("build", target).assertSuccess();
     String module = "small_with_shared_with_no_resource_deps";
-    String modulePath = "assets/" + module + "/" + module + "2.dex";
+    String modulePath = "assets/" + module + "/" + "classes.dex";
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
@@ -232,7 +232,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     moduleInspector.assertTypeExists("Lcom/facebook/sample/SmallWithShared;");
     moduleInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Shared;");
 
-    String sharedPath = "assets/s_1018759649/s_10187596492.dex";
+    String sharedPath = "assets/s_1018759649/classes.dex";
     zipInspector.assertFileDoesNotExist(sharedPath);
 
     DexInspector apkInspector = new DexInspector(apkPath, "classes2.dex");
@@ -245,7 +245,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckCommand("build", target).assertSuccess();
 
     String module = "small_with_shared_with_no_resource_deps";
-    String modulePath = "assets/" + module + "/" + module + "2.dex";
+    String modulePath = "assets/" + module + "/" + "classes.dex";
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
@@ -260,7 +260,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     // 1018759649 is determined as the hashcode of
     // s_small_with_shared2_with_no_resource_deps_small_with_shared_with_no_resource_deps which is
     // longer than 50 chars
-    String sharedPath = "assets/s_1018759649/s_10187596492.dex";
+    String sharedPath = "assets/s_1018759649/classes.dex";
     zipInspector.assertFileExists(sharedPath);
     DexInspector sharedInspector = new DexInspector(apkPath, sharedPath);
     sharedInspector.assertTypeExists("Lcom/facebook/sample/Shared;");
@@ -271,7 +271,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     String target = "//apps/multidex:app_modular_manifest_debug_blacklist_shared_multiple";
     workspace.runBuckCommand("build", target).assertSuccess();
     String module = "small_with_shared_with_no_resource_deps";
-    String modulePath = "assets/" + module + "/" + module + "2.dex";
+    String modulePath = "assets/" + module + "/" + "classes.dex";
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
@@ -289,7 +289,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     String target = "//apps/multidex:app_modular_manifest_debug_blacklist_query_shared_multiple";
     workspace.runBuckCommand("build", target).assertSuccess();
     String module = "small_with_shared_with_no_resource_deps";
-    String modulePath = "assets/" + module + "/" + module + "2.dex";
+    String modulePath = "assets/" + module + "/" + "classes.dex";
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
@@ -308,7 +308,7 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckCommand("build", target).assertSuccess();
 
     String module = "sample3";
-    String modulePath = "assets/" + module + "/" + module + "2.dex";
+    String modulePath = "assets/" + module + "/" + "classes.dex";
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
