@@ -20,6 +20,7 @@ import com.facebook.buck.android.dex.D8Options;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -30,6 +31,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -352,7 +354,12 @@ public class SmartDexingStep implements Step {
                     dexInputHashes,
                     ImmutableSet.copyOf(outputInputsPair.getValue()),
                     outputInputsPair.getKey(),
-                    successDir.resolve(outputInputsPair.getKey().getFileName()),
+                    successDir.resolve(
+                        outputInputsPair
+                            .getKey()
+                            .getParent()
+                            .getFileName()
+                            .resolve(outputInputsPair.getKey().getFileName())),
                     dxOptions,
                     primaryDexClassNamesPath,
                     xzCompressionLevel,
@@ -485,6 +492,7 @@ public class SmartDexingStep implements Step {
           xzCompressionLevel,
           classpathFiles,
           minSdkVersion);
+      steps.add(MkdirIsolatedStep.of(RelPath.get(outputHashPath.getParent().toString())));
       steps.add(WriteFileIsolatedStep.of(newInputsHash, outputHashPath, /* executable */ false));
     }
   }
