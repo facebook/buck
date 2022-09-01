@@ -36,6 +36,10 @@ def find_docs_dir():
 
 
 def main():
+    # These tests don't work on Windows
+    if os.name == "nt":
+        return
+
     docs_dir = find_docs_dir()
     input_files = []
     for root, dirs, files in os.walk(docs_dir):
