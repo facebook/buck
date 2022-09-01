@@ -1111,20 +1111,20 @@ android_binary(
 android_binary(
     name = "app_with_merge_sequence_modular",
     application_module_configs = {
-        "native.merge.C": ["//native/merge:C"],
-        "native.merge.D": ["//native/merge:D"],
-        "native.merge.F": ["//native/merge:F"],
+        "native.merge.C": ["//native/merge:C_asset"],
+        "native.merge.D": ["//native/merge:D_asset"],
+        "native.merge.F": ["//native/merge:F_asset"],
     },
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_code_generator = "//native/merge:codegen",
     native_library_merge_glue = "//native/merge:glue_1",
     native_library_merge_sequence = [
-        ("lib1.so", [".*/merge:A"]),
+        ("lib1.so", [".*/merge:A_asset"]),
     ],
     deps = [
         "//java/com/sample/lib:lib",
-        "//native/merge:A",
+        "//native/merge:A_asset",
         "//res/com/sample/base:base",
     ],
 )
@@ -1150,7 +1150,7 @@ android_binary(
     name = "app_with_merge_sequence_and_exclusions",
     application_module_configs = {
         "native.merge.A": [
-            "//native/merge:A",
+            "//native/merge:A_asset",
         ],
     },
     keystore = "//keystores:debug",
@@ -1158,14 +1158,14 @@ android_binary(
     native_library_merge_code_generator = "//native/merge:codegen",
     native_library_merge_glue = "//native/merge:glue_1",
     native_library_merge_sequence = [
-        ("lib1.so", [".*/merge:A"]),
+        ("lib1.so", [".*/merge:A_asset"]),
     ],
     native_library_merge_sequence_blocklist = [
-        ".*/merge:B",
+        ".*/merge:B_asset",
     ],
     deps = [
         "//java/com/sample/lib:lib",
-        "//native/merge:A",
+        "//native/merge:A_asset",
         "//res/com/sample/base:base",
     ],
 )

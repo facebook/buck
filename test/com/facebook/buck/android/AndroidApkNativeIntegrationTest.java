@@ -183,14 +183,14 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
     ZipInspector modularZipInspector = new ZipInspector(modularPath);
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
-    modularZipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_C.so");
-    modularZipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_D.so");
+    modularZipInspector.assertFileExists("lib/x86/libnative_merge_C.so");
+    modularZipInspector.assertFileExists("lib/x86/libnative_merge_D.so");
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib2e.so");
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib2f.so");
     modularZipInspector.assertFileExists("assets/native.merge.A/libs.txt");
     modularZipInspector.assertFileExists("assets/native.merge.A/libs.xzs");
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib1.so");
-    modularZipInspector.assertFileDoesNotExist("lib/x86/lib2.so");
+    modularZipInspector.assertFileExists("lib/x86/lib2.so");
   }
 
   @Test
@@ -656,22 +656,12 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
     assertTrue(sym.undefined.contains("_Z10botFromTopi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
 
-    sym =
-        syms.getXzsSymbols(
-            apkPath,
-            "libnative_xdsodce_mid.so",
-            "assets/native.xdsodce.mid/libs.xzs",
-            "assets/native.xdsodce.mid/libs.txt");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
     assertTrue(sym.global.contains("_Z10midFromTopi"));
     assertTrue(sym.undefined.contains("_Z10botFromMidi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
 
-    sym =
-        syms.getXzsSymbols(
-            apkPath,
-            "libnative_xdsodce_bot.so",
-            "assets/native.xdsodce.mid/libs.xzs",
-            "assets/native.xdsodce.mid/libs.txt");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
     assertTrue(sym.global.contains("_Z10botFromTopi"));
     assertTrue(sym.global.contains("_Z10botFromMidi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
