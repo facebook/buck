@@ -43,45 +43,6 @@ import java.util.Optional;
  * A specialization of {@link Linker} containing information specific to the Windows implementation.
  */
 public class WindowsLinker extends DelegatingTool implements Linker, HasImportLibrary {
-
-  private ExtraOutputsDeriver WINDOWS_EXTRA_OUTPUTS_DERIVER =
-      new ExtraOutputsDeriver() {
-        @Override
-        public ImmutableMap<String, Path> deriveExtraOutputsFromArgs(
-            ImmutableList<String> linkerArgs, Path output) {
-
-          ImmutableMap.Builder<String, Path> builder = new ImmutableMap.Builder<String, Path>();
-
-          // A .pdb is generated if any /DEBUG option is specified, which isn't /DEBUG:NONE.
-          // Buck realistically only support /DEBUG, which is the same as /DEBUG:FULL, but lld-link
-          // has other options including /DEBUG:GHASH, so we have to be more careful checking here.
-          // However a trailing /DEBUG:NONE overrides an earlier /DEBUG flag. Also we allow / or -.
-          boolean isPdbGenerated =
-              linkerArgs.stream()
-                      // Any debug flag specified?
-                      .anyMatch(arg -> arg.startsWith("/DEBUG") || arg.startsWith("-DEBUG"))
-                  &&
-                  // Is the last one not DEBUG:NONE?
-                  !linkerArgs.reverse().stream()
-                      .filter(arg -> arg.startsWith("/DEBUG") || arg.startsWith("-DEBUG"))
-                      .findFirst()
-                      .orElse("")
-                      .endsWith("DEBUG:NONE");
-          if (isPdbGenerated) {
-            String pdbFilename = MorePaths.getNameWithoutExtension(output) + ".pdb";
-            Path pdbOutput = output.getParent().resolve(pdbFilename);
-            builder.put("pdb", pdbOutput);
-          }
-          // An implib is generated if we are making a dll.
-          boolean isDllGenerated = linkerArgs.stream().anyMatch(arg -> arg.startsWith("/DLL"));
-          if (isDllGenerated) {
-            Path implibPath = importLibraryPath(output);
-            builder.put("implib", implibPath);
-          }
-          return builder.build();
-        }
-      };
-
   public WindowsLinker(Tool tool) {
     super(tool);
   }
@@ -188,7 +149,44 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
 
   @Override
   public Optional<ExtraOutputsDeriver> getExtraOutputsDeriver() {
-    return Optional.of(WINDOWS_EXTRA_OUTPUTS_DERIVER);
+    return Optional.of(
+        new ExtraOutputsDeriver() {
+          @Override
+          public ImmutableMap<String, Path> deriveExtraOutputsFromArgs(
+              ImmutableList<String> linkerArgs, Path output) {
+
+            ImmutableMap.Builder<String, Path> builder = new ImmutableMap.Builder<String, Path>();
+
+            // A .pdb is generated if any /DEBUG option is specified, which isn't /DEBUG:NONE.
+            // Buck realistically only support /DEBUG, which is the same as /DEBUG:FULL, but
+            // lld-link has other options including /DEBUG:GHASH, so we have to be more careful
+            // checking here. However a trailing /DEBUG:NONE overrides an earlier /DEBUG flag.
+            // Also we allow / or -.
+            boolean isPdbGenerated =
+                linkerArgs.stream()
+                        // Any debug flag specified?
+                        .anyMatch(arg -> arg.startsWith("/DEBUG") || arg.startsWith("-DEBUG"))
+                    &&
+                    // Is the last one not DEBUG:NONE?
+                    !linkerArgs.reverse().stream()
+                        .filter(arg -> arg.startsWith("/DEBUG") || arg.startsWith("-DEBUG"))
+                        .findFirst()
+                        .orElse("")
+                        .endsWith("DEBUG:NONE");
+            if (isPdbGenerated) {
+              String pdbFilename = MorePaths.getNameWithoutExtension(output) + ".pdb";
+              Path pdbOutput = output.getParent().resolve(pdbFilename);
+              builder.put("pdb", pdbOutput);
+            }
+            // An implib is generated if we are making a dll.
+            boolean isDllGenerated = linkerArgs.stream().anyMatch(arg -> arg.startsWith("/DLL"));
+            if (isDllGenerated) {
+              Path implibPath = importLibraryPath(output);
+              builder.put("implib", implibPath);
+            }
+            return builder.build();
+          }
+        });
   }
 
   @Override
