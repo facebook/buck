@@ -55,22 +55,32 @@ public abstract class NativeLinkableInput {
   @Value.Parameter
   public abstract ImmutableSet<SourcePath> getSwiftmodulePaths();
 
+  // Arguments to pass to the linker that can be de-duplicated.
+  @Value.Parameter
+  public abstract ImmutableSet<Arg> getDeduplicatedLinkerArgs();
+
   /** Combine, in order, several {@link NativeLinkableInput} objects into a single one. */
   public static NativeLinkableInput concat(Iterable<NativeLinkableInput> items) {
     ImmutableList.Builder<Arg> args = ImmutableList.builder();
     ImmutableSet.Builder<FrameworkPath> frameworks = ImmutableSet.builder();
     ImmutableSet.Builder<FrameworkPath> libraries = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> swiftmodulePaths = ImmutableSet.builder();
+    ImmutableSet.Builder<Arg> dedupedArgs = ImmutableSet.builder();
 
     for (NativeLinkableInput item : items) {
       args.addAll(item.getArgs());
       frameworks.addAll(item.getFrameworks());
       libraries.addAll(item.getLibraries());
       swiftmodulePaths.addAll(item.getSwiftmodulePaths());
+      dedupedArgs.addAll(item.getDeduplicatedLinkerArgs());
     }
 
     return NativeLinkableInput.of(
-        args.build(), frameworks.build(), libraries.build(), swiftmodulePaths.build());
+        args.build(),
+        frameworks.build(),
+        libraries.build(),
+        swiftmodulePaths.build(),
+        dedupedArgs.build());
   }
 
   public NativeLinkableInput withArgs(List<Arg> args) {
@@ -86,20 +96,22 @@ public abstract class NativeLinkableInput {
 
   public static NativeLinkableInput of(
       List<Arg> args, Set<FrameworkPath> frameworks, Set<FrameworkPath> libraries) {
-    return of(args, frameworks, libraries, Collections.emptySet());
+    return of(args, frameworks, libraries, Collections.emptySet(), Collections.emptySet());
   }
 
   public static NativeLinkableInput of(
       List<Arg> args,
       Set<FrameworkPath> frameworks,
       Set<FrameworkPath> libraries,
-      Set<SourcePath> swiftmodulePaths) {
+      Set<SourcePath> swiftmodulePaths,
+      Set<Arg> deduplicatedLinkerArgs) {
 
     return builder()
         .setArgs(args)
         .setFrameworks(frameworks)
         .setLibraries(libraries)
         .setSwiftmodulePaths(swiftmodulePaths)
+        .setDeduplicatedLinkerArgs(deduplicatedLinkerArgs)
         .build();
   }
 

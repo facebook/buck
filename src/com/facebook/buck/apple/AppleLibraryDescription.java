@@ -1411,6 +1411,11 @@ public class AppleLibraryDescription
           public ImmutableSet<SourcePath> getSwiftmodulePaths() {
             return swiftCompileRule.getSwiftmoduleLinkerInput();
           }
+
+          @Override
+          public ImmutableSet<Arg> getDeduplicatedLinkerArgs() {
+            return ImmutableSet.of();
+          }
         });
   }
 

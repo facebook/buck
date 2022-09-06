@@ -413,6 +413,19 @@ public class CxxLinkableEnhancer {
           ImmutableSortedSet.copyOf(linkableInput.getSwiftmodulePaths()), argsBuilder);
     }
 
+    // Add the de-duplicated linker args in sorted order
+    if (!linkableInput.getDeduplicatedLinkerArgs().isEmpty()) {
+      argsBuilder.addAll(
+          linkableInput.getDeduplicatedLinkerArgs().stream()
+              .sorted(
+                  (arg1, arg2) -> {
+                    String s1 = Arg.stringify(arg1, graphBuilder.getSourcePathResolver());
+                    String s2 = Arg.stringify(arg2, graphBuilder.getSourcePathResolver());
+                    return s1.compareTo(s2);
+                  })
+              .iterator());
+    }
+
     return argsBuilder.build();
   }
 

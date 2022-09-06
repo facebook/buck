@@ -93,6 +93,9 @@ public interface CxxLibraryDescriptionDelegate {
 
     /** Provides the ability to pass swiftmodule paths to the linker. */
     ImmutableSet<SourcePath> getSwiftmodulePaths();
+
+    /** Provides the ability to pass de-duplicated args to the linker. */
+    ImmutableSet<Arg> getDeduplicatedLinkerArgs();
   }
 
   Optional<ConfiguredDelegate> requireDelegate(
