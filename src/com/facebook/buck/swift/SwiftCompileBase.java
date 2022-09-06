@@ -668,6 +668,16 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     return builder.build();
   }
 
+  public ImmutableSet<Arg> getModuleMapFileArgs() {
+    ImmutableSet.Builder<Arg> builder = ImmutableSet.builder();
+    for (ExplicitModuleOutput module : moduleDeps) {
+      if (!module.getIsSwiftmodule()) {
+        builder.addAll(module.getLinkerArgs());
+      }
+    }
+    return builder.build();
+  }
+
   ImmutableList<Arg> getFileListLinkArg() {
     return FileListableLinkerInputArg.from(
         objectPaths.stream()

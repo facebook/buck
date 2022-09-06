@@ -21,6 +21,10 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.CompositeArg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -61,6 +65,32 @@ public abstract class ExplicitModuleOutput implements AddsToRuleKey {
         "-fmodule-file=" + getName() + "=" + modulePath,
         "-Xcc",
         "-fmodule-map-file=" + getModulemapPath().get().resolve(resolver));
+  }
+
+  /**
+   * These args are unnecessary to successfully link, but they have the side effect of forcing the
+   * pcm files and modulemaps to be materialized on linking. This is required to successfully debug
+   * a linked binary.
+   */
+  public Iterable<Arg> getLinkerArgs() {
+    Preconditions.checkState(
+        !getIsSwiftmodule(), "Trying to get clang args for a swiftmodule dependency");
+
+    String relativePath = getModulemapPath().get().getRelativePath();
+    if (!relativePath.isEmpty()) {
+      relativePath = "/" + relativePath;
+    }
+
+    return ImmutableList.of(
+        CompositeArg.of(
+            ImmutableList.of(
+                StringArg.of("-fmodule-file=" + getName() + "="),
+                SourcePathArg.of(getOutputPath()))),
+        CompositeArg.of(
+            ImmutableList.of(
+                StringArg.of("-fmodule-map-file="),
+                SourcePathArg.of(getModulemapPath().get().getBasePath()),
+                StringArg.of(relativePath))));
   }
 
   public static ExplicitModuleOutput ofSwiftmodule(

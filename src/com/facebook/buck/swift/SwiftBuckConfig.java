@@ -53,6 +53,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String INCREMENTAL_IMPORTS = "incremental_imports";
   public static final String POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY =
       "postprocess_generated_header_for_non_modules_compatibility";
+  public static final String FORCE_DEBUG_INFO_AT_LINK_TIME = "force_debug_info_at_link_time";
   private final BuckConfig delegate;
 
   @Override
@@ -231,6 +232,14 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public boolean getPostprocessGeneratedHeaderForNonModulesCompatibility() {
     return delegate.getBooleanValue(
         SECTION_NAME, POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY, false);
+  }
+
+  /**
+   * If true, Buck will add linker commands that reference the precompiled module and modulemap
+   * dependencies of a binary to force the debug dependencies to be materialized at link time.
+   */
+  public boolean getForceDebugInfoAtLinkTime() {
+    return delegate.getBooleanValue(SECTION_NAME, FORCE_DEBUG_INFO_AT_LINK_TIME, false);
   }
 
   /**

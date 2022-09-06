@@ -1414,7 +1414,11 @@ public class AppleLibraryDescription
 
           @Override
           public ImmutableSet<Arg> getDeduplicatedLinkerArgs() {
-            return ImmutableSet.of();
+            if (swiftBuckConfig.getForceDebugInfoAtLinkTime()) {
+              return swiftCompileRule.getModuleMapFileArgs();
+            } else {
+              return ImmutableSet.of();
+            }
           }
         });
   }
