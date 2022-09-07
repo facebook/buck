@@ -707,7 +707,10 @@ public class PythonBinaryIntegrationTest {
             .map(path -> tmp.getRoot().relativize(path))
             .collect(ImmutableList.toImmutableList());
 
-    Assert.assertEquals(String.format("Unexpected files: %s", pycFiles), 3, pycFiles.size());
+    // Depending on Python version we might have a variable count of Python
+    // files here (depending on whether it produces one for empty __init__
+    // files), but at least 3.
+    assertTrue(String.format("Unexpected files: %s", pycFiles), pycFiles.size() >= 3);
   }
 
   @Test
