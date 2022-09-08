@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
