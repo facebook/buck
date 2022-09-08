@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.integration.DexInspector;
 import com.facebook.buck.testutil.integration.ZipInspector;
@@ -85,23 +84,7 @@ public class DexTestUtils {
         if (canaryNameIndex.length() == 2 && canaryNameIndex.charAt(0) == '0') {
           canaryNameIndex = canaryNameIndex.substring(1);
         }
-        // if index is N=1, then classesN.dex convention simplifies to classes.dex
-        if ("1".equals(canaryNameIndex)) {
-          // we're ok with a single 1 as a numeric value
-          boolean foundOne = false;
-          for (char c : dexMetadata.dexFile.toString().toCharArray()) {
-            if (Character.isDigit(c)) {
-              if (c == '1') {
-                if (foundOne) {
-                  fail(dexMetadata.dexFile.toString() + " contains unexpected numeric value");
-                }
-                foundOne = true;
-              }
-            }
-          }
-        } else {
-          assertTrue(dexMetadata.dexFile.toString().contains(canaryNameIndex));
-        }
+        assertTrue(dexMetadata.dexFile.toString().contains(canaryNameIndex));
 
         // metadata for XZS dexes contains temporary files, not the final merged dex, is this a bug?
         if (!DexStore.XZS.matchesPath(dexMetadata.dexFile)) {

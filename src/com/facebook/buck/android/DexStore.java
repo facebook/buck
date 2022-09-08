@@ -35,14 +35,10 @@ enum DexStore {
     }
 
     // Google expects secondary dex files to start at 2.
-    // classes.dex is number 1.
-    // voltron modules start with index 1
+    // I guess classes.dex is number 1.
     @Override
-    public int secondaryDexIndexOffset(int index, boolean isRootModule) {
-      if (isRootModule) {
-        return index + 2;
-      }
-      return index + 1;
+    public int secondaryDexIndexOffset(int index) {
+      return index + 2;
     }
 
     @Override
@@ -51,10 +47,7 @@ enum DexStore {
     }
 
     @Override
-    String formatDexFileName(String prefix, String index) {
-      if ("1".equals(index)) {
-        return String.format("%s%s", prefix, suffix());
-      }
+    String formatFileNameForSecondary(String prefix, String index) {
       return String.format("%s%s%s", prefix, index, suffix());
     }
   },
@@ -98,27 +91,25 @@ enum DexStore {
   public abstract String suffix();
 
   // Start at one for easier comprehension by humans.
-  @SuppressWarnings("unused")
-  public int secondaryDexIndexOffset(int index, boolean isRootModule) {
+  public int secondaryDexIndexOffset(int index) {
     return index + 1;
   }
 
   // Canary class index must have at least two digits.
-  String getCanaryClassIndexName(Optional<Integer> groupIndex, int index, boolean isRootModule) {
-    return secondaryDexIndexName(groupIndex, index, "%02d", isRootModule);
+  String getCanaryClassIndexName(Optional<Integer> groupIndex, int index) {
+    return secondaryDexIndexName(groupIndex, index, "%02d");
   }
 
-  private String getSecondaryDexFileNameIndex(
-      Optional<Integer> groupIndex, int index, boolean isRootModule) {
-    return secondaryDexIndexName(groupIndex, index, "%d", isRootModule);
+  private String getSecondaryDexFileNameIndex(Optional<Integer> groupIndex, int index) {
+    return secondaryDexIndexName(groupIndex, index, "%d");
   }
 
   private String secondaryDexIndexName(
-      Optional<Integer> groupIndex, int index, String singleIndexFormat, boolean isRootModule) {
+      Optional<Integer> groupIndex, int index, String singleIndexFormat) {
     if (groupIndex.isPresent()) {
-      return String.format("%d_%d", groupIndex.get(), secondaryDexIndexOffset(index, isRootModule));
+      return String.format("%d_%d", groupIndex.get(), secondaryDexIndexOffset(index));
     } else {
-      return String.format(singleIndexFormat, secondaryDexIndexOffset(index, isRootModule));
+      return String.format(singleIndexFormat, secondaryDexIndexOffset(index));
     }
   }
 
@@ -132,11 +123,12 @@ enum DexStore {
   }
 
   public String fileNameForSecondary(APKModule module, Optional<Integer> groupIndex, int index) {
-    String fileNameIndex = getSecondaryDexFileNameIndex(groupIndex, index, module.isRootModule());
-    return formatDexFileName(prefix(), fileNameIndex);
+    String fileNameIndex = getSecondaryDexFileNameIndex(groupIndex, index);
+    String prefix = module.isRootModule() ? prefix() : module.getName();
+    return formatFileNameForSecondary(prefix, fileNameIndex);
   }
 
-  String formatDexFileName(String prefix, String fileNameIndex) {
+  String formatFileNameForSecondary(String prefix, String fileNameIndex) {
     return String.format("%s-%s%s", prefix, fileNameIndex, suffix());
   }
 
