@@ -103,8 +103,6 @@ public class AndroidApkCxxIntegrationTest extends AbiCompilationModeTest {
       zipInspector.assertFileExists("lib/armeabi-v7a/libc++_shared.so");
       zipInspector.assertFileExists("lib/x86/libc++_shared.so");
     }
-    zipInspector.assertFileDoesNotExist("assets/native.cxx.lib/libs.txt");
-    zipInspector.assertFileDoesNotExist("assets/native.cxx.lib/libs.xzs");
   }
 
   @Test
@@ -138,8 +136,8 @@ public class AndroidApkCxxIntegrationTest extends AbiCompilationModeTest {
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
                     filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
-    zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_lib.so");
     if (AssumeAndroidPlatform.get(workspace).isGnuStlAvailable()) {
       zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
       zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
@@ -147,6 +145,8 @@ public class AndroidApkCxxIntegrationTest extends AbiCompilationModeTest {
       zipInspector.assertFileExists("lib/armeabi-v7a/libc++_shared.so");
       zipInspector.assertFileExists("lib/x86/libc++_shared.so");
     }
+    zipInspector.assertFileExists("assets/native.cxx.lib/libs.txt");
+    zipInspector.assertFileExists("assets/native.cxx.lib/libs.xzs");
   }
 
   @Test

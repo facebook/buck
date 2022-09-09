@@ -272,7 +272,11 @@ public class AndroidPackageableCollector {
       return this;
     }
     APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkableGroup.getBuildTarget());
-    collectionBuilder.putNativeLinkables(module, nativeLinkableGroup);
+    if (module.isRootModule()) {
+      collectionBuilder.putNativeLinkables(module, nativeLinkableGroup);
+    } else {
+      collectionBuilder.putNativeLinkablesAssets(module, nativeLinkableGroup);
+    }
     return this;
   }
 

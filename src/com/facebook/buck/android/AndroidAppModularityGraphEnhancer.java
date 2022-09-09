@@ -32,15 +32,16 @@ import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.stream.Stream;
 
 public class AndroidAppModularityGraphEnhancer {
 
@@ -87,18 +88,15 @@ public class AndroidAppModularityGraphEnhancer {
     ImmutableCollection<NdkCxxPlatform> platforms =
         getPlatforms(originalBuildTarget.getTargetConfiguration()).values();
     ImmutableMultimap.Builder<APKModule, String> builder = ImmutableMultimap.builder();
-    Stream.concat(
-            collection.getNativeLinkables().entries().stream(),
-            collection.getNativeLinkablesAssets().entries().stream())
-        .forEach(
-            item -> {
-              for (NdkCxxPlatform platform : platforms) {
-                NativeLinkable link =
-                    item.getValue().getNativeLinkable(platform.getCxxPlatform(), ruleResolver);
-                ImmutableSet<String> soNames = link.getSharedLibraries(ruleResolver).keySet();
-                builder.putAll(item.getKey(), soNames);
-              }
-            });
+    for (Map.Entry<APKModule, NativeLinkableGroup> item :
+        collection.getNativeLinkablesAssets().entries()) {
+      for (NdkCxxPlatform platform : platforms) {
+        NativeLinkable link =
+            item.getValue().getNativeLinkable(platform.getCxxPlatform(), ruleResolver);
+        ImmutableSet<String> soNames = link.getSharedLibraries(ruleResolver).keySet();
+        builder.putAll(item.getKey(), soNames);
+      }
+    }
     return builder.build();
   }
 
