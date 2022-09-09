@@ -61,6 +61,8 @@ import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.stream.RichStream;
@@ -976,7 +978,9 @@ public class RustCompileUtils {
             new CxxLocationMacroExpander(cxxPlatform),
             new OutputMacroExpander(),
             new ExecutableMacroExpander<>(ExecutableMacro.class),
-            new ExecutableMacroExpander<>(ExecutableTargetMacro.class));
+            new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
+            new QueryTargetsMacroExpander(context.getTargetGraph()),
+            new QueryTargetsAndOutputsMacroExpander(context.getTargetGraph()));
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
