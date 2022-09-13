@@ -180,7 +180,6 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testInferCxxBinaryDepsInvalidateCacheWhenVersionChanges() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
@@ -203,6 +202,11 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
+      if (buildTarget.getFullyQualifiedName().equals(inputBuildTargetName)) {
+        // #infer-capture-all are uncacheable, so let's skip them
+        continue;
+      }
+
       buildLog.assertTargetWasFetchedFromCache(buildTarget);
     }
 
@@ -806,8 +810,11 @@ public class CxxBinaryIntegrationTest {
                 .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)));
   }
 
+  // Infer CXX capture rule doesn't do a fine-grained input tracking via depsfile because it's not
+  // compatible with the rule's dependency on InferPlatform. Hence the capture rule will get rebuilt
+  // even when an "unused" header changes.
   @Test
-  public void testInferCxxBinaryWithUnusedDepsDoesNotRebuildWhenUnusedHeaderChanges()
+  public void testInferCxxBinaryWithUnusedDepsGetsRebuiltWhenUnusedHeaderChanges()
       throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
@@ -838,12 +845,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    BuckBuildLog.BuildLogEntry simpleOnceCppCaptureTargetEntry =
-        buildLog.getLogEntry(simpleOneCppCaptureTarget);
-
-    assertThat(
-        simpleOnceCppCaptureTargetEntry.getSuccessType(),
-        equalTo(Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED)));
+    buildLog.assertTargetBuiltLocally(simpleOneCppCaptureTarget);
 
     /*
      * Check that when the used-header is changed, then a build is triggered

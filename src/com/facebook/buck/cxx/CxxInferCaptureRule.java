@@ -18,21 +18,16 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
-import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferPlatform;
@@ -61,14 +56,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 /** Generate the CFG for a source file */
-class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
-    implements SupportsDependencyFileRuleKey {
+class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl> {
   private static final Logger LOG = Logger.get(CxxInferCaptureRule.class);
 
   @VisibleForTesting static final RelPath RESULT_DIR_PATH = RelPath.get("infer-out");
@@ -353,61 +345,6 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
     ProjectFilesystem filesystem = getProjectFilesystem();
     OutputPathResolver outputPathResolver = getOutputPathResolver(filesystem);
     return filesystem.resolve(outputPathResolver.resolvePath(getBuildable().resultDirectoryPath));
-  }
-
-  @Override
-  public boolean useDependencyFileRuleKeys() {
-    return true;
-  }
-
-  @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(
-      SourcePathResolverAdapter pathResolver) {
-    return Depfiles.getCoveredByDepFilePredicate(
-        Optional.of(getBuildable().preprocessorDelegate), Optional.empty());
-  }
-
-  @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(
-      SourcePathResolverAdapter pathResolver) {
-    return (SourcePath path) -> false;
-  }
-
-  @Override
-  public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
-      BuildContext context, CellPathResolver cellPathResolver) throws IOException {
-    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    ProjectFilesystem filesystem = getProjectFilesystem();
-    OutputPathResolver outputPathResolver = getOutputPathResolver(filesystem);
-    Impl buildable = getBuildable();
-
-    ImmutableList<Path> dependencies;
-    try {
-      dependencies =
-          Depfiles.parseAndVerifyDependencies(
-              context.getEventBus(),
-              filesystem,
-              sourcePathResolver,
-              buildable.preprocessorDelegate.getHeaderPathNormalizer(context),
-              HeaderVerification.of(HeaderVerification.Mode.IGNORE),
-              buildable.getDepFilePath(outputPathResolver).getPath(),
-              sourcePathResolver.getRelativePath(filesystem, buildable.input).getPath(),
-              outputPathResolver.resolvePath(buildable.output).getPath(),
-              DependencyTrackingMode.MAKEFILE);
-    } catch (Depfiles.HeaderVerificationException e) {
-      throw new HumanReadableException(e);
-    }
-
-    ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
-
-    // include all inputs coming from the preprocessor tool.
-    inputs.addAll(
-        buildable.preprocessorDelegate.getInputsAfterBuildingLocally(dependencies, context));
-
-    // Add the input.
-    inputs.add(buildable.input);
-
-    return inputs.build();
   }
 
   private static AbsPath toAbsNormalizedPath(AbsPath root, RelPath relPath) {
