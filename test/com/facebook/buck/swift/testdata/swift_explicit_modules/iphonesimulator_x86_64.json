@@ -1,5 +1,5 @@
 {
-    "sdk_version": "15.5",
+    "sdk_version": "16.0",
     "swift": [
         {
             "is_framework": false,
@@ -32,9 +32,10 @@
                 "UniformTypeIdentifiers",
                 "Vision",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "ARKit"
             ]
@@ -58,11 +59,43 @@
                 "Swift",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "AVFoundation"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "AVKit",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/AVKit.framework/Modules/AVKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "_StringProcessing",
+                "simd"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "AVKit"
             ]
         },
         {
@@ -79,9 +112,11 @@
                 "ObjectiveC",
                 "Swift",
                 "_Concurrency",
-                "os"
+                "_StringProcessing",
+                "os",
+                "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Accelerate"
             ]
@@ -98,11 +133,54 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Accessibility"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "AppIntents",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/AppIntents.framework/Modules/AppIntents.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreLocation",
+                "Darwin",
+                "Dispatch",
+                "ExtensionFoundation",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "AppIntents"
+            ]
+        },
+        {
+            "is_framework": false,
+            "name": "AppleArchive",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/AppleArchive.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Compression",
+                "CryptoKit",
+                "Darwin",
+                "Foundation",
+                "Swift",
+                "System",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "AppleArchive"
             ]
         },
         {
@@ -117,11 +195,50 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "AssetsLibrary"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "AutomatedDeviceEnrollment",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/AutomatedDeviceEnrollment.framework/Modules/AutomatedDeviceEnrollment.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "ExtensionFoundation",
+                "ExtensionKit",
+                "Foundation",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency",
+                "_StringProcessing",
+                "os"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
+        },
+        {
+            "is_framework": true,
+            "name": "BackgroundAssets",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/BackgroundAssets.framework/Modules/BackgroundAssets.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "ExtensionFoundation",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "BackgroundAssets"
             ]
         },
         {
@@ -135,12 +252,27 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CallKit"
             ]
+        },
+        {
+            "is_framework": true,
+            "name": "CarKey",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/CarKey.framework/Modules/CarKey.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Foundation",
+                "Swift",
+                "_Concurrency",
+                "_StringProcessing",
+                "os"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
         },
         {
             "is_framework": false,
@@ -161,29 +293,50 @@
                 "QuartzCore",
                 "Swift",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CarPlay"
             ]
         },
         {
-            "is_framework": false,
-            "name": "CloudKit",
-            "swiftinterface": "$SDKROOT/usr/lib/swift/CloudKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "is_framework": true,
+            "name": "Charts",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/Charts.framework/Modules/Charts.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
+                "Darwin",
+                "Foundation",
+                "Swift",
+                "SwiftOnoneSupport",
+                "SwiftUI",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
+        },
+        {
+            "is_framework": true,
+            "name": "CloudKit",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/CloudKit.framework/Modules/CloudKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
                 "CoreFoundation",
                 "CoreLocation",
+                "CoreTransferable",
                 "Darwin",
                 "Dispatch",
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
+                "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CloudKit"
             ]
@@ -195,9 +348,10 @@
             "swift_deps": [
                 "Darwin",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -208,29 +362,58 @@
                 "Darwin",
                 "Foundation",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Compression"
             ]
         },
         {
-            "is_framework": false,
+            "is_framework": true,
             "name": "Contacts",
-            "swiftinterface": "$SDKROOT/usr/lib/swift/Contacts.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/Contacts.framework/Modules/Contacts.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
+                "CoreData",
                 "CoreFoundation",
                 "Darwin",
                 "Dispatch",
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Contacts"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "ContactsUI",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/ContactsUI.framework/Modules/ContactsUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Contacts",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "ContactsUI"
             ]
         },
         {
@@ -243,9 +426,10 @@
                 "Dispatch",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreAudio"
             ]
@@ -256,10 +440,12 @@
             "swiftinterface": "$SDKROOT/System/Library/Frameworks/CoreAudioKit.framework/Modules/CoreAudioKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
+                "CoreAudio",
                 "CoreFoundation",
                 "CoreGraphics",
                 "CoreImage",
                 "CoreMIDI",
+                "CoreMedia",
                 "Darwin",
                 "Dispatch",
                 "FileProvider",
@@ -268,18 +454,21 @@
                 "ObjectiveC",
                 "QuartzCore",
                 "Swift",
+                "SwiftUI",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
+                "AudioToolbox",
                 "CoreAudioKit"
             ]
         },
         {
-            "is_framework": false,
+            "is_framework": true,
             "name": "CoreData",
-            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreData.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/CoreData.framework/Modules/CoreData.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "CoreFoundation",
@@ -288,9 +477,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreData"
             ]
@@ -304,9 +494,10 @@
                 "Dispatch",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreFoundation"
             ]
@@ -321,9 +512,10 @@
                 "Dispatch",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreGraphics"
             ]
@@ -341,9 +533,10 @@
                 "Metal",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreImage"
             ]
@@ -359,9 +552,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreLocation"
             ]
@@ -377,9 +571,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreMIDI"
             ]
@@ -397,9 +592,10 @@
                 "Metal",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreML"
             ]
@@ -418,9 +614,10 @@
                 "Metal",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreAudioTypes",
                 "CoreMedia",
@@ -438,11 +635,54 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreNFC"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "CoreSpotlight",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/CoreSpotlight.framework/Modules/CoreSpotlight.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "CoreSpotlight"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "CoreTransferable",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/CoreTransferable.framework/Modules/CoreTransferable.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "_StringProcessing",
+                "os"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "CoreTransferable"
             ]
         },
         {
@@ -456,9 +696,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "LocalAuthentication",
                 "Security"
@@ -475,9 +716,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CryptoTokenKit"
             ]
@@ -489,7 +731,7 @@
             "swift_deps": [
                 "Swift"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Darwin",
                 "SwiftOverlayShims",
@@ -507,9 +749,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "DataDetection"
             ]
@@ -520,9 +763,10 @@
             "swiftinterface": "$SDKROOT/System/Library/Frameworks/DeveloperToolsSupport.framework/Modules/DeveloperToolsSupport.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "DeveloperToolsSupport"
             ]
@@ -536,10 +780,34 @@
                 "ManagedSettings",
                 "Swift",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
+        },
+        {
+            "is_framework": true,
+            "name": "DeviceDiscoveryExtension",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/DeviceDiscoveryExtension.framework/Modules/DeviceDiscoveryExtension.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "ExtensionFoundation",
+                "Foundation",
+                "Network",
+                "ObjectiveC",
+                "Swift",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "_StringProcessing",
+                "os"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "DeviceDiscoveryExtension"
+            ]
         },
         {
             "is_framework": false,
@@ -550,39 +818,71 @@
                 "Darwin",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Dispatch"
             ]
         },
         {
             "is_framework": false,
+            "name": "Distributed",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Distributed.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Darwin",
+                "Swift",
+                "_Concurrency"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
+        },
+        {
+            "is_framework": false,
             "name": "ExtensionFoundation",
             "swiftinterface": "$SDKROOT/usr/lib/swift/ExtensionFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
+                "Darwin",
                 "Foundation",
                 "Swift",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
-            "clang_deps": []
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "ExtensionFoundation"
+            ]
         },
         {
             "is_framework": false,
             "name": "ExtensionKit",
             "swiftinterface": "$SDKROOT/usr/lib/swift/ExtensionKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
                 "ExtensionFoundation",
+                "FileProvider",
                 "Foundation",
+                "Metal",
+                "OSLog",
+                "ObjectiveC",
+                "QuartzCore",
                 "Swift",
                 "SwiftUI",
-                "_Concurrency"
+                "UIKit",
+                "_Concurrency",
+                "_StringProcessing",
+                "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
-            "clang_deps": []
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "ExtensionKit"
+            ]
         },
         {
             "is_framework": true,
@@ -600,9 +900,10 @@
                 "SwiftUI",
                 "UIKit",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreServices"
             ]
@@ -619,30 +920,32 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "FileProvider"
             ]
         },
         {
-            "is_framework": false,
+            "is_framework": true,
             "name": "Foundation",
-            "swiftinterface": "$SDKROOT/usr/lib/swift/Foundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/Foundation.framework/Modules/Foundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "CoreFoundation",
-                "CoreGraphics",
                 "Darwin",
                 "Dispatch",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
-                "Foundation"
+                "Foundation",
+                "ptrauth"
             ]
         },
         {
@@ -664,11 +967,37 @@
                 "Swift",
                 "UIKit",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "GLKit"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "GameController",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/GameController.framework/Modules/GameController.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "GameController"
             ]
         },
         {
@@ -693,9 +1022,10 @@
                 "Swift",
                 "UIKit",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "GameplayKit"
             ]
@@ -706,6 +1036,7 @@
             "swiftinterface": "$SDKROOT/System/Library/Frameworks/GroupActivities.framework/Modules/GroupActivities.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
+                "CloudKit",
                 "Combine",
                 "CoreGraphics",
                 "CryptoKit",
@@ -713,12 +1044,16 @@
                 "Foundation",
                 "Network",
                 "Swift",
+                "SwiftUI",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
-            "clang_deps": []
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "GroupActivities"
+            ]
         },
         {
             "is_framework": false,
@@ -732,9 +1067,11 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "HealthKit"
             ]
@@ -756,11 +1093,31 @@
                 "QuartzCore",
                 "Swift",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "HomeKit"
+            ]
+        },
+        {
+            "is_framework": false,
+            "name": "IdentityLookup",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/IdentityLookup.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "IdentityLookup"
             ]
         },
         {
@@ -776,9 +1133,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Intents"
             ]
@@ -792,9 +1150,10 @@
                 "Foundation",
                 "Swift",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -806,10 +1165,12 @@
                 "ManagedSettings",
                 "Swift",
                 "UIKit",
+                "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -830,9 +1191,10 @@
                 "QuartzCore",
                 "Swift",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "MapKit"
             ]
@@ -860,9 +1222,10 @@
                 "UIKit",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "MediaPlayer"
             ]
@@ -878,9 +1241,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Metal"
             ]
@@ -904,9 +1268,10 @@
                 "Swift",
                 "UIKit",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "MetalKit"
             ]
@@ -923,9 +1288,10 @@
                 "ObjectiveC",
                 "Swift",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "MetricKit"
             ]
@@ -943,9 +1309,10 @@
                 "ObjectiveC",
                 "Swift",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "ModelIO"
             ]
@@ -959,9 +1326,10 @@
                 "CoreGraphics",
                 "Foundation",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -975,9 +1343,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "NaturalLanguage"
             ]
@@ -994,9 +1363,10 @@
                 "ObjectiveC",
                 "Swift",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "NearbyInteraction"
             ]
@@ -1012,9 +1382,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Network",
                 "Security"
@@ -1032,9 +1403,10 @@
                 "ObjectiveC",
                 "Swift",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "OSLog"
             ]
@@ -1046,9 +1418,10 @@
             "swift_deps": [
                 "Darwin",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "ObjectiveC"
             ]
@@ -1071,9 +1444,10 @@
                 "QuartzCore",
                 "Swift",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "PassKit"
             ]
@@ -1095,9 +1469,10 @@
                 "QuartzCore",
                 "Swift",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "PencilKit"
             ]
@@ -1124,9 +1499,10 @@
                 "Swift",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Photos"
             ]
@@ -1156,9 +1532,10 @@
                 "UIKit",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "PhotosUI"
             ]
@@ -1176,9 +1553,10 @@
                 "Metal",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "QuartzCore"
             ]
@@ -1201,9 +1579,10 @@
                 "Swift",
                 "UIKit",
                 "UniformTypeIdentifiers",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "PDFKit",
                 "QuickLook"
@@ -1215,6 +1594,7 @@
             "swiftinterface": "$SDKROOT/System/Library/Frameworks/RealityFoundation.framework/Modules/RealityFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
+                "Accessibility",
                 "Combine",
                 "CoreAudio",
                 "CoreFoundation",
@@ -1230,10 +1610,11 @@
                 "Swift",
                 "UIKit",
                 "_Concurrency",
+                "_StringProcessing",
                 "os",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "AVFAudio",
                 "AudioToolbox",
@@ -1261,11 +1642,50 @@
                 "Swift",
                 "UIKit",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "MultipeerConnectivity"
+            ]
+        },
+        {
+            "is_framework": false,
+            "name": "RegexBuilder",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/RegexBuilder.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Swift",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
+        },
+        {
+            "is_framework": true,
+            "name": "RoomPlan",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/RoomPlan.framework/Modules/RoomPlan.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "ARKit",
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "SpriteKit",
+                "Swift",
+                "_Concurrency",
+                "_StringProcessing",
+                "os",
+                "simd"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "CoreVideo",
+                "RoomPlan"
             ]
         },
         {
@@ -1288,11 +1708,63 @@
                 "Swift",
                 "UIKit",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "SceneKit"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "SharedWithYou",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/SharedWithYou.framework/Modules/SharedWithYou.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreTransferable",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "OSLog",
+                "ObjectiveC",
+                "QuartzCore",
+                "SharedWithYouCore",
+                "Swift",
+                "SwiftUI",
+                "UIKit",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "_StringProcessing",
+                "os"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "SharedWithYou"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "SharedWithYouCore",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/SharedWithYouCore.framework/Modules/SharedWithYouCore.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "SharedWithYouCore"
             ]
         },
         {
@@ -1300,6 +1772,7 @@
             "name": "ShazamKit",
             "swiftinterface": "$SDKROOT/usr/lib/swift/ShazamKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
+                "AVFoundation",
                 "CoreAudio",
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1311,10 +1784,15 @@
                 "Metal",
                 "MusicKit",
                 "ObjectiveC",
+                "QuartzCore",
                 "Swift",
-                "_Concurrency"
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "_StringProcessing",
+                "os",
+                "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "ShazamKit"
             ]
@@ -1340,11 +1818,28 @@
                 "Swift",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "SoundAnalysis"
+            ]
+        },
+        {
+            "is_framework": false,
+            "name": "Spatial",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Spatial.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Darwin",
+                "Swift",
+                "_Concurrency",
+                "_StringProcessing",
+                "simd"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "Spatial"
             ]
         },
         {
@@ -1367,9 +1862,10 @@
                 "Swift",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Speech"
             ]
@@ -1394,9 +1890,10 @@
                 "Swift",
                 "UIKit",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "SpriteKit"
             ]
@@ -1420,9 +1917,10 @@
                 "Swift",
                 "UIKit",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Security",
                 "StoreKit"
@@ -1459,21 +1957,24 @@
                 "CoreFoundation",
                 "CoreGraphics",
                 "CoreImage",
+                "CoreTransferable",
                 "Darwin",
                 "DeveloperToolsSupport",
                 "Dispatch",
                 "FileProvider",
                 "Foundation",
                 "Metal",
+                "OSLog",
                 "ObjectiveC",
                 "QuartzCore",
                 "Swift",
                 "UIKit",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "SwiftUI"
             ]
@@ -1485,9 +1986,10 @@
             "swift_deps": [
                 "Darwin",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1499,9 +2001,10 @@
                 "Dispatch",
                 "Foundation",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1522,9 +2025,10 @@
                 "ObjectiveC",
                 "QuartzCore",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "UIKit"
             ]
@@ -1540,11 +2044,31 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "UniformTypeIdentifiers"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "VideoSubscriberAccount",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/VideoSubscriberAccount.framework/Modules/VideoSubscriberAccount.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "VideoSubscriberAccount"
             ]
         },
         {
@@ -1564,12 +2088,54 @@
                 "ObjectiveC",
                 "Swift",
                 "_Concurrency",
+                "_StringProcessing",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "Vision"
             ]
+        },
+        {
+            "is_framework": true,
+            "name": "VisionKit",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/VisionKit.framework/Modules/VisionKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "Vision",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "VisionKit"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "WeatherKit",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/WeatherKit.framework/Modules/WeatherKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreLocation",
+                "Foundation",
+                "Swift",
+                "_Concurrency",
+                "_StringProcessing",
+                "os"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
         },
         {
             "is_framework": false,
@@ -1588,9 +2154,10 @@
                 "QuartzCore",
                 "Swift",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "WebKit"
             ]
@@ -1610,11 +2177,13 @@
                 "ObjectiveC",
                 "Swift",
                 "SwiftUI",
+                "UIKit",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "WidgetKit"
             ]
@@ -1636,9 +2205,10 @@
                 "QuartzCore",
                 "Swift",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios9.0-simulator",
+            "target": "x86_64-apple-ios11.0-simulator",
             "clang_deps": [
                 "XCTest"
             ]
@@ -1661,9 +2231,10 @@
                 "Darwin",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "os"
             ]
@@ -1675,12 +2246,23 @@
             "swift_deps": [
                 "Darwin",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "simd"
             ]
+        },
+        {
+            "is_framework": false,
+            "name": "_StringProcessing",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/_StringProcessing.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Swift"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
         },
         {
             "is_framework": true,
@@ -1688,31 +2270,48 @@
             "swiftinterface": "$SDKROOT/System/Library/Frameworks/_AVKit_SwiftUI.framework/Modules/_AVKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
+                "AVKit",
                 "Combine",
-                "CoreAudio",
-                "CoreFoundation",
-                "CoreGraphics",
-                "CoreImage",
-                "CoreMIDI",
-                "CoreMedia",
-                "Darwin",
-                "Dispatch",
-                "FileProvider",
-                "Foundation",
-                "Metal",
-                "ObjectiveC",
-                "QuartzCore",
                 "Swift",
                 "SwiftUI",
                 "UIKit",
-                "UniformTypeIdentifiers",
                 "_Concurrency",
-                "simd"
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
-            "clang_deps": [
-                "AVKit"
-            ]
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
+        },
+        {
+            "is_framework": true,
+            "name": "_AppIntents_SwiftUI",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_AppIntents_SwiftUI.framework/Modules/_AppIntents_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AppIntents",
+                "Foundation",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
+        },
+        {
+            "is_framework": true,
+            "name": "_AppIntents_UIKit",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_AppIntents_UIKit.framework/Modules/_AppIntents_UIKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AppIntents",
+                "Foundation",
+                "Swift",
+                "SwiftUI",
+                "UIKit",
+                "_AppIntents_SwiftUI",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
         },
         {
             "is_framework": true,
@@ -1732,9 +2331,10 @@
                 "Swift",
                 "SwiftUI",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "AuthenticationServices"
             ]
@@ -1752,9 +2352,10 @@
                 "Foundation",
                 "ObjectiveC",
                 "Swift",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "_CoreData_CloudKit"
             ]
@@ -1777,13 +2378,34 @@
                 "Swift",
                 "SwiftUI",
                 "UIKit",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": [
                 "CoreLocationUI",
                 "_CoreLocationUI_SwiftUI"
             ]
+        },
+        {
+            "is_framework": true,
+            "name": "_DeviceActivity_SwiftUI",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_DeviceActivity_SwiftUI.framework/Modules/_DeviceActivity_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "DeviceActivity",
+                "ExtensionFoundation",
+                "ExtensionKit",
+                "Foundation",
+                "ManagedSettings",
+                "Swift",
+                "SwiftUI",
+                "UIKit",
+                "_Concurrency",
+                "_StringProcessing",
+                "os"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
         },
         {
             "is_framework": true,
@@ -1793,12 +2415,14 @@
                 "Foundation",
                 "GroupActivities",
                 "Swift",
+                "SwiftUI",
                 "UIKit",
                 "UniformTypeIdentifiers",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1809,9 +2433,10 @@
                 "HomeKit",
                 "Swift",
                 "SwiftUI",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1822,9 +2447,10 @@
                 "MapKit",
                 "Swift",
                 "SwiftUI",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1837,9 +2463,43 @@
                 "MusicKit",
                 "Swift",
                 "SwiftUI",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": []
+        },
+        {
+            "is_framework": true,
+            "name": "_PassKit_SwiftUI",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_PassKit_SwiftUI.framework/Modules/_PassKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Foundation",
+                "PassKit",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
+            "clang_deps": [
+                "_PassKit_SwiftUI"
+            ]
+        },
+        {
+            "is_framework": true,
+            "name": "_PhotosUI_SwiftUI",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_PhotosUI_SwiftUI.framework/Modules/_PhotosUI_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreTransferable",
+                "PhotosUI",
+                "Swift",
+                "SwiftUI",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "_StringProcessing"
+            ],
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1850,9 +2510,10 @@
                 "QuickLook",
                 "Swift",
                 "SwiftUI",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1863,9 +2524,10 @@
                 "SceneKit",
                 "Swift",
                 "SwiftUI",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1876,9 +2538,10 @@
                 "SpriteKit",
                 "Swift",
                 "SwiftUI",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1891,9 +2554,10 @@
                 "Swift",
                 "SwiftUI",
                 "_Concurrency",
+                "_StringProcessing",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         },
         {
@@ -1904,9 +2568,10 @@
                 "Foundation",
                 "Swift",
                 "System",
-                "_Concurrency"
+                "_Concurrency",
+                "_StringProcessing"
             ],
-            "target": "x86_64-apple-ios15.5-simulator",
+            "target": "x86_64-apple-ios16.0-simulator",
             "clang_deps": []
         }
     ],
@@ -1924,13 +2589,11 @@
             ]
         },
         {
-            "name": "AVKit",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/AVKit.framework/Modules/module.modulemap",
+            "name": "AVRouting",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AVRouting.framework/Modules/module.modulemap",
             "clang_deps": [
-                "AVFoundation",
-                "Darwin",
                 "Foundation",
-                "UIKit"
+                "Network"
             ]
         },
         {
@@ -1983,13 +2646,6 @@
             "clang_deps": [
                 "Darwin",
                 "Foundation"
-            ]
-        },
-        {
-            "name": "AppleArchive",
-            "modulemap": "$SDKROOT/usr/include/AppleArchive/module.modulemap",
-            "clang_deps": [
-                "Darwin"
             ]
         },
         {
@@ -2077,18 +2733,18 @@
             ]
         },
         {
-            "name": "CommonCrypto",
-            "modulemap": "$SDKROOT/usr/include/CommonCrypto/module.modulemap",
+            "name": "ColorSync",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ColorSync.framework/Modules/module.modulemap",
             "clang_deps": [
+                "CoreFoundation",
                 "Darwin"
             ]
         },
         {
-            "name": "ContactsUI",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/ContactsUI.framework/Modules/module.modulemap",
+            "name": "CommonCrypto",
+            "modulemap": "$SDKROOT/usr/include/CommonCrypto/module.modulemap",
             "clang_deps": [
-                "Contacts",
-                "UIKit"
+                "Darwin"
             ]
         },
         {
@@ -2135,14 +2791,6 @@
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin"
-            ]
-        },
-        {
-            "name": "CoreSpotlight",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreSpotlight.framework/Modules/module.modulemap",
-            "clang_deps": [
-                "Foundation",
-                "UniformTypeIdentifiers"
             ]
         },
         {
@@ -2242,15 +2890,6 @@
             ]
         },
         {
-            "name": "GameController",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/GameController.framework/Modules/module.modulemap",
-            "clang_deps": [
-                "Darwin",
-                "Foundation",
-                "UIKit"
-            ]
-        },
-        {
             "name": "GameKit",
             "modulemap": "$SDKROOT/System/Library/Frameworks/GameKit.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2290,13 +2929,6 @@
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin",
-                "Foundation"
-            ]
-        },
-        {
-            "name": "IdentityLookup",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/IdentityLookup.framework/Modules/module.modulemap",
-            "clang_deps": [
                 "Foundation"
             ]
         },
@@ -2360,7 +2992,17 @@
             "name": "LocalAuthentication",
             "modulemap": "$SDKROOT/System/Library/Frameworks/LocalAuthentication.framework/Modules/module.modulemap",
             "clang_deps": [
-                "Foundation"
+                "Foundation",
+                "Security"
+            ]
+        },
+        {
+            "name": "LocalAuthenticationEmbeddedUI",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/LocalAuthenticationEmbeddedUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "LocalAuthentication",
+                "UIKit"
             ]
         },
         {
@@ -2508,6 +3150,13 @@
             ]
         },
         {
+            "name": "PushToTalk",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/PushToTalk.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
             "name": "QuickLookThumbnailing",
             "modulemap": "$SDKROOT/System/Library/Frameworks/QuickLookThumbnailing.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2603,14 +3252,6 @@
             ]
         },
         {
-            "name": "VideoSubscriberAccount",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/VideoSubscriberAccount.framework/Modules/module.modulemap",
-            "clang_deps": [
-                "Darwin",
-                "Foundation"
-            ]
-        },
-        {
             "name": "VideoToolbox",
             "modulemap": "$SDKROOT/System/Library/Frameworks/VideoToolbox.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2619,14 +3260,6 @@
                 "CoreMedia",
                 "CoreVideo",
                 "Darwin"
-            ]
-        },
-        {
-            "name": "VisionKit",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/VisionKit.framework/Modules/module.modulemap",
-            "clang_deps": [
-                "Foundation",
-                "UIKit"
             ]
         },
         {
@@ -2767,8 +3400,7 @@
                 "Darwin",
                 "Dispatch",
                 "ObjectiveC",
-                "Security",
-                "ptrauth"
+                "Security"
             ]
         },
         {
@@ -2790,17 +3422,26 @@
             ]
         },
         {
-            "name": "UIKit",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/UIKit.framework/Modules/module.modulemap",
+            "name": "AVKit",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AVKit.framework/Modules/module.modulemap",
             "clang_deps": [
-                "CoreGraphics",
-                "CoreImage",
-                "CoreText",
+                "AVFoundation",
+                "CoreMedia",
                 "Darwin",
-                "FileProvider",
                 "Foundation",
-                "QuartzCore",
-                "UserNotifications"
+                "UIKit"
+            ]
+        },
+        {
+            "name": "Network",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Network.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Security",
+                "dnssd",
+                "os_object"
             ]
         },
         {
@@ -2834,6 +3475,34 @@
             ]
         },
         {
+            "name": "UIKit",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/UIKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "CoreImage",
+                "CoreText",
+                "Darwin",
+                "FileProvider",
+                "Foundation",
+                "QuartzCore",
+                "UserNotifications"
+            ]
+        },
+        {
+            "name": "AppIntents",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AppIntents.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "AppleArchive",
+            "modulemap": "$SDKROOT/usr/include/AppleArchive/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
             "name": "AssetsLibrary",
             "modulemap": "$SDKROOT/System/Library/Frameworks/AssetsLibrary.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2848,6 +3517,13 @@
                 "Darwin",
                 "os_object",
                 "os_workgroup"
+            ]
+        },
+        {
+            "name": "BackgroundAssets",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/BackgroundAssets.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
             ]
         },
         {
@@ -2899,6 +3575,14 @@
             ]
         },
         {
+            "name": "ContactsUI",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ContactsUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Contacts",
+                "UIKit"
+            ]
+        },
+        {
             "name": "CoreAudio",
             "modulemap": "$SDKROOT/System/Library/Frameworks/CoreAudio.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2909,6 +3593,7 @@
             "name": "CoreAudioKit",
             "modulemap": "$SDKROOT/System/Library/Frameworks/CoreAudioKit.framework/Modules/module.modulemap",
             "clang_deps": [
+                "AVFAudio",
                 "AudioUnit",
                 "Foundation",
                 "UIKit"
@@ -2933,6 +3618,7 @@
                 "IOSurface",
                 "ImageIO",
                 "Metal",
+                "ObjectiveC",
                 "OpenGLES"
             ]
         },
@@ -2963,10 +3649,17 @@
             ]
         },
         {
-            "name": "UniformTypeIdentifiers",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/UniformTypeIdentifiers.framework/Modules/module.modulemap",
+            "name": "CoreSpotlight",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreSpotlight.framework/Modules/module.modulemap",
             "clang_deps": [
-                "Darwin",
+                "Foundation",
+                "UniformTypeIdentifiers"
+            ]
+        },
+        {
+            "name": "CoreTransferable",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreTransferable.framework/Modules/module.modulemap",
+            "clang_deps": [
                 "Foundation"
             ]
         },
@@ -3013,6 +3706,32 @@
             "clang_deps": []
         },
         {
+            "name": "DeviceDiscoveryExtension",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/DeviceDiscoveryExtension.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "Network",
+                "UniformTypeIdentifiers"
+            ]
+        },
+        {
+            "name": "ExtensionFoundation",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ExtensionFoundation.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "ExtensionKit",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ExtensionKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "ExtensionFoundation",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
             "name": "FileProvider",
             "modulemap": "$SDKROOT/System/Library/Frameworks/FileProvider.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -3032,6 +3751,15 @@
                 "OpenGLES",
                 "UIKit",
                 "_Builtin_intrinsics"
+            ]
+        },
+        {
+            "name": "GameController",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/GameController.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "UIKit"
             ]
         },
         {
@@ -3099,11 +3827,17 @@
             ]
         },
         {
+            "name": "GroupActivities",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/GroupActivities.framework/Modules/module.modulemap",
+            "clang_deps": []
+        },
+        {
             "name": "HealthKit",
             "modulemap": "$SDKROOT/System/Library/Frameworks/HealthKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
-                "ObjectiveC"
+                "ObjectiveC",
+                "UniformTypeIdentifiers"
             ]
         },
         {
@@ -3113,6 +3847,13 @@
                 "CoreGraphics",
                 "Foundation",
                 "UIKit"
+            ]
+        },
+        {
+            "name": "IdentityLookup",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/IdentityLookup.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
             ]
         },
         {
@@ -3143,6 +3884,7 @@
             "clang_deps": [
                 "AVFoundation",
                 "CoreGraphics",
+                "CoreMedia",
                 "Darwin",
                 "Foundation",
                 "UIKit"
@@ -3184,18 +3926,6 @@
             "clang_deps": [
                 "Foundation",
                 "simd"
-            ]
-        },
-        {
-            "name": "Network",
-            "modulemap": "$SDKROOT/System/Library/Frameworks/Network.framework/Modules/module.modulemap",
-            "clang_deps": [
-                "CoreFoundation",
-                "Darwin",
-                "Dispatch",
-                "Security",
-                "dnssd",
-                "os_object"
             ]
         },
         {
@@ -3256,6 +3986,7 @@
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
+                "CoreVideo",
                 "Darwin",
                 "Foundation",
                 "Metal",
@@ -3277,12 +4008,48 @@
             ]
         },
         {
+            "name": "UniformTypeIdentifiers",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/UniformTypeIdentifiers.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "RoomPlan",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/RoomPlan.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "SharedWithYou",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/SharedWithYou.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "SharedWithYouCore",
+                "UIKit",
+                "UniformTypeIdentifiers"
+            ]
+        },
+        {
+            "name": "SharedWithYouCore",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/SharedWithYouCore.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
             "name": "ShazamKit",
             "modulemap": "$SDKROOT/System/Library/Frameworks/ShazamKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFAudio",
+                "AVFoundation",
                 "Darwin",
-                "Foundation"
+                "Foundation",
+                "UniformTypeIdentifiers"
             ]
         },
         {
@@ -3293,6 +4060,14 @@
                 "CoreML",
                 "CoreMedia",
                 "Foundation"
+            ]
+        },
+        {
+            "name": "Spatial",
+            "modulemap": "$SDKROOT/usr/include/Spatial/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "simd"
             ]
         },
         {
@@ -3321,6 +4096,14 @@
             ]
         },
         {
+            "name": "VideoSubscriberAccount",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/VideoSubscriberAccount.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
             "name": "Vision",
             "modulemap": "$SDKROOT/System/Library/Frameworks/Vision.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -3332,6 +4115,14 @@
                 "ImageIO",
                 "Metal",
                 "simd"
+            ]
+        },
+        {
+            "name": "VisionKit",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/VisionKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
             ]
         },
         {
@@ -3383,11 +4174,6 @@
             ]
         },
         {
-            "name": "ptrauth",
-            "modulemap": "$RESOURCEDIR/clang/include/module.modulemap",
-            "clang_deps": []
-        },
-        {
             "name": "_CoreData_CloudKit",
             "modulemap": "$SDKROOT/System/Library/Frameworks/_CoreData_CloudKit.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -3400,6 +4186,16 @@
             "clang_deps": [
                 "Foundation"
             ]
+        },
+        {
+            "name": "_PassKit_SwiftUI",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/_PassKit_SwiftUI.framework/Modules/module.modulemap",
+            "clang_deps": []
+        },
+        {
+            "name": "ptrauth",
+            "modulemap": "$RESOURCEDIR/clang/include/module.modulemap",
+            "clang_deps": []
         }
     ]
 }

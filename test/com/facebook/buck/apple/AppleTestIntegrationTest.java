@@ -318,6 +318,7 @@ public class AppleTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "default_platform_in_rules", tmp);
     workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_path_normalization_args_enabled", true);
 
     BuildTarget target = workspace.newBuildTarget("//:DemoTest");
     // buckconfig override is ignored
@@ -329,12 +330,13 @@ public class AppleTestIntegrationTest {
             "cxx.default_platform=doesnotexist")
         .assertSuccess();
 
-    BuildTarget simTarget = target.withFlavors(InternalFlavor.of("iphonesimulator-i386"));
+    BuildTarget simTarget = target.withFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
     workspace.runBuckCommand("build", simTarget.getFullyQualifiedName()).assertSuccess();
 
     BuildTarget fatTarget =
         target.withFlavors(
-            InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("iphonesimulator-i386"));
+            InternalFlavor.of("iphonesimulator-x86_64"),
+            InternalFlavor.of("iphonesimulator-arm64"));
     workspace.runBuckCommand("build", fatTarget.getFullyQualifiedName()).assertSuccess();
   }
 
@@ -947,8 +949,9 @@ public class AppleTestIntegrationTest {
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption(
         "apple", "xctool_default_destination_specifier", XCTOOL_DEFAULT_DEST_FOR_TESTS);
+    workspace.addBuckConfigLocalOption("cxx", "link_path_normalization_args_enabled", true);
     BuildTarget target =
-        BuildTargetFactory.newInstance("//:foo#iphonesimulator-i386,iphonesimulator-x86_64");
+        BuildTargetFactory.newInstance("//:foo#iphonesimulator-arm64,iphonesimulator-x86_64");
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -967,7 +970,7 @@ public class AppleTestIntegrationTest {
     // check result is actually multiarch.
     ProcessExecutor.Result lipoVerifyResult =
         workspace.runCommand(
-            "lipo", output.resolve("foo").toString(), "-verify_arch", "i386", "x86_64");
+            "lipo", output.resolve("foo").toString(), "-verify_arch", "arm64", "x86_64");
     assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
   }
 
@@ -975,12 +978,6 @@ public class AppleTestIntegrationTest {
   public void appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithLinkerNormArgs()
       throws Exception {
     appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithLinkerNormArgsState(true);
-  }
-
-  @Test
-  public void appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithoutLinkerNormArgs()
-      throws Exception {
-    appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithLinkerNormArgsState(false);
   }
 
   private void appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithLinkerNormArgsState(
@@ -993,7 +990,7 @@ public class AppleTestIntegrationTest {
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
     BuildTarget target =
-        BuildTargetFactory.newInstance("//:foo#iphonesimulator-i386,iphonesimulator-x86_64");
+        BuildTargetFactory.newInstance("//:foo#iphonesimulator-arm64,iphonesimulator-x86_64");
     ProcessResult result =
         workspace.runBuckCommand(
             "build",
@@ -1022,13 +1019,13 @@ public class AppleTestIntegrationTest {
                     "%s.dSYM"))
             .resolve("Contents/Resources/DWARF/" + libraryTarget.getShortName());
     ProcessExecutor.Result lipoVerifyResult =
-        workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64");
+        workspace.runCommand("lipo", output.toString(), "-verify_arch", "arm64", "x86_64");
     assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolForConcreteArchitectures(
         "-[FooXCTest testTwoPlusTwoEqualsFour]",
         workspace,
         output,
-        Optional.of(ImmutableList.of("i386", "x86_64")));
+        Optional.of(ImmutableList.of("arm64", "x86_64")));
   }
 
   @Test(timeout = 3 * 60 * 1_000)
@@ -1038,10 +1035,11 @@ public class AppleTestIntegrationTest {
     workspace.setUp();
     workspace.addBuckConfigLocalOption(
         "apple", "xctool_default_destination_specifier", XCTOOL_DEFAULT_DEST_FOR_TESTS);
+    workspace.addBuckConfigLocalOption("cxx", "link_path_normalization_args_enabled", true);
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
     BuildTarget target =
-        BuildTargetFactory.newInstance("//:AppTest#iphonesimulator-i386,iphonesimulator-x86_64");
+        BuildTargetFactory.newInstance("//:AppTest#iphonesimulator-arm64,iphonesimulator-x86_64");
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -1060,7 +1058,7 @@ public class AppleTestIntegrationTest {
     // check result is actually multiarch.
     ProcessExecutor.Result lipoVerifyResult =
         workspace.runCommand(
-            "lipo", output.resolve("AppTest").toString(), "-verify_arch", "i386", "x86_64");
+            "lipo", output.resolve("AppTest").toString(), "-verify_arch", "arm64", "x86_64");
     assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
   }
 

@@ -93,13 +93,8 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    String[][] expectedArchs = {
-      {"i386", "x86_64"},
-      {"x86_64"}
-    };
-    String[] archFlavors = {
-      "iphonesimulator-x86_64,iphonesimulator-i386", "iphonesimulator-x86_64"
-    };
+    String[][] expectedArchs = {{"x86_64"}};
+    String[] archFlavors = {"iphonesimulator-x86_64"};
 
     for (int i = 0; i < expectedArchs.length; i++) {
       BuildTarget target = workspace.newBuildTarget("//:DemoApp#" + archFlavors[i] + ",no-debug");

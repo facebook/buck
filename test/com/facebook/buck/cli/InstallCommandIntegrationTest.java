@@ -219,7 +219,8 @@ public class InstallCommandIntegrationTest {
     result.assertSuccess();
   }
 
-  @Test
+  // We don't have the TV sim runtime installed on the CI machines
+  // @Test
   public void appleBundleInstallsInTVSimulator() throws IOException {
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVSIMULATOR));
@@ -234,7 +235,8 @@ public class InstallCommandIntegrationTest {
     result.assertSuccess();
   }
 
-  @Test
+  // We don't have the TV sim runtime installed on the CI machines
+  // @Test
   public void appleBundleInstallsAndRunsInTVSimulator() throws IOException {
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVSIMULATOR));
@@ -249,7 +251,8 @@ public class InstallCommandIntegrationTest {
     result.assertSuccess();
   }
 
-  @Test(timeout = 150 * 1_000)
+  // We don't have the TV sim runtime installed on the CI machines
+  // @Test(timeout = 150 * 1_000)
   public void appleBundleInstallsAndRunsInTVSimulatorWithDwarfDebugging()
       throws IOException, InterruptedException {
     assumeTrue(
