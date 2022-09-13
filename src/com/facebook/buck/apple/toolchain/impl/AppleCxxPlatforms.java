@@ -624,9 +624,6 @@ public class AppleCxxPlatforms {
     if (appleConfig.linkAllObjC()) {
       builder.addAll(Linkers.iXlinker("-ObjC"));
     }
-    if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
-      builder.addAll(Linkers.iXlinker("-bitcode_verify"));
-    }
 
     for (String libSearchPath : targetSdk.getAdditionalLibrarySearchPaths()) {
       builder.add("-L" + libSearchPath);
