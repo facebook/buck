@@ -124,20 +124,17 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
                     filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("assets/native.cxx.foo1/libs.xzs");
-    zipInspector.assertFileExists("assets/native.cxx.foo1/libs.txt");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset2.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
 
     zipInspector.assertFileDoesNotExist("assets/lib/libs.xzs");
     zipInspector.assertFileDoesNotExist("assets/lib/metadata.txt");
-    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_foo1.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset2.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
   }
 

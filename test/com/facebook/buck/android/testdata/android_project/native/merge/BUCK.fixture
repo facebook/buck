@@ -145,6 +145,89 @@ cxx_library(
     ],
 )
 
+#
+# Asset-only variant of the above graph, intended to test merging in modular
+# environments where all native libs may be assets.
+#
+
+cxx_library(
+    name = "A_asset",
+    srcs = ["A.c"],
+    can_be_asset = True,
+    soname = "lib1a.so",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":B_asset",
+        ":C_asset",
+    ],
+)
+
+cxx_library(
+    name = "B_asset",
+    srcs = ["B.c"],
+    can_be_asset = True,
+    soname = "lib1b.so",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":D_asset",
+    ],
+)
+
+cxx_library(
+    name = "C_asset",
+    srcs = ["C.c"],
+    can_be_asset = True,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":D_asset",
+        ":prebuilt_for_C",
+        ":static_for_C",
+    ],
+)
+
+cxx_library(
+    name = "D_asset",
+    precompiled_header = ":precompiled_for_D_asset",
+    srcs = ["D.c"],
+    can_be_asset = True,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":E_asset",
+        ":F_asset", # TODO T123289901: This dependency shouldn't be necessary.
+    ],
+)
+
+cxx_library(
+    name = "E_asset",
+    srcs = ["E.c"],
+    can_be_asset = True,
+    soname = "lib2e.so",
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)
+
+cxx_library(
+    name = "F_asset",
+    srcs = ["F.c"],
+    can_be_asset = True,
+    exported_headers = ["F.h"],
+    soname = "lib2f.so",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":prebuilt_for_F",
+        ":static_for_F",
+    ],
+)
+
+cxx_precompiled_header(
+    name = "precompiled_for_D_asset",
+    src = "precompiled_for_D.h",
+    deps = [
+        ":F_asset"
+    ],
+)
+
 # This graph validates native_library_merge_sequence behavior preventing
 # target dependency cycles in cases where module dependency cycles are
 # allowed, namely when dependency chains repeatedly alternate between
@@ -172,6 +255,7 @@ cxx_library(
 cxx_library(
     name = "G",
     srcs = ["G.c"],
+    can_be_asset = True,
     visibility = ["PUBLIC"],
     deps = [
         ":H",
@@ -195,6 +279,7 @@ cxx_library(
 cxx_library(
     name = "I",
     srcs = ["I.c"],
+    can_be_asset = True,
     visibility = ["PUBLIC"],
     deps = [
         ":J",
@@ -216,6 +301,7 @@ cxx_library(
 cxx_library(
     name = "K",
     srcs = ["K.c"],
+    can_be_asset = True,
     visibility = ["PUBLIC"],
     deps = [
         ":L",
@@ -236,6 +322,7 @@ cxx_library(
 cxx_library(
     name = "M",
     srcs = ["M.c"],
+    can_be_asset = True,
     visibility = ["PUBLIC"],
     deps = [
     ],
