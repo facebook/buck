@@ -31,6 +31,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -624,6 +625,42 @@ public class KotlinLibraryIntegrationTest {
             workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes.json"))));
   }
 
+  @Test
+  public void shouldNotGenerateJvmAbi() throws IOException {
+    String targetFqn = "//com/example/child:child";
+    workspace.addBuckConfigLocalOption("kotlin", "use_jvm_abi_gen", false);
+    ProcessResult buildResult = workspace.runBuckCommand("build", targetFqn);
+    buildResult.assertSuccess("Build should have succeeded.");
+
+    assertFalse(
+        "Should not generate jvm-abi",
+        Files.exists(
+            workspace.getPath(
+                JavaAbis.getGenPathForClassAbiPartFromLibraryTarget(getGenDir(targetFqn)))));
+  }
+
+  @Test
+  public void shouldGenerateJvmAbiIfEnabled() throws IOException {
+    String targetFqn = "//com/example/child:child";
+    workspace.addBuckConfigLocalOption("kotlin", "use_jvm_abi_gen", true);
+    workspace.addBuckConfigLocalOption(
+        "kotlin", "kosabi_jvm_abi_gen_plugin", "//com/example/libs:jvm-abi-gen");
+    // Though jvm-abi-gen for class-abi won't use these 2 plugins, Kosabi.getPluginOptionsMappings
+    // requires all 3 plugins to be valid to return any.
+    workspace.addBuckConfigLocalOption(
+        "kotlin", "kosabi_stubs_gen_plugin", "//com/example/libs:jvm-abi-gen");
+    workspace.addBuckConfigLocalOption(
+        "kotlin", "kosabi_applicability_plugin", "//com/example/libs:jvm-abi-gen");
+    ProcessResult buildResult = workspace.runBuckCommand("build", targetFqn);
+    buildResult.assertSuccess("Build should have succeeded.");
+
+    assertTrue(
+        "Should generate jvm-abi",
+        Files.exists(
+            workspace.getPath(
+                JavaAbis.getGenPathForClassAbiPartFromLibraryTarget(getGenDir(targetFqn)))));
+  }
+
   private Path getOutputJarPath(String targetFqn) throws IOException {
     BuildTarget utilTarget = BuildTargetFactory.newInstance(targetFqn);
     return getOutputFilePath(targetFqn, utilTarget.getShortName() + ".jar");
@@ -631,9 +668,14 @@ public class KotlinLibraryIntegrationTest {
 
   private Path getOutputFilePath(String targetFqn, String fileName) throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance(targetFqn);
-    RelPath genDir =
-        BuildPaths.getGenDir(workspace.getProjectFileSystem().getBuckPaths(), target).getParent();
-    return genDir.resolve(String.format("lib__%s__output/" + fileName, target.getShortName()));
+    return getGenDir(targetFqn)
+        .getParent()
+        .resolve(String.format("lib__%s__output/" + fileName, target.getShortName()));
+  }
+
+  private RelPath getGenDir(String targetFqn) throws IOException {
+    BuildTarget target = BuildTargetFactory.newInstance(targetFqn);
+    return BuildPaths.getGenDir(workspace.getProjectFileSystem().getBuckPaths(), target);
   }
 
   private Path getReportFilePath(String targetFqn, String fileName) throws IOException {

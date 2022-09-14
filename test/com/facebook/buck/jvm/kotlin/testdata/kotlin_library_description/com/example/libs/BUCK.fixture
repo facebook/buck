@@ -1,0 +1,5 @@
+prebuilt_jar(
+    name = "jvm-abi-gen",
+    binary_jar = "jvm-abi-gen.jar",
+    visibility = ["PUBLIC"],
+)
