@@ -47,6 +47,7 @@ class AndroidInstall {
       AndroidInstallApkOptions apkOptions,
       HasInstallableApk.IsolatedApkInfo apkInfo,
       Optional<IsolatedExopackageInfo> exopackageInfo,
+      Optional<AbsPath> agentApk,
       String adbExecutable,
       InstallId installId) {
     this.logger = logger;
@@ -72,6 +73,7 @@ class AndroidInstall {
             new IsolatedAdbExecutionContext(),
             new IsolatedAndroidInstallerPrinter(logger),
             Optional.of(adbExecutable),
+            agentApk.map(AbsPath::getPath),
             apkOptions.restartAdbOnFailure,
             apkOptions.skipInstallMetadata,
             apkOptions.alwaysUseJavaAgent,

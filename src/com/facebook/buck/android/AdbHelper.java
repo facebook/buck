@@ -107,6 +107,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
   private final Optional<String> adbExecutable;
+  private final Optional<Path> agentApk;
   private final AdbExecutionContext adbExecutionContext;
   private final boolean restartAdbOnFailure;
   // Caches the list of android devices for this execution
@@ -135,6 +136,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         new DefaultAdbExecutionContext(contextSupplier),
         androidPrinter,
         adbExecutable,
+        Optional.empty(),
         restartAdbOnFailure,
         skipMetadataIfNoInstalls,
         alwaysUseJavaAgent,
@@ -148,6 +150,7 @@ public class AdbHelper implements AndroidDevicesHelper {
       AdbExecutionContext adbExecutionContext,
       AndroidInstallPrinter androidPrinter,
       Optional<String> adbExecutable,
+      Optional<Path> agentApk,
       boolean restartAdbOnFailure,
       boolean skipMetadataIfNoInstalls,
       boolean alwaysUseJavaAgent,
@@ -160,6 +163,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
     this.androidPrinter = androidPrinter;
     this.adbExecutable = adbExecutable;
+    this.agentApk = agentApk;
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
     this.alwaysUseJavaAgent = alwaysUseJavaAgent;
     this.isZstdCompressionEnabled = isZstdCompressionEnabled;
@@ -662,7 +666,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         androidPrinter,
         device,
         getConsole(),
-        getApkFilePathFromProperties().orElse(null),
+        agentApk.orElse(getApkFilePathFromProperties().orElse(null)),
         nextAgentPort.getAndIncrement(),
         alwaysUseJavaAgent,
         isZstdCompressionEnabled);
