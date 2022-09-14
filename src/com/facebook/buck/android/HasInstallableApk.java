@@ -86,5 +86,9 @@ public interface HasInstallableApk {
      *     install.
      */
     public abstract AbsPath getApkPath();
+
+    public static IsolatedApkInfo of(AbsPath manifestPath, AbsPath apkPath) {
+      return ImmutableIsolatedApkInfo.ofImpl(manifestPath, apkPath);
+    }
   }
 }

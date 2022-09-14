@@ -17,6 +17,7 @@
 package com.facebook.buck.installer.android;
 
 import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.IsolatedAdbExecutionContext;
 import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -30,10 +31,8 @@ import java.util.logging.Logger; // NOPMD
 
 /** Installs an Android Apk */
 class AndroidInstall {
-
+  private final HasInstallableApk.IsolatedApkInfo apkInfo;
   private final AbsPath rootPath;
-  private final AbsPath manifestPath;
-  private final AbsPath apkPath;
   private final InstallId installId;
   private final boolean installViaSd = false;
   private final Logger logger;
@@ -44,14 +43,12 @@ class AndroidInstall {
       AbsPath rootPath,
       AndroidCommandLineOptions cliOptions,
       AndroidInstallApkOptions apkOptions,
-      AbsPath manifestPath,
+      HasInstallableApk.IsolatedApkInfo apkInfo,
       String adbExecutable,
-      AbsPath apkPath,
       InstallId installId) {
     this.logger = logger;
     this.rootPath = rootPath;
-    this.manifestPath = manifestPath;
-    this.apkPath = apkPath;
+    this.apkInfo = apkInfo;
     this.installId = installId;
 
     // Set-up adbOptions
@@ -81,9 +78,8 @@ class AndroidInstall {
   /** Uses AdbHelper to do actual install with APK */
   public synchronized InstallResult installApk() {
     try {
-      logger.info(String.format("Attempting install of %s", apkPath));
-      adbHelper.installApk(
-          manifestPath, apkPath, rootPath, installViaSd, /*quiet=*/ false, installId.getValue());
+      logger.info(String.format("Attempting install of %s", apkInfo.getApkPath()));
+      adbHelper.installApk(apkInfo, rootPath, installViaSd, /*quiet=*/ false, installId.getValue());
     } catch (Exception err) {
       String errMsg = Throwables.getStackTraceAsString(err);
       logger.log(

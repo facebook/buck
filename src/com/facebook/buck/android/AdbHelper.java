@@ -327,8 +327,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   /** install method called from buck2 */
   public void installApk(
-      AbsPath manifestPath,
-      AbsPath apkPath,
+      HasInstallableApk.IsolatedApkInfo isolatedApkInfo,
       AbsPath rootPath,
       boolean installViaSd,
       boolean quiet,
@@ -339,7 +338,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     Optional<IsolatedExopackageInfo> optionalIsolatedExopackageInfo = Optional.empty();
 
     installApk(
-        ImmutableIsolatedApkInfo.ofImpl(manifestPath, apkPath),
+        isolatedApkInfo,
         optionalIsolatedExopackageInfo,
         rootPath,
         installViaSd,

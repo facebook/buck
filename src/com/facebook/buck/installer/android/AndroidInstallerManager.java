@@ -16,6 +16,7 @@
 
 package com.facebook.buck.installer.android;
 
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.installer.InstallCommand;
 import com.facebook.buck.installer.InstallId;
@@ -82,10 +83,10 @@ class AndroidInstallerManager implements InstallCommand {
               null,
               options,
               androidArtifacts.getApkOptions(),
-              androidArtifacts.getAndroidManifestPath(),
+              HasInstallableApk.IsolatedApkInfo.of(
+                  androidArtifacts.getAndroidManifestPath(), androidArtifacts.getApk()),
               // TODO: msemko read from toolchains. Need to pass from buck2
               "/opt/android_sdk/platform-tools/adb",
-              androidArtifacts.getApk(),
               installId);
       return androidInstaller.installApk();
 
