@@ -22,9 +22,11 @@ import java.nio.file.Path;
  * Install Command interface. Support for a specific installer such as iOS or Android is implemented
  * as subclasses of this interface. *
  */
-@FunctionalInterface
 public interface InstallCommand {
 
   /** Installs an artifact from a given path/location. */
-  InstallResult install(String artifact, Path artifactPath, InstallId installId);
+  InstallResult fileReady(String artifact, Path artifactPath, InstallId installId);
+
+  /** Indicate that all files have been received by the installer */
+  InstallResult allFilesReady(InstallId installId);
 }

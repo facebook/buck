@@ -50,7 +50,7 @@ class AppleInstallerManager implements InstallCommand {
   }
 
   @Override
-  public InstallResult install(String artifactName, Path artifactPath, InstallId installId) {
+  public InstallResult fileReady(String artifactName, Path artifactPath, InstallId installId) {
     SettableFuture<AppleInstallAppOptions> appInstallOptionsFuture = getOptionsFuture(installId);
     // if options file
     if (artifactName.equals("options")) {
@@ -90,6 +90,11 @@ class AppleInstallerManager implements InstallCommand {
       String errMsg = Throwables.getStackTraceAsString(err);
       return InstallResult.error(errMsg);
     }
+  }
+
+  @Override
+  public InstallResult allFilesReady(InstallId installId) {
+    return InstallResult.success();
   }
 
   private SettableFuture<AppleInstallAppOptions> getOptionsFuture(InstallId installId) {

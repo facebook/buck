@@ -162,7 +162,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
     }
 
     if (!installFilesMap.isEmpty()) {
-      InstallResult installResult = install(installId, installFilesMap);
+      InstallResult installResult = fileReady(installId, installFilesMap);
       if (installResult.isError()) {
         fileResponseBuilder.setErrorDetail(
             ErrorDetail.newBuilder().setMessage(installResult.getErrorMessage()).build());
@@ -192,7 +192,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
     return ImmutableMap.of();
   }
 
-  private InstallResult install(InstallId installId, Map<String, Path> filesMap)
+  private InstallResult fileReady(InstallId installId, Map<String, Path> filesMap)
       throws InterruptedException {
     logger.info(String.format("Starting install for install id: %s", installId.getValue()));
 
@@ -205,7 +205,7 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
       Path path = fileEntry.getValue();
 
       ListenableFuture<InstallResult> future =
-          LISTENING_EXECUTOR_SERVICE.submit(() -> install(name, path, installId));
+          LISTENING_EXECUTOR_SERVICE.submit(() -> fileReady(name, path, installId));
       Futures.addCallback(
           future, getInstallResultCallback(latch, errorMessages, name, path), directExecutor());
       futureList.add(future);
@@ -221,6 +221,11 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
           "Timeout of "
               + INSTALL_TIMEOUT_UNIT.toSeconds(INSTALL_MAX_WAIT_TIME)
               + "s has been exceeded. Install failed.");
+    } else {
+      InstallResult allFilesReady = installer.allFilesReady(installId);
+      if (allFilesReady.isError()) {
+        errorMessages.add(allFilesReady.getErrorMessage());
+      }
     }
 
     if (errorMessages.isEmpty()) {
@@ -265,9 +270,9 @@ public class InstallerService extends InstallerGrpc.InstallerImplBase {
     };
   }
 
-  private InstallResult install(String name, Path path, InstallId installId) {
+  private InstallResult fileReady(String name, Path path, InstallId installId) {
     logger.info(String.format("Starting install for file name: %s and path: %s", name, path));
-    return installer.install(name, path, installId);
+    return installer.fileReady(name, path, installId);
   }
 
   @Override

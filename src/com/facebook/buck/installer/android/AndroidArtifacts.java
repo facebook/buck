@@ -17,34 +17,34 @@
 package com.facebook.buck.installer.android;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
-import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
 
 /** Holds android install related artifacts (apk options, manifest path, etc) */
 class AndroidArtifacts {
-
-  private final SettableFuture<AbsPath> androidManifestPath = SettableFuture.create();
-  private final SettableFuture<AndroidInstallApkOptions> apkOptions = SettableFuture.create();
+  private AbsPath androidManifestPath;
+  private AndroidInstallApkOptions apkOptions;
+  private AbsPath apk;
 
   public void setAndroidManifestPath(AbsPath androidManifestPath) {
-    this.androidManifestPath.set(androidManifestPath);
+    this.androidManifestPath = androidManifestPath;
   }
 
-  public AbsPath getAndroidManifestPath() throws InterruptedException, ExecutionException {
-    return this.androidManifestPath.get();
+  public AbsPath getAndroidManifestPath() {
+    return this.androidManifestPath;
   }
 
   public void setApkOptions(AndroidInstallApkOptions apkOptions) {
-    this.apkOptions.set(apkOptions);
+    this.apkOptions = apkOptions;
   }
 
-  public AndroidInstallApkOptions getApkOptions() throws InterruptedException, ExecutionException {
-    return this.apkOptions.get();
+  public AndroidInstallApkOptions getApkOptions() {
+    return this.apkOptions;
   }
 
-  public void waitTillReadyToUse() throws ExecutionException, InterruptedException {
-    Futures.allAsList(Arrays.asList(androidManifestPath, apkOptions)).get();
+  public AbsPath getApk() {
+    return apk;
+  }
+
+  public void setApk(AbsPath apk) {
+    this.apk = apk;
   }
 }

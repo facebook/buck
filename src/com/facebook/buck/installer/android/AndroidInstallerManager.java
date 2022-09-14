@@ -48,27 +48,33 @@ class AndroidInstallerManager implements InstallCommand {
    * as a separate field.
    */
   @Override
-  public InstallResult install(String artifactName, Path artifactPath, InstallId installId) {
+  public InstallResult fileReady(String artifactName, Path artifactPath, InstallId installId) {
     try {
       AndroidArtifacts androidArtifacts = getOrMakeAndroidArtifacts(installId);
       if (artifactName.equals("options")) {
         androidArtifacts.setApkOptions(new AndroidInstallApkOptions(artifactPath));
-        return InstallResult.success();
-      }
-
-      if (artifactName.equals("manifest")) {
+      } else if (artifactName.equals("manifest")) {
         androidArtifacts.setAndroidManifestPath(AbsPath.of(artifactPath));
-        return InstallResult.success();
+      } else {
+        androidArtifacts.setApk(AbsPath.of(artifactPath));
       }
 
-      // apk processing
-      logger.info(String.format("Apk processing start waiting. Artifact name: %s", artifactName));
-      androidArtifacts.waitTillReadyToUse();
-      logger.info(
+      return InstallResult.success();
+    } catch (Exception err) {
+      String errMsg = Throwables.getStackTraceAsString(err);
+      logger.log(
+          Level.SEVERE,
           String.format(
-              "Apk processing finished waiting. Ready to process. Artifact name: %s",
-              artifactName));
+              "Error installing %s from %s due to %s", artifactName, artifactPath, errMsg),
+          err);
+      return InstallResult.error(errMsg);
+    }
+  }
 
+  @Override
+  public InstallResult allFilesReady(InstallId installId) {
+    try {
+      AndroidArtifacts androidArtifacts = getOrMakeAndroidArtifacts(installId);
       AndroidInstall androidInstaller =
           new AndroidInstall(
               logger,
@@ -79,17 +85,13 @@ class AndroidInstallerManager implements InstallCommand {
               androidArtifacts.getAndroidManifestPath(),
               // TODO: msemko read from toolchains. Need to pass from buck2
               "/opt/android_sdk/platform-tools/adb",
-              AbsPath.of(artifactPath),
+              androidArtifacts.getApk(),
               installId);
       return androidInstaller.installApk();
 
     } catch (Exception err) {
       String errMsg = Throwables.getStackTraceAsString(err);
-      logger.log(
-          Level.SEVERE,
-          String.format(
-              "Error installing %s from %s due to %s", artifactName, artifactPath, errMsg),
-          err);
+      logger.log(Level.SEVERE, String.format("Install error due to %s", errMsg), err);
       return InstallResult.error(errMsg);
     }
   }
