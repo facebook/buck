@@ -23,8 +23,10 @@ import com.facebook.buck.installer.InstallId;
 import com.facebook.buck.installer.InstallResult;
 import com.google.common.base.Throwables;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
 
@@ -79,12 +81,12 @@ class AndroidInstallerManager implements InstallCommand {
       AndroidInstall androidInstaller =
           new AndroidInstall(
               logger,
-              // TODO: msemko need for exo packaging support
-              null,
+              AbsPath.of(Paths.get(".").normalize().toAbsolutePath()),
               options,
               androidArtifacts.getApkOptions(),
               HasInstallableApk.IsolatedApkInfo.of(
                   androidArtifacts.getAndroidManifestPath(), androidArtifacts.getApk()),
+              Optional.empty(),
               // TODO: msemko read from toolchains. Need to pass from buck2
               "/opt/android_sdk/platform-tools/adb",
               installId);

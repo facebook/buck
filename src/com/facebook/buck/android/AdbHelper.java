@@ -325,28 +325,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         fullyQualifiedName);
   }
 
-  /** install method called from buck2 */
   public void installApk(
-      HasInstallableApk.IsolatedApkInfo isolatedApkInfo,
-      AbsPath rootPath,
-      boolean installViaSd,
-      boolean quiet,
-      String installableTargetFullyQualifiedName)
-      throws InterruptedException {
-
-    // TODO: add support of exo packages
-    Optional<IsolatedExopackageInfo> optionalIsolatedExopackageInfo = Optional.empty();
-
-    installApk(
-        isolatedApkInfo,
-        optionalIsolatedExopackageInfo,
-        rootPath,
-        installViaSd,
-        quiet,
-        installableTargetFullyQualifiedName);
-  }
-
-  private void installApk(
       HasInstallableApk.IsolatedApkInfo isolatedApkInfo,
       Optional<IsolatedExopackageInfo> optionalIsolatedExopackageInfo,
       AbsPath rootPath,

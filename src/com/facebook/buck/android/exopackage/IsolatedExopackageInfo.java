@@ -85,4 +85,10 @@ public abstract class IsolatedExopackageInfo {
   public abstract Optional<IsolatedExopackageInfo.IsolatedNativeLibsInfo> getNativeLibsInfo();
 
   public abstract Optional<IsolatedExopackageInfo.IsolatedResourcesInfo> getResourcesInfo();
+
+  public static IsolatedExopackageInfo.Builder builder() {
+    return new IsolatedExopackageInfo.Builder();
+  }
+
+  public static class Builder extends ImmutableIsolatedExopackageInfo.Builder {}
 }
