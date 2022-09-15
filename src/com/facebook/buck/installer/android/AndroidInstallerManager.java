@@ -17,6 +17,7 @@
 package com.facebook.buck.installer.android;
 
 import com.facebook.buck.android.HasInstallableApk;
+import com.facebook.buck.android.exopackage.IsolatedExopackageInfo;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.installer.InstallCommand;
 import com.facebook.buck.installer.InstallId;
@@ -58,6 +59,14 @@ class AndroidInstallerManager implements InstallCommand {
         androidArtifacts.setApkOptions(new AndroidInstallApkOptions(artifactPath));
       } else if (artifactName.equals("manifest")) {
         androidArtifacts.setAndroidManifestPath(AbsPath.of(artifactPath));
+      } else if (artifactName.equals("secondary_dex_exopackage_info_directory")) {
+        androidArtifacts.setSecondaryDexExopackageInfoDirectory(
+            Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("secondary_dex_exopackage_info_metadata")) {
+        androidArtifacts.setSecondaryDexExopackageInfoMetadata(
+            Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("exopackage_agent_apk")) {
+        androidArtifacts.setAgentApk(Optional.of(AbsPath.of(artifactPath)));
       } else {
         androidArtifacts.setApk(AbsPath.of(artifactPath));
       }
@@ -78,6 +87,20 @@ class AndroidInstallerManager implements InstallCommand {
   public InstallResult allFilesReady(InstallId installId) {
     try {
       AndroidArtifacts androidArtifacts = getOrMakeAndroidArtifacts(installId);
+      Optional<AbsPath> secondaryDexExopackageInfoDirectory =
+          androidArtifacts.getSecondaryDexExopackageInfoDirectory();
+      Optional<AbsPath> secondaryDexExopackageInfoMetadata =
+          androidArtifacts.getSecondaryDexExopackageInfoMetadata();
+      Optional<IsolatedExopackageInfo> isolatedExopackageInfo = Optional.empty();
+      if (secondaryDexExopackageInfoDirectory.isPresent()
+          || secondaryDexExopackageInfoMetadata.isPresent()) {
+        IsolatedExopackageInfo.Builder builder = IsolatedExopackageInfo.builder();
+        builder.setDexInfo(
+            IsolatedExopackageInfo.IsolatedDexInfo.of(
+                secondaryDexExopackageInfoMetadata.get(),
+                secondaryDexExopackageInfoDirectory.get()));
+        isolatedExopackageInfo = Optional.of(builder.build());
+      }
       AndroidInstall androidInstaller =
           new AndroidInstall(
               logger,
@@ -86,7 +109,8 @@ class AndroidInstallerManager implements InstallCommand {
               androidArtifacts.getApkOptions(),
               HasInstallableApk.IsolatedApkInfo.of(
                   androidArtifacts.getAndroidManifestPath(), androidArtifacts.getApk()),
-              Optional.empty(),
+              isolatedExopackageInfo,
+              androidArtifacts.getAgentApk(),
               // TODO: msemko read from toolchains. Need to pass from buck2
               "/opt/android_sdk/platform-tools/adb",
               installId);

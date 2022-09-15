@@ -17,12 +17,16 @@
 package com.facebook.buck.installer.android;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import java.util.Optional;
 
 /** Holds android install related artifacts (apk options, manifest path, etc) */
 class AndroidArtifacts {
   private AbsPath androidManifestPath;
   private AndroidInstallApkOptions apkOptions;
   private AbsPath apk;
+  private Optional<AbsPath> agentApk = Optional.empty();
+  private Optional<AbsPath> secondaryDexExopackageInfoDirectory = Optional.empty();
+  private Optional<AbsPath> secondaryDexExopackageInfoMetadata = Optional.empty();
 
   public void setAndroidManifestPath(AbsPath androidManifestPath) {
     this.androidManifestPath = androidManifestPath;
@@ -46,5 +50,31 @@ class AndroidArtifacts {
 
   public void setApk(AbsPath apk) {
     this.apk = apk;
+  }
+
+  public Optional<AbsPath> getAgentApk() {
+    return agentApk;
+  }
+
+  public void setAgentApk(Optional<AbsPath> agentApk) {
+    this.agentApk = agentApk;
+  }
+
+  public Optional<AbsPath> getSecondaryDexExopackageInfoDirectory() {
+    return secondaryDexExopackageInfoDirectory;
+  }
+
+  public void setSecondaryDexExopackageInfoDirectory(
+      Optional<AbsPath> secondaryDexExopackageInfoDirectory) {
+    this.secondaryDexExopackageInfoDirectory = secondaryDexExopackageInfoDirectory;
+  }
+
+  public Optional<AbsPath> getSecondaryDexExopackageInfoMetadata() {
+    return secondaryDexExopackageInfoMetadata;
+  }
+
+  public void setSecondaryDexExopackageInfoMetadata(
+      Optional<AbsPath> secondaryDexExopackageInfoMetadata) {
+    this.secondaryDexExopackageInfoMetadata = secondaryDexExopackageInfoMetadata;
   }
 }
