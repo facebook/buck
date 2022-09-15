@@ -44,6 +44,11 @@ def _add_wrapper_label(**kwargs):
     kwargs["labels"] += ["wrapped_with_buck_java_rules"]
     return kwargs
 
+# Returns true if build.is_oss is set to true; this should indicate that the current build is
+# being done for the purpose of an oss release.
+def _is_oss_build():
+    return native.read_config("build", "is_oss", "false") == "true"
+
 def _add_os_labels(**kwargs):
     if "labels" not in kwargs:
         kwargs["labels"] = []
@@ -54,6 +59,9 @@ def _add_os_labels(**kwargs):
         kwargs["labels"] += ["tpx:platform:linux"]
     if native.host_info().os.is_windows:
         kwargs["labels"] += ["tpx:platform:windows"]
+
+    if _is_oss_build():
+        kwargs["labels"] += ["tpx:is_oss_build"]
 
     return kwargs
 
