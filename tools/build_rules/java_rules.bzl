@@ -44,6 +44,19 @@ def _add_wrapper_label(**kwargs):
     kwargs["labels"] += ["wrapped_with_buck_java_rules"]
     return kwargs
 
+def _add_os_labels(**kwargs):
+    if "labels" not in kwargs:
+        kwargs["labels"] = []
+
+    if native.host_info().os.is_macos:
+        kwargs["labels"] += ["tpx:platform:macos"]
+    if native.host_info().os.is_linux:
+        kwargs["labels"] += ["tpx:platform:linux"]
+    if native.host_info().os.is_windows:
+        kwargs["labels"] += ["tpx:platform:windows"]
+
+    return kwargs
+
 
 
 def buck_java_library(name, **kwargs):
@@ -119,6 +132,7 @@ def java_test(
         env = {}
 
     kwargs = _add_wrapper_label(**kwargs)
+    kwargs = _add_os_labels(**kwargs)
     kwargs["labels"] += extra_labels
 
     native.java_test(
