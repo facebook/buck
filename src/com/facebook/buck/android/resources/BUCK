@@ -1,12 +1,13 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 
+EXO_RESOURCES_REWRITER_SRCS = ["ExoResourcesRewriterExecutableMain.java"]
 MERGE_ANDROID_RESOURCES_SRCS = ["MergeAndroidResources.java", "MergeAndroidResourcesExecutableMain.java"]
 MERGE_ASSETS_SRCS = ["MergeAssetsUtils.java", "MergeAssetsExecutableMain.java"]
 MERGE_THIRD_PARTY_JAR_RESOURCES_SRCS = ["MergeThirdPartyJarResourcesUtils.java", "MergeThirdPartyJarResourcesExecutableMain.java"]
 
 buck_java_library(
     name = "resources",
-    srcs = glob(["*.java"], exclude = MERGE_ANDROID_RESOURCES_SRCS + MERGE_ASSETS_SRCS + MERGE_THIRD_PARTY_JAR_RESOURCES_SRCS),
+    srcs = glob(["*.java"], exclude = EXO_RESOURCES_REWRITER_SRCS + MERGE_ANDROID_RESOURCES_SRCS + MERGE_ASSETS_SRCS + MERGE_THIRD_PARTY_JAR_RESOURCES_SRCS),
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io:io",
@@ -92,5 +93,29 @@ buck_java_binary(
     ],
     deps = [
         ":merge_third_party_jar_resources",
+    ],
+)
+
+buck_java_library(
+    name = "exo_resources_rewriter",
+    srcs = EXO_RESOURCES_REWRITER_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":resources",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/guava:guava",
+    ],
+    java_version = "11",
+)
+
+buck_java_binary(
+    name = "exo_resources_rewriter_binary",
+    main_class = "com.facebook.buck.android.resources.ExoResourcesRewriterExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":exo_resources_rewriter",
     ],
 )
