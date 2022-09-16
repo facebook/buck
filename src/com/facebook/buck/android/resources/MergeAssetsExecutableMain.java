@@ -19,8 +19,10 @@ package com.facebook.buck.android.resources;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.kohsuke.args4j.CmdLineException;
@@ -38,6 +40,11 @@ public class MergeAssetsExecutableMain {
 
   @Option(name = "--assets-dirs", required = true, usage = "directory containing assets")
   private String assetsDirs;
+
+  @Option(
+      name = "--output-apk-hash",
+      usage = "output path of a file containing the hash of output APK")
+  private String outputApkHash;
 
   public static void main(String[] args) throws IOException {
     MergeAssetsExecutableMain main = new MergeAssetsExecutableMain();
@@ -59,10 +66,17 @@ public class MergeAssetsExecutableMain {
             .map(RelPath::get)
             .collect(ImmutableSet.toImmutableSet());
 
+    Path outputApkPath = Paths.get(outputApk);
     MergeAssetsUtils.mergeAssets(
-        Paths.get(outputApk),
+        outputApkPath,
         Optional.ofNullable(baseApk).map(Paths::get),
         AbsPath.of(Paths.get(".").normalize().toAbsolutePath()),
         dirs);
+
+    if (outputApkHash != null) {
+      Files.writeString(
+          Paths.get(outputApkHash),
+          com.google.common.io.Files.hash(outputApkPath.toFile(), Hashing.sha1()).toString());
+    }
   }
 }
