@@ -2,7 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binar
 
 MERGE_ANDROID_RESOURCES_SRCS = ["MergeAndroidResources.java", "MergeAndroidResourcesExecutableMain.java"]
 MERGE_ASSETS_SRCS = ["MergeAssetsUtils.java", "MergeAssetsExecutableMain.java"]
-MERGE_THIRD_PARTY_JAR_RESOURCES_SRCS = ["MergeThirdPartyJarResourcesUtils.java"]
+MERGE_THIRD_PARTY_JAR_RESOURCES_SRCS = ["MergeThirdPartyJarResourcesUtils.java", "MergeThirdPartyJarResourcesExecutableMain.java"]
 
 buck_java_library(
     name = "resources",
@@ -78,7 +78,19 @@ buck_java_library(
         ":resources",
         "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/io/filesystem/impl:utils",
+        "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",
     ],
     java_version = "11",
+)
+
+buck_java_binary(
+    name = "merge_third_party_jar_resources_binary",
+    main_class = "com.facebook.buck.android.resources.MergeThirdPartyJarResourcesExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":merge_third_party_jar_resources",
+    ],
 )
