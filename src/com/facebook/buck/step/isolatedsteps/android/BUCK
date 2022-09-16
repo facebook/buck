@@ -21,6 +21,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android/build_config:build_config",
         "//src/com/facebook/buck/android/manifest:manifest",
         "//src/com/facebook/buck/android/resources:merge_assets",
+        "//src/com/facebook/buck/android/resources:merge_third_party_jar_resources",
         "//src/com/facebook/buck/android/resources:resources",
         "//src/com/facebook/buck/core/build/execution/context:context",
         "//src/com/facebook/buck/core/filesystems:filesystems",
