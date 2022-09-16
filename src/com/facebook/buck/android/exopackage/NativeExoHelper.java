@@ -137,11 +137,15 @@ public class NativeExoHelper implements ExoHelper {
     ImmutableMultimap.Builder<String, Path> filteredLibraries = ImmutableMultimap.builder();
     for (Map.Entry<String, Path> entry : allLibraries.entries()) {
       RelPath relativePath = nativeLibsDir.relativize(entry.getValue());
-      // relativePath is of the form libs/x86/foo.so, or assetLibs/x86/foo.so etc.
-      Preconditions.checkState(relativePath.getNameCount() == 3);
       Preconditions.checkState(
-          relativePath.getName(0).toString().equals("libs")
-              || relativePath.getName(0).toString().equals("assetLibs"));
+          relativePath.getNameCount() == 2 || relativePath.getNameCount() == 3,
+          "relativePath should be of the form x86/foo.so (for buck2) or either libs/x86/foo.so or assetLibs/x86/foo.so (for buck1), but was: "
+              + relativePath);
+      if (relativePath.getNameCount() == 3) {
+        Preconditions.checkState(
+            relativePath.getName(0).toString().equals("libs")
+                || relativePath.getName(0).toString().equals("assetLibs"));
+      }
       String libAbi = relativePath.getParent().getFileName().toString();
       String libName = relativePath.getFileName().toString();
       if (libAbi.equals(abi) && !ignoreLibraries.contains(libName)) {

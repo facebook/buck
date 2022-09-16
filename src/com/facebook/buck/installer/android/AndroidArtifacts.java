@@ -27,6 +27,8 @@ class AndroidArtifacts {
   private Optional<AbsPath> agentApk = Optional.empty();
   private Optional<AbsPath> secondaryDexExopackageInfoDirectory = Optional.empty();
   private Optional<AbsPath> secondaryDexExopackageInfoMetadata = Optional.empty();
+  private Optional<AbsPath> nativeLibraryExopackageInfoDirectory = Optional.empty();
+  private Optional<AbsPath> nativeLibraryExopackageInfoMetadata = Optional.empty();
 
   public void setAndroidManifestPath(AbsPath androidManifestPath) {
     this.androidManifestPath = androidManifestPath;
@@ -76,5 +78,23 @@ class AndroidArtifacts {
   public void setSecondaryDexExopackageInfoMetadata(
       Optional<AbsPath> secondaryDexExopackageInfoMetadata) {
     this.secondaryDexExopackageInfoMetadata = secondaryDexExopackageInfoMetadata;
+  }
+
+  public Optional<AbsPath> getNativeLibraryExopackageInfoDirectory() {
+    return nativeLibraryExopackageInfoDirectory;
+  }
+
+  public void setNativeLibraryExopackageInfoDirectory(
+      Optional<AbsPath> nativeLibraryExopackageInfoDirectory) {
+    this.nativeLibraryExopackageInfoDirectory = nativeLibraryExopackageInfoDirectory;
+  }
+
+  public Optional<AbsPath> getNativeLibraryExopackageInfoMetadata() {
+    return nativeLibraryExopackageInfoMetadata;
+  }
+
+  public void setNativeLibraryExopackageInfoMetadata(
+      Optional<AbsPath> nativeLibraryExopackageInfoMetadata) {
+    this.nativeLibraryExopackageInfoMetadata = nativeLibraryExopackageInfoMetadata;
   }
 }

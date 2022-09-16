@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.installer.InstallCommand;
 import com.facebook.buck.installer.InstallId;
 import com.facebook.buck.installer.InstallResult;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,6 +66,12 @@ class AndroidInstallerManager implements InstallCommand {
       } else if (artifactName.equals("secondary_dex_exopackage_info_metadata")) {
         androidArtifacts.setSecondaryDexExopackageInfoMetadata(
             Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("native_library_exopackage_info_directory")) {
+        androidArtifacts.setNativeLibraryExopackageInfoDirectory(
+            Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("native_library_exopackage_info_metadata")) {
+        androidArtifacts.setNativeLibraryExopackageInfoMetadata(
+            Optional.of(AbsPath.of(artifactPath)));
       } else if (artifactName.equals("exopackage_agent_apk")) {
         androidArtifacts.setAgentApk(Optional.of(AbsPath.of(artifactPath)));
       } else {
@@ -91,14 +98,33 @@ class AndroidInstallerManager implements InstallCommand {
           androidArtifacts.getSecondaryDexExopackageInfoDirectory();
       Optional<AbsPath> secondaryDexExopackageInfoMetadata =
           androidArtifacts.getSecondaryDexExopackageInfoMetadata();
+      Optional<AbsPath> nativeLibraryExopackageInfoDirectory =
+          androidArtifacts.getNativeLibraryExopackageInfoDirectory();
+      Optional<AbsPath> nativeLibraryExopackageInfoMetadata =
+          androidArtifacts.getNativeLibraryExopackageInfoMetadata();
       Optional<IsolatedExopackageInfo> isolatedExopackageInfo = Optional.empty();
       if (secondaryDexExopackageInfoDirectory.isPresent()
-          || secondaryDexExopackageInfoMetadata.isPresent()) {
+          || secondaryDexExopackageInfoMetadata.isPresent()
+          || nativeLibraryExopackageInfoDirectory.isPresent()
+          || nativeLibraryExopackageInfoMetadata.isPresent()) {
         IsolatedExopackageInfo.Builder builder = IsolatedExopackageInfo.builder();
-        builder.setDexInfo(
-            IsolatedExopackageInfo.IsolatedDexInfo.of(
-                secondaryDexExopackageInfoMetadata.get(),
-                secondaryDexExopackageInfoDirectory.get()));
+        Preconditions.checkState(
+            secondaryDexExopackageInfoDirectory.isPresent()
+                == secondaryDexExopackageInfoMetadata.isPresent());
+        secondaryDexExopackageInfoDirectory.ifPresent(
+            directory ->
+                builder.setDexInfo(
+                    IsolatedExopackageInfo.IsolatedDexInfo.of(
+                        secondaryDexExopackageInfoMetadata.get(), directory)));
+
+        Preconditions.checkState(
+            nativeLibraryExopackageInfoDirectory.isPresent()
+                == nativeLibraryExopackageInfoMetadata.isPresent());
+        nativeLibraryExopackageInfoDirectory.ifPresent(
+            directory ->
+                builder.setNativeLibsInfo(
+                    IsolatedExopackageInfo.IsolatedNativeLibsInfo.of(
+                        nativeLibraryExopackageInfoMetadata.get(), directory)));
         isolatedExopackageInfo = Optional.of(builder.build());
       }
       AndroidInstall androidInstaller =
