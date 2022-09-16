@@ -57,7 +57,8 @@ public class ResourcesExoHelper implements ExoHelper {
                 pathAndHash ->
                     ProjectFilesystemUtils.readFileIfItExists(
                             rootPath, pathAndHash.getHashPath().getPath())
-                        .get(),
+                        .get()
+                        .stripTrailing(),
                 i -> i.getPath().getPath()));
   }
 
