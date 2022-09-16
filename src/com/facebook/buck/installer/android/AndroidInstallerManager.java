@@ -24,6 +24,7 @@ import com.facebook.buck.installer.InstallId;
 import com.facebook.buck.installer.InstallResult;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -72,6 +73,21 @@ class AndroidInstallerManager implements InstallCommand {
       } else if (artifactName.equals("native_library_exopackage_info_metadata")) {
         androidArtifacts.setNativeLibraryExopackageInfoMetadata(
             Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("resources_exopackage_assets")) {
+        androidArtifacts.setResourcesExopackageInfoAssets(Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("resources_exopackage_assets_hash")) {
+        androidArtifacts.setResourcesExopackageInfoAssetsHash(
+            Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("resources_exopackage_res")) {
+        androidArtifacts.setResourcesExopackageInfoRes(Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("resources_exopackage_res_hash")) {
+        androidArtifacts.setResourcesExopackageInfoResHash(Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("resources_exopackage_third_party_jar_resources")) {
+        androidArtifacts.setResourcesExopackageInfoThirdPartyJarResources(
+            Optional.of(AbsPath.of(artifactPath)));
+      } else if (artifactName.equals("resources_exopackage_third_party_jar_resources_hash")) {
+        androidArtifacts.setResourcesExopackageInfoThirdPartyJarResourcesHash(
+            Optional.of(AbsPath.of(artifactPath)));
       } else if (artifactName.equals("exopackage_agent_apk")) {
         androidArtifacts.setAgentApk(Optional.of(AbsPath.of(artifactPath)));
       } else {
@@ -102,11 +118,41 @@ class AndroidInstallerManager implements InstallCommand {
           androidArtifacts.getNativeLibraryExopackageInfoDirectory();
       Optional<AbsPath> nativeLibraryExopackageInfoMetadata =
           androidArtifacts.getNativeLibraryExopackageInfoMetadata();
+      ImmutableList.Builder<IsolatedExopackageInfo.IsolatedExopackagePathAndHash>
+          pathAndHashBuilder = ImmutableList.builder();
+      androidArtifacts
+          .getResourcesExopackageInfoAssets()
+          .ifPresent(
+              assets ->
+                  pathAndHashBuilder.add(
+                      IsolatedExopackageInfo.IsolatedExopackagePathAndHash.of(
+                          assets, androidArtifacts.getResourcesExopackageInfoAssetsHash().get())));
+      androidArtifacts
+          .getResourcesExopackageInfoRes()
+          .ifPresent(
+              res ->
+                  pathAndHashBuilder.add(
+                      IsolatedExopackageInfo.IsolatedExopackagePathAndHash.of(
+                          res, androidArtifacts.getResourcesExopackageInfoResHash().get())));
+      androidArtifacts
+          .getResourcesExopackageInfoThirdPartyJarResources()
+          .ifPresent(
+              thirdPartyJarResources ->
+                  pathAndHashBuilder.add(
+                      IsolatedExopackageInfo.IsolatedExopackagePathAndHash.of(
+                          thirdPartyJarResources,
+                          androidArtifacts
+                              .getResourcesExopackageInfoThirdPartyJarResourcesHash()
+                              .get())));
+      ImmutableList<IsolatedExopackageInfo.IsolatedExopackagePathAndHash> exopackageResources =
+          pathAndHashBuilder.build();
+
       Optional<IsolatedExopackageInfo> isolatedExopackageInfo = Optional.empty();
       if (secondaryDexExopackageInfoDirectory.isPresent()
           || secondaryDexExopackageInfoMetadata.isPresent()
           || nativeLibraryExopackageInfoDirectory.isPresent()
-          || nativeLibraryExopackageInfoMetadata.isPresent()) {
+          || nativeLibraryExopackageInfoMetadata.isPresent()
+          || !exopackageResources.isEmpty()) {
         IsolatedExopackageInfo.Builder builder = IsolatedExopackageInfo.builder();
         Preconditions.checkState(
             secondaryDexExopackageInfoDirectory.isPresent()
@@ -125,6 +171,12 @@ class AndroidInstallerManager implements InstallCommand {
                 builder.setNativeLibsInfo(
                     IsolatedExopackageInfo.IsolatedNativeLibsInfo.of(
                         nativeLibraryExopackageInfoMetadata.get(), directory)));
+
+        if (!exopackageResources.isEmpty()) {
+          builder.setResourcesInfo(
+              IsolatedExopackageInfo.IsolatedResourcesInfo.of(exopackageResources));
+        }
+
         isolatedExopackageInfo = Optional.of(builder.build());
       }
       AndroidInstall androidInstaller =

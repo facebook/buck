@@ -29,6 +29,12 @@ class AndroidArtifacts {
   private Optional<AbsPath> secondaryDexExopackageInfoMetadata = Optional.empty();
   private Optional<AbsPath> nativeLibraryExopackageInfoDirectory = Optional.empty();
   private Optional<AbsPath> nativeLibraryExopackageInfoMetadata = Optional.empty();
+  private Optional<AbsPath> resourcesExopackageInfoAssets = Optional.empty();
+  private Optional<AbsPath> resourcesExopackageInfoAssetsHash = Optional.empty();
+  private Optional<AbsPath> resourcesExopackageInfoRes = Optional.empty();
+  private Optional<AbsPath> resourcesExopackageInfoResHash = Optional.empty();
+  private Optional<AbsPath> resourcesExopackageInfoThirdPartyJarResources = Optional.empty();
+  private Optional<AbsPath> resourcesExopackageInfoThirdPartyJarResourcesHash = Optional.empty();
 
   public void setAndroidManifestPath(AbsPath androidManifestPath) {
     this.androidManifestPath = androidManifestPath;
@@ -96,5 +102,58 @@ class AndroidArtifacts {
   public void setNativeLibraryExopackageInfoMetadata(
       Optional<AbsPath> nativeLibraryExopackageInfoMetadata) {
     this.nativeLibraryExopackageInfoMetadata = nativeLibraryExopackageInfoMetadata;
+  }
+
+  public Optional<AbsPath> getResourcesExopackageInfoAssets() {
+    return resourcesExopackageInfoAssets;
+  }
+
+  public void setResourcesExopackageInfoAssets(Optional<AbsPath> resourcesExopackageInfoAssets) {
+    this.resourcesExopackageInfoAssets = resourcesExopackageInfoAssets;
+  }
+
+  public Optional<AbsPath> getResourcesExopackageInfoAssetsHash() {
+    return resourcesExopackageInfoAssetsHash;
+  }
+
+  public void setResourcesExopackageInfoAssetsHash(
+      Optional<AbsPath> resourcesExopackageInfoAssetsHash) {
+    this.resourcesExopackageInfoAssetsHash = resourcesExopackageInfoAssetsHash;
+  }
+
+  public Optional<AbsPath> getResourcesExopackageInfoRes() {
+    return resourcesExopackageInfoRes;
+  }
+
+  public void setResourcesExopackageInfoRes(Optional<AbsPath> resourcesExopackageInfoRes) {
+    this.resourcesExopackageInfoRes = resourcesExopackageInfoRes;
+  }
+
+  public Optional<AbsPath> getResourcesExopackageInfoResHash() {
+    return resourcesExopackageInfoResHash;
+  }
+
+  public void setResourcesExopackageInfoResHash(Optional<AbsPath> resourcesExopackageInfoResHash) {
+    this.resourcesExopackageInfoResHash = resourcesExopackageInfoResHash;
+  }
+
+  public Optional<AbsPath> getResourcesExopackageInfoThirdPartyJarResources() {
+    return resourcesExopackageInfoThirdPartyJarResources;
+  }
+
+  public void setResourcesExopackageInfoThirdPartyJarResources(
+      Optional<AbsPath> resourcesExopackageInfoThirdPartyJarResources) {
+    this.resourcesExopackageInfoThirdPartyJarResources =
+        resourcesExopackageInfoThirdPartyJarResources;
+  }
+
+  public Optional<AbsPath> getResourcesExopackageInfoThirdPartyJarResourcesHash() {
+    return resourcesExopackageInfoThirdPartyJarResourcesHash;
+  }
+
+  public void setResourcesExopackageInfoThirdPartyJarResourcesHash(
+      Optional<AbsPath> resourcesExopackageInfoThirdPartyJarResourcesHash) {
+    this.resourcesExopackageInfoThirdPartyJarResourcesHash =
+        resourcesExopackageInfoThirdPartyJarResourcesHash;
   }
 }
