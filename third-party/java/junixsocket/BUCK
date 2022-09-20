@@ -2,7 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
 
 buck_prebuilt_jar(
     name = "junixsocket",
-    binary_jar = "junixsocket-selftest-2.4.0-jar-with-dependencies.jar",
+    binary_jar = "junixsocket-selftest-2.5.1-jar-with-dependencies.jar",
     licenses = [
         "LICENSE",
     ],

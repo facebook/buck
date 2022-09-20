@@ -35,7 +35,7 @@ public class UnixDomainSocket extends Socket implements Transport {
     File socketFile = path.toFile();
     AFUNIXSocket socket = AFUNIXSocket.newInstance();
     try {
-      socket.connect(new AFUNIXSocketAddress(socketFile));
+      socket.connect(AFUNIXSocketAddress.of(socketFile));
       return new UnixDomainSocket(socket);
     } catch (Throwable e) {
       socket.close();
