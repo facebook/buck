@@ -16,12 +16,16 @@
 
 package com.facebook.buck.testrunner;
 
+import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.FileListingService;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.SyncService;
+import com.android.ddmlib.TimeoutException;
 import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
@@ -209,6 +213,7 @@ public class InstrumentationTestRunner {
           // Pulls all files from source into destination directory.
           // Expects both parts of the argument to be directories.
           // Creates destination directory if it doesn't exist.
+          // Creates clean source directory before the test run.
           {
             String raw = args[++i];
             String[] parts = raw.split("=", 2);
@@ -247,6 +252,8 @@ public class InstrumentationTestRunner {
       System.exit(1);
     }
 
+    // Process env-based setup
+
     String buckdeviceSerial = System.getProperty("buck.device.id");
     String androidSerial = System.getenv("ANDROID_SERIAL");
     String deviceSerial = null;
@@ -267,6 +274,20 @@ public class InstrumentationTestRunner {
       System.err.println(
           "Must pass buck.device.id system property, as this run is not configured to auto-connect to device.");
       System.exit(1);
+    }
+
+    String testArtifactsPath = System.getenv("TEST_RESULT_ARTIFACTS_DIR");
+    if (testArtifactsPath != null) {
+      String devicePath = "/sdcard/test_result/artifacts/";
+      extraDirsToPull.put(devicePath, testArtifactsPath);
+      extraInstrumentationArguments.put("TEST_RESULT_ARTIFACTS_DIR", devicePath);
+    }
+
+    String testArtifactAnnotationsPath = System.getenv("TEST_RESULT_ARTIFACT_ANNOTATIONS_DIR");
+    if (testArtifactAnnotationsPath != null) {
+      String devicePath = "/sdcard/test_result/artifact_annotations/";
+      extraDirsToPull.put(devicePath, testArtifactAnnotationsPath);
+      extraInstrumentationArguments.put("TEST_RESULT_ARTIFACT_ANNOTATIONS_DIR", devicePath);
     }
 
     return new InstrumentationTestRunner(
@@ -323,6 +344,22 @@ public class InstrumentationTestRunner {
     if (this.apkUnderTestExopackageLocalPath != null) {
       Path localBase = Paths.get(apkUnderTestExopackageLocalPath);
       syncExopackageDir(localBase, device);
+    }
+
+    // Clean up output directories before the run
+    for (String devicePath : this.extraDirsToPull.keySet()) {
+      String output = executeAdbShellCommand("rm -fr " + devicePath, device);
+
+      if (locateDir(device.getFileListingService(), devicePath) != null) {
+        System.err.printf("Failed to clean up directory %s due to error: %s", devicePath, output);
+        System.exit(1);
+      }
+
+      output = executeAdbShellCommand("mkdir -p " + devicePath, device);
+      if (locateDir(device.getFileListingService(), devicePath) == null) {
+        System.err.printf("Failed to create directory %s due to error: %s", devicePath, output);
+        System.exit(1);
+      }
     }
 
     try {
@@ -403,6 +440,14 @@ public class InstrumentationTestRunner {
         device.uninstallPackage(this.targetPackageName);
       }
     }
+  }
+
+  private String executeAdbShellCommand(String command, IDevice device)
+      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+          IOException {
+    CollectingOutputReceiver receiver = new CollectingOutputReceiver();
+    device.executeShellCommand(command, receiver);
+    return receiver.getOutput();
   }
 
   private void pullDir(IDevice device, String sourceDir, String destinationDir) throws Exception {
