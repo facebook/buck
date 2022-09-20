@@ -17,18 +17,18 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
-/** Isolated from buck1 codebase implementation of ADB execution context. */
+/**
+ * Isolated from buck1 codebase implementation of ADB execution context. It is used in the buck2
+ * android installer in AdbHelper.
+ */
 public class IsolatedAdbExecutionContext implements AdbExecutionContext {
 
-  private static final Console CONSOLE =
-      new Console(Verbosity.STANDARD_INFORMATION, System.out, System.err, Ansi.withoutTty());
+  private static final Console CONSOLE = Console.createNullConsole();
 
   @Override
   public Optional<BuckEventBus> getBuckEventBus() {

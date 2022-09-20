@@ -18,7 +18,6 @@ package com.facebook.buck.installer.android;
 
 import com.facebook.buck.installer.InstallerServer;
 import java.io.IOException;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
@@ -57,7 +56,6 @@ public class AndroidInstallerMain {
 
   private static Logger getLogger(String logPath) throws IOException {
     Logger logger = Logger.getLogger(AndroidInstallerMain.class.getName());
-    logger.addHandler(new ConsoleHandler());
     logger.addHandler(getFileHandler(logPath));
     return logger;
   }

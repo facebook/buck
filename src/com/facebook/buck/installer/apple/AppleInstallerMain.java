@@ -18,7 +18,6 @@ package com.facebook.buck.installer.apple;
 
 import com.facebook.buck.installer.InstallerServer;
 import java.io.IOException;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
@@ -58,7 +57,6 @@ public class AppleInstallerMain {
 
   private static Logger getLogger(String logPath) throws IOException {
     Logger logger = Logger.getLogger(AppleInstallerMain.class.getName());
-    logger.addHandler(new ConsoleHandler());
     logger.addHandler(getFileHandler(logPath));
     return logger;
   }
