@@ -48,6 +48,8 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
@@ -274,7 +276,9 @@ public class CxxTestDescription
             buildTarget,
             cellRoots.getCellNameResolver(),
             graphBuilder,
-            ImmutableList.of(LocationMacroExpander.INSTANCE));
+            ImmutableList.of(
+                LocationMacroExpander.INSTANCE,
+                new ExecutableMacroExpander<>(ExecutableMacro.class)));
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, Arg> testEnv =
