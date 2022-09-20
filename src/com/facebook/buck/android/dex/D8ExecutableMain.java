@@ -45,8 +45,11 @@ public class D8ExecutableMain {
   @Option(name = "--output-dex-file", required = true)
   private String outputDex;
 
-  @Option(name = "--files-to-dex-list", required = true)
+  @Option(name = "--files-to-dex-list")
   private String filesToDexList;
+
+  @Option(name = "--file-to-dex")
+  private String fileToDex;
 
   @Option(name = "--android-jar", required = true)
   private String androidJar;
@@ -125,10 +128,17 @@ public class D8ExecutableMain {
   }
 
   private void run() throws IOException {
-    ImmutableSet<Path> filesToDex =
-        Files.readAllLines(Paths.get(filesToDexList)).stream()
-            .map(Paths::get)
-            .collect(ImmutableSet.toImmutableSet());
+    ImmutableSet<Path> filesToDex;
+    if (filesToDexList != null) {
+      Preconditions.checkState(fileToDex == null);
+      filesToDex =
+          Files.readAllLines(Paths.get(filesToDexList)).stream()
+              .map(Paths::get)
+              .collect(ImmutableSet.toImmutableSet());
+    } else {
+      Preconditions.checkState(fileToDex != null);
+      filesToDex = ImmutableSet.of(Paths.get(fileToDex));
+    }
 
     Optional<Path> primaryDexClassNamesPath =
         Optional.ofNullable(primaryDexClassNamesList).map(Paths::get);
