@@ -50,6 +50,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
@@ -278,7 +279,8 @@ public class CxxTestDescription
             graphBuilder,
             ImmutableList.of(
                 LocationMacroExpander.INSTANCE,
-                new ExecutableMacroExpander<>(ExecutableMacro.class)));
+                new ExecutableMacroExpander<>(ExecutableMacro.class),
+                new ExecutableMacroExpander<>(ExecutableTargetMacro.class)));
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, Arg> testEnv =
