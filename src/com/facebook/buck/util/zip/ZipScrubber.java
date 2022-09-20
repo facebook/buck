@@ -47,6 +47,11 @@ public class ZipScrubber {
   public static void scrubZip(Path zipPath) throws IOException {
     try (FileChannel channel =
         FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+      if (channel.size() > Integer.MAX_VALUE) {
+        // TODO T132141479
+        System.err.println("ZipScrubber does not support zip files over 2gb, skipping");
+        return;
+      }
       try (ByteBufferUnmapper unmapper =
           ByteBufferUnmapper.createUnsafe(
               channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size()))) {
