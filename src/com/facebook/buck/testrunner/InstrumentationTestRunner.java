@@ -208,7 +208,7 @@ public class InstrumentationTestRunner {
           // Format is --extra-dir-to-pull /device/source=/directory/destination
           // Pulls all files from source into destination directory.
           // Expects both parts of the argument to be directories.
-          // Expects destination directory to exist.
+          // Creates destination directory if it doesn't exist.
           {
             String raw = args[++i];
             String[] parts = raw.split("=", 2);
@@ -414,6 +414,10 @@ public class InstrumentationTestRunner {
       return;
     }
     FileListingService.FileEntry[] filesToPull = listingService.getChildrenSync(dir);
+    File destinationDirFile = new File(destinationDir);
+    if (!destinationDirFile.exists()) {
+      destinationDirFile.mkdirs();
+    }
     device.getSyncService().pull(filesToPull, destinationDir, SyncService.getNullProgressMonitor());
   }
 
