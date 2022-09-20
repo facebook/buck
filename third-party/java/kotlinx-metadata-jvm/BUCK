@@ -1,6 +1,6 @@
 load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
 
-LATEST_VERSION = "0.3.0"
+LATEST_VERSION = "0.5.0"
 
 buck_prebuilt_jar(
     name = "kotlinx-metadata-jvm",
