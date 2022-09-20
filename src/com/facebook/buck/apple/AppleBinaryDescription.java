@@ -43,7 +43,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
@@ -64,6 +63,7 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.file.CopyFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -457,6 +457,19 @@ public class AppleBinaryDescription
     Optional<MultiarchFileInfo> fatBinaryInfo =
         MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
     if (fatBinaryInfo.isPresent()) {
+      if (shouldUseWatchKitStubBinary(buildTarget, args)) {
+        BuildTarget thinTarget = Iterables.getFirst(fatBinaryInfo.get().getThinTargets(), null);
+        return requireThinBinary(
+            context,
+            thinTarget,
+            projectFilesystem,
+            params,
+            graphBuilder,
+            cellRoots,
+            appleCxxPlatformsFlavorDomain,
+            args);
+      }
+
       ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
       for (BuildTarget thinTarget : fatBinaryInfo.get().getThinTargets()) {
         thinRules.add(
@@ -533,14 +546,12 @@ public class AppleBinaryDescription
                   buildTarget, appleCxxPlatformsFlavorDomain, args, graphBuilder);
           if (shouldUseWatchKitStubBinary(buildTarget, args)
               && watchKitStubBinaryPath.isPresent()) {
-            return new Lipo(
+            return new CopyFile(
                 buildTarget,
                 projectFilesystem,
                 graphBuilder,
-                getLipo(buildTarget, appleCxxPlatformsFlavorDomain, args, graphBuilder),
-                watchKitStubBinaryPath.get(),
                 new OutputPath("WK"),
-                ImmutableList.of("-extract", getWatchArch(buildTarget)));
+                watchKitStubBinaryPath.get());
           } else {
             CxxBinaryDescriptionArg.Builder delegateArg =
                 CxxBinaryDescriptionArg.builder().from(args);
@@ -615,23 +626,6 @@ public class AppleBinaryDescription
         || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_ARM64_FLAVOR));
   }
 
-  private String getWatchArch(BuildTarget buildTarget) {
-    FlavorSet flavors = buildTarget.getFlavors();
-    if (flavors.contains(AppleBundleDescription.WATCH_OS_FLAVOR)) {
-      return "armv7k";
-    } else if (flavors.contains(AppleBundleDescription.WATCH_OS_64_32_FLAVOR)) {
-      return "arm64_32";
-    } else if (flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_FLAVOR)) {
-      return "i386";
-    } else if (flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_X86_64_FLAVOR)) {
-      return "x86_64";
-    } else if (flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_ARM64_FLAVOR)) {
-      return "arm64";
-    } else {
-      throw new HumanReadableException("Missing watch flavor, cannot determine arch");
-    }
-  }
-
   private Optional<SourcePath> getWatchKitStubBinaryPath(
       BuildTarget buildTarget,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain,
@@ -645,17 +639,6 @@ public class AppleBinaryDescription
       watchKitStubBinaryPath = appleCxxPlatform.get().resolve(graphBuilder).getWatchKitStubBinary();
     }
     return watchKitStubBinaryPath;
-  }
-
-  private Tool getLipo(
-      BuildTarget buildTarget,
-      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain,
-      AppleBinaryDescriptionArg args,
-      ActionGraphBuilder graphBuilder) {
-    Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
-        getAppleCxxPlatform(
-            graphBuilder, appleCxxPlatformsFlavorDomain, buildTarget, args.getDefaultPlatform());
-    return appleCxxPlatform.get().resolve(graphBuilder).getLipo();
   }
 
   private Optional<ApplePlatform> getApplePlatformForTarget(
