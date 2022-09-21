@@ -162,6 +162,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> moduleDeps;
 
+  @AddToRuleKey private final boolean emitObjCHeaderTextually;
+
   private BuildableSupport.DepsSupplier depsSupplier;
   protected final Optional<AbsPath> argfilePath; // internal scratch temp path
 
@@ -213,6 +215,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
     this.incrementalBuild = swiftBuckConfig.getIncrementalBuild();
     this.incrementalImports = swiftBuckConfig.getIncrementalImports();
+    this.emitObjCHeaderTextually = swiftBuckConfig.getEmitObjCHeaderTextually();
 
     if (incrementalBuild || incrementalImports) {
       ImmutableList.Builder<Path> objectPaths = ImmutableList.builder();
@@ -430,6 +433,10 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         "-emit-objc-header-path",
         getEmitObjCHeaderPath().toString(),
         "-emit-object");
+
+    if (emitObjCHeaderTextually) {
+      argBuilder.add(frontendFlag, "-emit-objc-header-textually");
+    }
 
     if (incrementalBuild || incrementalImports) {
       argBuilder.add("-incremental");

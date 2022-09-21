@@ -53,6 +53,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String INCREMENTAL_IMPORTS = "incremental_imports";
   public static final String POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY =
       "postprocess_generated_header_for_non_modules_compatibility";
+  private static final String EMIT_OBJC_HEADER_TEXTUALLY = "emit_objc_header_textually";
   public static final String FORCE_DEBUG_INFO_AT_LINK_TIME = "force_debug_info_at_link_time";
   private final BuckConfig delegate;
 
@@ -230,8 +231,32 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    * Objective-C code that does not use the -fmodules flag for compilation.
    */
   public boolean getPostprocessGeneratedHeaderForNonModulesCompatibility() {
-    return delegate.getBooleanValue(
-        SECTION_NAME, POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY, false);
+    boolean flagValue =
+        delegate.getBooleanValue(
+            SECTION_NAME, POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY, false);
+    assert !(flagValue && getEmitObjCHeaderTextually())
+        : "Do not use both "
+            + POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY
+            + " and "
+            + EMIT_OBJC_HEADER_TEXTUALLY
+            + " options";
+    return flagValue;
+  }
+
+  /**
+   * If true, BUCK will pass `-Xfrontend -emit-objc-header-textually` to make generated Objective-C
+   * headers compatible with Objective-C code that does not use the -fmodules flag for compilation.
+   * This is an in-compiler alternative to the above buck post-processing tool.
+   */
+  public boolean getEmitObjCHeaderTextually() {
+    boolean flagValue = delegate.getBooleanValue(SECTION_NAME, EMIT_OBJC_HEADER_TEXTUALLY, false);
+    assert !(flagValue && getPostprocessGeneratedHeaderForNonModulesCompatibility())
+        : "Do not use both "
+            + POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY
+            + " and "
+            + EMIT_OBJC_HEADER_TEXTUALLY
+            + " options";
+    return flagValue;
   }
 
   /**
