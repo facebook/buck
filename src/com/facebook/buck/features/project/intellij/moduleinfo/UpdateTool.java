@@ -33,6 +33,9 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -41,31 +44,76 @@ import org.xml.sax.SAXException;
 /** A command line tool to update IntelliJ binary index for changed IML files */
 public class UpdateTool {
 
+  @Option(name = "--idea-dir", required = true)
+  private String ideaDir;
+
+  // File with a list of module iml files to update the index with
+  @Option(
+      name = "--update-list",
+      forbids = {"--generate"})
+  private String updateImlFileList;
+
+  // Write a complete binary index from modules in the given .idea directory
+  @Option(
+      name = "--generate",
+      forbids = {"--update-list"})
+  private boolean generate;
+
   private static final String IML_SUFFIX = ".iml";
   private static final String EXCLUDE_KEY = "excludeFolder";
   private static final String INCLUDE_KEY = "sourceFolder";
 
   /** Entry point */
   public static void main(String[] args) throws IOException {
-    if (args.length != 2) {
-      System.err.println("Usage: updatetool <path/to/iml-file-list> <path/to/.idea>");
+    final UpdateTool main = new UpdateTool();
+    final CmdLineParser parser = new CmdLineParser(main);
+    try {
+      parser.parseArgument(args);
+    } catch (CmdLineException e) {
+      e.printStackTrace(System.err);
       System.exit(1);
     }
-    final Path ideaConfigDir = Paths.get(args[1]);
-    final ModuleInfoBinaryIndex index = new ModuleInfoBinaryIndex(ideaConfigDir);
-    index.update(moduleInfosFromPath(ideaConfigDir.getParent(), Paths.get(args[0])));
+    main.run();
   }
 
-  private static ImmutableSet<ModuleInfo> moduleInfosFromPath(
+  public void run() throws IOException {
+    final Path ideaConfigDir = Paths.get(ideaDir);
+    final ModuleInfoBinaryIndex index = new ModuleInfoBinaryIndex(ideaConfigDir);
+    final Path projectRoot = ideaConfigDir.getParent();
+
+    if (updateImlFileList != null) {
+      index.update(moduleInfosFromListOfImlFiles(projectRoot, Paths.get(updateImlFileList)));
+    } else if (generate) {
+      index.write(moduleInfosFromIdeaDir(projectRoot, ideaConfigDir));
+    } else {
+      System.err.println("Must specify either --update-list or --generate");
+      System.exit(1);
+    }
+  }
+
+  private static ImmutableSet<ModuleInfo> moduleInfosFromListOfImlFiles(
       @Nonnull Path projectRoot, @Nonnull Path path) {
     try (final Stream<String> lineStream = Files.lines(path, StandardCharsets.UTF_8)) {
-      return lineStream
-          .parallel()
-          .map(filePath -> moduleInfoFromFile(projectRoot, Paths.get(filePath)))
-          .collect(ImmutableSet.toImmutableSet());
+      return moduleInfosFromPaths(projectRoot, lineStream.map(Paths::get));
     } catch (IOException e) {
       throw new RuntimeException("Could not read from path: " + path, e);
     }
+  }
+
+  private static ImmutableSet<ModuleInfo> moduleInfosFromIdeaDir(
+      @Nonnull Path projectRoot, @Nonnull Path ideaDir) throws IOException {
+    Path modulesDir = ideaDir.resolve("modules");
+    try (final Stream<Path> moduleFileStream = Files.list(modulesDir)) {
+      return moduleInfosFromPaths(projectRoot, moduleFileStream);
+    }
+  }
+
+  private static ImmutableSet<ModuleInfo> moduleInfosFromPaths(
+      @Nonnull Path projectRoot, @Nonnull Stream<Path> stream) {
+    return stream
+        .parallel()
+        .map(filePath -> moduleInfoFromFile(projectRoot, filePath))
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   static ModuleInfo moduleInfoFromFile(@Nonnull Path projectRoot, @Nonnull Path imlFile) {

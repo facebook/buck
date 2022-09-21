@@ -6,7 +6,7 @@ java_library_with_plugins(
         ["*.java"],
         exclude = [
             "LookupTool.java",
-            "UpdateBinaryIndexFromIMLListTool.java",
+            "UpdateTool.java",
         ],
     ),
     provided_deps = ["//third-party/java/guava:guava"],
@@ -42,6 +42,10 @@ java_library_with_plugins(
     srcs = ["UpdateTool.java"],
     deps = [
         ":moduleinfo",
+        "//third-party/java/args4j:args4j",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/features/project/intellij/moduleinfo:moduleinfo",
     ],
 )
 

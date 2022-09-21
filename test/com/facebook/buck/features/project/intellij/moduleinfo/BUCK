@@ -5,6 +5,7 @@ java_test(
     srcs = glob(["*.java"]),
     deps = [
         "//src/com/facebook/buck/features/project/intellij/moduleinfo:moduleinfo",
+        "//src/com/facebook/buck/features/project/intellij/moduleinfo:updatetool-lib",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
