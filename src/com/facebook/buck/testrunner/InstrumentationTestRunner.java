@@ -425,8 +425,7 @@ public class InstrumentationTestRunner {
             "/data/data/" + this.packageName + "/files/coverage.ec", this.codeCoverageOutputFile);
       }
       for (Map.Entry<String, String> entry : this.extraFilesToPull.entrySet()) {
-        String devicePath = entry.getKey().replaceAll("$PACKAGE_NAME", this.packageName);
-        device.pullFile(devicePath, entry.getValue());
+        device.pullFile(entry.getKey(), entry.getValue());
       }
       for (Map.Entry<String, String> entry : this.extraDirsToPull.entrySet()) {
         pullDir(device, entry.getKey(), entry.getValue());
