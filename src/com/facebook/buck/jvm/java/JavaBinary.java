@@ -157,11 +157,14 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     RelPath classpathArgsPath = outputDirectory.resolveRel("classpath_args");
     steps.add(
         WriteFileIsolatedStep.of(
-            () ->
-                includePaths.stream()
-                    .map(filesystem::resolve)
-                    .map(AbsPath::toString)
-                    .collect(Collectors.joining(File.pathSeparator)),
+            () -> {
+              String classPath =
+                  includePaths.stream()
+                      .map(filesystem::resolve)
+                      .map(AbsPath::toString)
+                      .collect(Collectors.joining(File.pathSeparator));
+              return String.format("\"%s\"", classPath);
+            },
             classpathArgsPath,
             false));
 
