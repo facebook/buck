@@ -40,6 +40,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -278,7 +279,8 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   // regex pattern to extract java version from both "7" and "1.7" notations.
-  private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("^(1\\.)*(?<version>\\d)$");
+  @VisibleForTesting
+  static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("^(1\\.)*(?<version>1?\\d)$");
 
   private boolean isDesugarRequired() {
     String rawJavaSourceLevel =
