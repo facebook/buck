@@ -89,6 +89,7 @@ public class IjProjectJsonWriter extends IjProjectWriter {
         module.getName(),
         projectPaths.getModuleDir(module).toString(),
         moduleData.getDependencies(),
+        moduleData.getGeneratedFolders(),
         moduleData.getContentRoots());
 
     return writeTemplate(

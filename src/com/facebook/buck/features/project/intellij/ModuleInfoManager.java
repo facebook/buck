@@ -55,9 +55,21 @@ public final class ModuleInfoManager {
       String moduleName,
       String moduleDir,
       ImmutableSet<IjDependencyListBuilder.DependencyEntry> dependencies,
+      ImmutableSet<IjSourceFolder> generatedFolders,
       ImmutableList<ContentRoot> contentRoots) {
     if (projectConfig.isGeneratingModuleInfoBinaryIndexEnabled()) {
-      moduleInfoQueue.add(createModuleInfo(moduleName, moduleDir, dependencies, contentRoots));
+      ImmutableList<ContentRoot> allContentRoots =
+          ImmutableList.<ContentRoot>builder()
+              .addAll(contentRoots)
+              .addAll(
+                  generatedFolders.stream()
+                      .map(
+                          generatedFolder ->
+                              ContentRoot.of(
+                                  generatedFolder.getUrl(), ImmutableList.of(generatedFolder)))
+                      .collect(Collectors.toList()))
+              .build();
+      moduleInfoQueue.add(createModuleInfo(moduleName, moduleDir, dependencies, allContentRoots));
     }
   }
 
