@@ -89,6 +89,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
   private final ImmutableCollection<PreDexSplitDexGroup> preDexDeps;
   private final ListeningExecutorService dxExecutorService;
   private final int xzCompressionLevel;
+  private final Optional<Integer> minSdkVersion;
 
   public PreDexSplitDexMerge(
       BuildTarget buildTarget,
@@ -99,13 +100,15 @@ public class PreDexSplitDexMerge extends PreDexMerge {
       APKModuleGraph<BuildTarget> apkModuleGraph,
       ImmutableCollection<PreDexSplitDexGroup> preDexDeps,
       ListeningExecutorService dxExecutorService,
-      int xzCompressionLevel) {
+      int xzCompressionLevel,
+      Optional<Integer> minSdkVersion) {
     super(buildTarget, projectFilesystem, params, androidPlatformTarget);
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;
     this.preDexDeps = preDexDeps;
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
+    this.minSdkVersion = minSdkVersion;
   }
 
   private ImmutableMap<Path, Sha1HashCode> resolvePrimaryDexInputHashPaths() {
@@ -396,10 +399,12 @@ public class PreDexSplitDexMerge extends PreDexMerge {
 
             ImmutableMultimap<APKModule, String> mergedDexEntries = mergedDexEntriesBuilder.build();
 
-            if (dexSplitMode.getDexStore() == DexStore.RAW) {
+            if (dexSplitMode.getDexStore() == DexStore.RAW && minSdkVersion.orElse(0) < 23) {
               Preconditions.checkState(
                   mergedDexEntries.get(apkModuleGraph.getRootAPKModule()).size() < 100,
-                  "Build produces more than 100 secondary dexes, this can break native multidex loading and/or redex. Increase linear_alloc_hard_limit or disable predexing");
+                  "Build produces more than 100 secondary dexes, this can break on Android 5.0 and older.\n"
+                      + "Set minSdkVersion to 23 or higher via `manifest_entries = {'min_sdk_version': 23}` "
+                      + "or disable native multidexing.");
             }
 
             for (APKModule apkModule : modulesWithDexes) {

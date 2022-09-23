@@ -864,7 +864,8 @@ public class AndroidBinaryGraphEnhancer {
             apkModuleGraph,
             dexGroupRules,
             dxExecutorService,
-            xzCompressionLevel);
+            xzCompressionLevel,
+            minSdkVersion);
     graphBuilder.addToIndex(superDexMergeRule);
 
     return superDexMergeRule;
