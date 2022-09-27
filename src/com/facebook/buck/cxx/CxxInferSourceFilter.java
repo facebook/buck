@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.infer.InferConfig;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -24,7 +25,11 @@ class CxxInferSourceFilter {
 
   private final Optional<Pattern> blockListRegex;
 
-  CxxInferSourceFilter(InferConfig inferConfig) {
+  private final SourcePathResolverAdapter resolver;
+
+  CxxInferSourceFilter(InferConfig inferConfig, SourcePathResolverAdapter resolver) {
+    this.resolver = resolver;
+
     Optional<String> rawFilterRegex = inferConfig.getBlockListRegex();
 
     blockListRegex = rawFilterRegex.map(Pattern::compile);
@@ -32,6 +37,9 @@ class CxxInferSourceFilter {
 
   public boolean isBlockListed(CxxSource source) {
     return blockListRegex.isPresent()
-        && blockListRegex.get().matcher(source.getPath().toString()).matches();
+        && blockListRegex
+            .get()
+            .matcher(resolver.getIdeallyRelativePath(source.getPath()).toString())
+            .matches();
   }
 }
