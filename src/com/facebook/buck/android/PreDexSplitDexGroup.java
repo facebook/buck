@@ -45,7 +45,6 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -192,12 +191,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             groupIndex);
     PreDexedFilesSorter.Result result =
         preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(filesystem, steps);
-
-    if (dexSplitMode.getDexStore() == DexStore.RAW) {
-      Preconditions.checkState(
-          result.secondaryOutputToInputs.keySet().size() < 100,
-          "Build produces more than 100 secondary dexes, this can break native multidex loading and/or redex. Increase linear_alloc_hard_limit or disable predexing");
-    }
 
     SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
     ImmutableMultimap.Builder<Path, SourcePath> aggregatedOutputToInputs =
