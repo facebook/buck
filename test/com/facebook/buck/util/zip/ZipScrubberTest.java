@@ -57,7 +57,8 @@ public class ZipScrubberTest {
 
     byte[] bytes = bytesOutputStream.toByteArray();
     // Execute the zip scrubber step.
-    ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
+    ZipScrubber.scrubZipBuffer(
+        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -83,7 +84,8 @@ public class ZipScrubberTest {
     }
 
     byte[] bytes = byteArrayOutputStream.toByteArray();
-    ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
+    ZipScrubber.scrubZipBuffer(
+        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -109,7 +111,8 @@ public class ZipScrubberTest {
     }
 
     byte[] bytes = byteArrayOutputStream.toByteArray();
-    ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
+    ZipScrubber.scrubZipBuffer(
+        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -128,7 +131,8 @@ public class ZipScrubberTest {
     byte[] bytes = Resources.toByteArray(sample);
 
     // Execute the zip scrubber step.
-    ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
+    ZipScrubber.scrubZipBuffer(
+        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -147,7 +151,8 @@ public class ZipScrubberTest {
     byte[] bytes = Resources.toByteArray(sample);
 
     // Execute the zip scrubber step.
-    ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
+    ZipScrubber.scrubZipBuffer(
+        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -166,7 +171,29 @@ public class ZipScrubberTest {
     byte[] bytes = Resources.toByteArray(sample);
 
     // Execute the zip scrubber step.
-    ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
+    ZipScrubber.scrubZipBuffer(
+        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+
+    // Iterate over each of the entries, expecting to see all zeros in the time fields.
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
+    try (ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(bytes))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
+      }
+    }
+  }
+
+  @Test
+  public void forceSlidingWindowMovement() throws Exception {
+    // This test matches modificationTimesLargePadding, but forces a small sliding window.
+
+    // Small test file that has padding (inserted by `zipalign 4`).
+    String packageName = getClass().getPackage().getName().replace('.', '/');
+    URL sample = Resources.getResource(packageName + "/aligned.page.zip");
+    byte[] bytes = Resources.toByteArray(sample);
+
+    // Execute the zip scrubber step with the smallest window possible.
+    ZipScrubber.scrubZipBuffer(SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), 8));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));

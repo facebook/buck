@@ -16,12 +16,9 @@
 
 package com.facebook.buck.util.zip;
 
-import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -52,21 +49,23 @@ public class ZipScrubber {
         System.err.println("ZipScrubber does not support zip files over 2gb, skipping");
         return;
       }
-      try (ByteBufferUnmapper unmapper =
-          ByteBufferUnmapper.createUnsafe(
-              channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size()))) {
-        scrubZipBuffer(channel.size(), unmapper.getByteBuffer());
+
+      SlidingFileWindow buffer = new SlidingFileWindow(channel);
+      try {
+        scrubZipBuffer(buffer);
+      } finally {
+        buffer.close();
       }
     }
   }
 
   @VisibleForTesting
-  static void scrubZipBuffer(long zipSize, ByteBuffer map) throws IOException {
+  static void scrubZipBuffer(SlidingFileWindow map) throws IOException {
     map.order(ByteOrder.LITTLE_ENDIAN);
 
     // Search backwards from the end of the ZIP file, searching for the EOCD signature, which
     // designates the start of the EOCD.
-    int eocdOffset = (int) zipSize - ZipEntry.ENDHDR;
+    long eocdOffset = map.limit() - ZipEntry.ENDHDR;
     while (map.getInt(eocdOffset) != ZipEntry.ENDSIG) {
       eocdOffset--;
     }
@@ -75,7 +74,7 @@ public class ZipScrubber {
     if ((cdEntries & 0xffff) == 0xffff) {
       // It's ZIP64 format and number of entries is stored in a different
       // field: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
-      int zip64eocdOffset = eocdOffset;
+      long zip64eocdOffset = eocdOffset;
       while (map.getInt(zip64eocdOffset) != ZIP64_ENDSIG) {
         zip64eocdOffset--;
       }
@@ -86,17 +85,15 @@ public class ZipScrubber {
     int cdOffset = map.getInt(eocdOffset + ZipEntry.ENDOFF);
     for (long idx = 0; idx < cdEntries; idx++) {
       // Wrap the central directory header and zero out it's timestamp.
-      ByteBuffer entry = slice(map, cdOffset);
+      SlidingFileWindow entry = map.slice(cdOffset);
       check(entry.getInt(0) == ZipEntry.CENSIG, "expected central directory header signature");
 
       entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_FAKE_TIME);
-      ByteBuffer localEntry = slice(map, entry.getInt(ZipEntry.CENOFF));
+      SlidingFileWindow localEntry = map.slice(entry.getInt(ZipEntry.CENOFF));
       scrubLocalEntry(localEntry);
       scrubExtraFields(
-          slice(
-              entry,
-              ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM),
-              entry.getShort(ZipEntry.CENEXT)));
+          entry.slice(
+              ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM), entry.getShort(ZipEntry.CENEXT)));
 
       cdOffset +=
           ZipEntry.CENHDR
@@ -106,32 +103,15 @@ public class ZipScrubber {
     }
   }
 
-  private static ByteBuffer slice(ByteBuffer map, int offset) {
-    ByteBuffer result = map.duplicate();
-    result.position(offset);
-    result = result.slice();
-    result.order(ByteOrder.LITTLE_ENDIAN);
-    return result;
-  }
-
-  // Duplicate as using `slice.limit` has compatibility issues because of Java9 APIs.
-  private static ByteBuffer slice(ByteBuffer map, int offset, int limit) {
-    ByteBuffer result = slice(map, offset);
-    result.limit(limit);
-    return result;
-  }
-
-  private static void scrubLocalEntry(ByteBuffer entry) throws IOException {
+  private static void scrubLocalEntry(SlidingFileWindow entry) throws IOException {
     check(entry.getInt(0) == ZipEntry.LOCSIG, "expected local header signature");
     entry.putInt(ZipEntry.LOCTIM, ZipConstants.DOS_FAKE_TIME);
     scrubExtraFields(
-        slice(
-            entry,
-            ZipEntry.LOCHDR + entry.getShort(ZipEntry.LOCNAM),
-            entry.getShort(ZipEntry.LOCEXT)));
+        entry.slice(
+            ZipEntry.LOCHDR + entry.getShort(ZipEntry.LOCNAM), entry.getShort(ZipEntry.LOCEXT)));
   }
 
-  private static void scrubExtraFields(ByteBuffer data) {
+  private static void scrubExtraFields(SlidingFileWindow data) throws IOException {
     // See http://mdfs.net/Docs/Comp/Archiving/Zip/ExtraField for structure of extra fields.
     //
     // Additionally, tools like zipalign inject zero values for padding, which seem to violate
@@ -141,7 +121,7 @@ public class ZipScrubber {
     // zipalign padding:
     // https://android.googlesource.com/platform/build/+/refs/tags/android-10.0.0_r33/tools/zipalign/ZipEntry.cpp#200
 
-    final int end = data.limit();
+    final long end = data.limit();
 
     while (data.position() < end) {
       if (end - data.position() < 4) {
@@ -183,12 +163,9 @@ public class ZipScrubber {
 
   /** Read the name of a zip file from a local entry. Useful for debugging. */
   @SuppressWarnings("unused")
-  private static String localEntryName(ByteBuffer entry) {
+  private static String localEntryName(SlidingFileWindow entry) throws IOException {
     byte[] nameBytes = new byte[entry.getShort(ZipEntry.LOCNAM)];
-    // Note: This strange looking casting exists to enable building on both Java 8 and Java 9+.
-    //       Java 9 introduced ByteBuffer::position, which returns a ByteBuffer, unlike
-    //       Buffer::position, which returns a Buffer.
-    ((ByteBuffer) ((Buffer) entry.slice()).position(ZipEntry.LOCHDR)).get(nameBytes);
+    entry.slice().position(ZipEntry.LOCHDR).get(nameBytes);
     return new String(nameBytes);
   }
 

@@ -45,6 +45,11 @@ public class ByteBufferUnmapper implements Scope {
 
   @Override
   public void close() {
+    unmap(buffer);
+  }
+
+  /** Static method to unmap a ByteBuffer. */
+  public static void unmap(ByteBuffer buffer) {
     if (!buffer.isDirect()) {
       return;
     }
