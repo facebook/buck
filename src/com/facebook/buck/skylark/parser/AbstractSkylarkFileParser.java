@@ -299,7 +299,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         loadExtensions(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
     StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
     env.setPrintHandler(new BuckStarlarkPrintHandler(eventHandler));
-    env.setLoader(Maps.transformValues(dependencies, ExtensionData::getExtension)::get);
+    env.setLoader(
+        new BuckLoader(
+            ImmutableMap.copyOf(Maps.transformValues(dependencies, ExtensionData::getExtension))));
 
     parseContext.setup(env);
     readConfigContext.setup(env);
