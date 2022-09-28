@@ -2980,6 +2980,7 @@ public class StubJarTest {
             "public class A {",
             "  <@Foo.TypeAnnotation T> void foo(@Foo.TypeAnnotation String s) { }",
             "  @Foo.TypeAnnotation List<String> bar(@Foo.TypeAnnotation Integer i, List<List<@Foo.TypeAnnotation String>> s) { return null; }",
+            "  List<@Foo.TypeAnnotation String> baz() { return null; }",
             "}")
         .addExpectedStub(
             "com/example/buck/A",
@@ -3008,6 +3009,12 @@ public class StubJarTest {
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_RETURN, null // invisible",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_FORMAL_PARAMETER 0, null // invisible",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_FORMAL_PARAMETER 1, 0;0; // invisible",
+            "",
+            "  // access flags 0x0",
+            "  // signature ()Ljava/util/List<Ljava/lang/String;>;",
+            "  // declaration: java.util.List<java.lang.String> baz()",
+            "  baz()Ljava/util/List;",
+            "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_RETURN, 0; // invisible",
             "}")
         .createAndCheckStubJar();
   }

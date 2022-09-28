@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
+import com.sun.source.tree.AnnotatedTypeTree;
 import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
@@ -368,6 +369,11 @@ class PostEnterCanonicalizer {
                           javacTrees.getElement(new TreePath(treePath.getCompilationUnit()))));
           return types.getDeclaredType(elements.getOrCreateTypeElement(packageElement, identifier));
         }
+      case ANNOTATED_TYPE:
+        AnnotatedTypeTree annotatedTypeTree = (AnnotatedTypeTree) tree;
+        ExpressionTree underlyingTree = annotatedTypeTree.getUnderlyingType();
+        TreePath underlyingTreePath = TreePath.getPath(treePath, underlyingTree);
+        return getInferredType(underlyingTreePath);
         // $CASES-OMITTED$
       default:
         throw new AssertionError(String.format("Unexpected tree kind %s", tree.getKind()));
