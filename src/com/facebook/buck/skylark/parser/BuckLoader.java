@@ -33,6 +33,9 @@ class BuckLoader implements StarlarkThread.Loader {
   @Nullable
   @Override
   public LoadedModule load(String module) {
+    if (BuckV2OnlyModule.isV2OnlyImport(module)) {
+      return BuckV2OnlyModule.INSTANCE;
+    }
     return modules.get(module);
   }
 }

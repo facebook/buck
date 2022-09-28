@@ -1513,4 +1513,21 @@ public class SkylarkProjectBuildFileParserTest {
 
     getSingleRule(buildFile);
   }
+
+  @Test
+  public void v2Only() throws Exception {
+    AbsPath buildFile = AbsPath.of(projectFilesystem.resolve(Paths.get("BUCK")));
+
+    Files.write(
+        buildFile.getPath(),
+        Collections.singletonList("load(':fgfg?v2_only', 'my_rule')\nmy_rule(name = 'test')\n"));
+
+    ForwardRelPath buildFileRel =
+        ForwardRelPath.ofRelPath(MorePaths.relativize(projectFilesystem.getRootPath(), buildFile));
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Error: 'BuckV2OnlyValue' object is not callable");
+
+    parser.getManifest(buildFileRel);
+  }
 }

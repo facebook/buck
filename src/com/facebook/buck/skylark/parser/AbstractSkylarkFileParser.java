@@ -494,6 +494,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       Preconditions.checkState(containingLabel.equals(skylarkImport.getContainingLabel()));
 
+      if (BuckV2OnlyModule.isV2OnlyImport(skylarkImport.getImport())) {
+        // `?v2_only` imports do not count as includes.
+        continue;
+      }
+
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport.getImport())) continue;
       try {
@@ -532,6 +537,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       LoadImport skylarkImport = skylarkImports.get(i);
 
       Preconditions.checkState(containingLabel.equals(skylarkImport.getContainingLabel()));
+
+      if (BuckV2OnlyModule.isV2OnlyImport(skylarkImport.getImport())) {
+        // `BuckLoader` handles it.
+        continue;
+      }
 
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport.getImport())) continue;
@@ -738,6 +748,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     for (int i = 0; i < imports.size(); ++i) {
       LoadImport dependency = imports.get(i);
 
+      if (BuckV2OnlyModule.isV2OnlyImport(dependency.getImport())) {
+        // These are handled by `BuckLoader`.
+        continue;
+      }
+
       // Record dependency for this load.
       load.addDependency(dependency);
       AbsPath extensionPath = getImportPath(dependency.getLabel(), dependency.getImport());
@@ -904,6 +919,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    */
   private AbsPath getImportPath(Label containingLabel, String skylarkImport)
       throws BuildFileParseException {
+
+    Preconditions.checkArgument(!BuckV2OnlyModule.isV2OnlyImport(skylarkImport));
+
     if (isRelativeLoad(skylarkImport) && skylarkImport.contains("/")) {
       throw BuildFileParseException.createForUnknownParseError(
           "Relative loads work only for files in the same directory but "
