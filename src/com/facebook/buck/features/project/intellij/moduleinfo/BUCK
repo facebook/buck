@@ -44,6 +44,8 @@ java_library_with_plugins(
         ":moduleinfo",
         "//third-party/java/args4j:args4j",
     ],
+    source = "8",
+    target = "8",
     visibility = [
         "//test/com/facebook/buck/features/project/intellij/moduleinfo:moduleinfo",
     ],
