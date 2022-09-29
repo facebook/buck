@@ -6,4 +6,150 @@ Use the following instructions to build d8.jar:
 - Build d8: tools/gradle.py -Pexclude_deps d8
 - d8.jar can be found in build/libs/d8.jar
 
-Current revision: https://github.com/facebookexperimental/r8/commit/08ff3ef2730eeff0f232cbd19ae9a1a03da1962e
+Current revision: https://r8.googlesource.com/r8/+/refs/tags/agp-7.0.3
+For current revision, use the instructions from https://r8.googlesource.com/r8/+/refs/tags/agp-7.0.3 to clone the repo and add the following patch. Then build it with:
+- Build d8: tools/gradle.py d8 r8
+- d8.jar can be found in build/libs/d8.jar
+- run: java -jar build/libs/d8.jar --version
+  and the output should be
+  D8 3.0.73 (build engineering)
+
+The patch:
+1) add the ability to get computeReferencedResources;
+2) expose internal options (https://github.com/facebookexperimental/r8/commit/7e66d9cfa273980ba51523f99d7fec79df61ac92)
+3) always enabling readCompileTimeAnnotations option. Otherwise, missing annotation will cause Redex opt failure.
+
+diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
+index f1ed0cda4..761654935 100644
+--- a/src/main/java/com/android/tools/r8/D8Command.java
++++ b/src/main/java/com/android/tools/r8/D8Command.java
+@@ -53,6 +53,7 @@ import java.util.function.Consumer;
+  */
+ @Keep
+ public final class D8Command extends BaseCompilerCommand {
++  private Consumer<InternalOptions> internalOptionsModifier;
+
+   private static class DefaultD8DiagnosticsHandler implements DiagnosticsHandler {
+
+@@ -82,6 +83,7 @@ public final class D8Command extends BaseCompilerCommand {
+     private boolean intermediate = false;
+     private DesugarGraphConsumer desugarGraphConsumer = null;
+     private StringConsumer desugaredLibraryKeepRuleConsumer = null;
++    private Consumer<InternalOptions> internalOptionsModifier;
+     private String synthesizedClassPrefix = "";
+     private boolean enableMainDexListCheck = true;
+     private boolean minimalMainDex = false;
+@@ -139,6 +141,11 @@ public final class D8Command extends BaseCompilerCommand {
+       return self();
+     }
+
++    public Builder setInternalOptionsModifier(Consumer<InternalOptions> f) {
++      this.internalOptionsModifier = f;
++      return self();
++    }
+     /**
+      * Indicate if compilation is to intermediate results, i.e., intended for later mergin\
+g.
+      *
+@@ -316,7 +323,8 @@ public final class D8Command extends BaseCompilerCommand {
+           mainDexKeepRules,
+           getThreadCount(),
+           getDumpInputFlags(),
+-          factory);
++          factory,
++          internalOptionsModifier);
+     }
+   }
+
+@@ -333,6 +341,10 @@ public final class D8Command extends BaseCompilerCommand {
+   private final ImmutableList<ProguardConfigurationRule> mainDexKeepRules;
+   private final DexItemFactory factory;
+
++  public DexItemFactory getDexItemFactory() {
++    return factory;
++  }
++
+   public static Builder builder() {
+     return new Builder();
+   }
+@@ -397,7 +409,8 @@ public final class D8Command extends BaseCompilerCommand {
+       ImmutableList<ProguardConfigurationRule> mainDexKeepRules,
+       int threadCount,
+       DumpInputFlags dumpInputFlags,
+-      DexItemFactory factory) {
++      DexItemFactory factory,
++      Consumer<InternalOptions> internalOptionsModifier) {
+     super(
+         inputApp,
+         mode,
+@@ -423,6 +436,7 @@ public final class D8Command extends BaseCompilerCommand {
+     this.minimalMainDex = minimalMainDex;
+     this.mainDexKeepRules = mainDexKeepRules;
+     this.factory = factory;
++    this.internalOptionsModifier = internalOptionsModifier;
+   }
+
+   private D8Command(boolean printHelp, boolean printVersion) {
+   @@ -458,7 +472,7 @@ public final class D8Command extends BaseCompilerCommand {
+     internal.enableMainDexListCheck = enableMainDexListCheck;
+     internal.minApiLevel = getMinApiLevel();
+     internal.intermediate = intermediate;
+-    internal.readCompileTimeAnnotations = intermediate;
++    internal.readCompileTimeAnnotations = true;
+     internal.desugarGraphConsumer = desugarGraphConsumer;
+     internal.mainDexKeepRules = mainDexKeepRules;
+     internal.lineNumberOptimization = LineNumberOptimization.OFF;
+@@ -506,6 +520,10 @@ public final class D8Command extends BaseCompilerCommand {
+     internal.setDumpInputFlags(getDumpInputFlags(), skipDump);
+     internal.dumpOptions = dumpOptions();
+
++    if (internalOptionsModifier != null) {
++      internalOptionsModifier.accept(internal);
++    }
++
+     return internal;
+   }
+
+diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/c\
+om/android/tools/r8/graph/DexItemFactory.java
+index 7d95e878f..80265f56e 100644
+--- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
++++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
+@@ -46,6 +46,8 @@ import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
+ import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
+ import java.util.ArrayList;
+ import java.util.Arrays;
++import java.util.Collection;
++import java.util.HashSet;
+ import java.util.HashMap;
+ import java.util.IdentityHashMap;
+ import java.util.Iterator;
+ @@ -2690,4 +2692,17 @@ public class DexItemFactory {
+   synchronized public void forAllTypes(Consumer<DexType> f) {
+     new ArrayList<>(types.values()).forEach(f);
+   }
++
++  // Facebook addition: compute the resources referenced by this dex file.
++  // Does not apply to any merging, just the input class.
++  public Collection<String> computeReferencedResources() {
++    Set<String> resourceNames = new HashSet<>();
++    for (DexField item: fields.values()) {
++      DexType clazz = item.holder;
++      if (clazz.toDescriptorString().contains("/R$")) {
++        resourceNames.add(clazz.getPackageDescriptor().replaceAll("/", ".") + "." + item.n\
+ame.toString());
++      }
++    }
++    return resourceNames;
++  }
+ }
+diff --git a/tools/gradle.py b/tools/gradle.py
+index 63c92b544..704336fbe 100755
+--- a/tools/gradle.py
++++ b/tools/gradle.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ # Copyright (c) 2016, the R8 project authors. Please see the AUTHORS file
+ # for details. All rights reserved. Use of this source code is governed by a
+ # BSD-style license that can be found in the LICENSE file.
