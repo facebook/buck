@@ -36,6 +36,7 @@
 
 # buckconfig in Ocaml test project directory to override compiler paths.
 /test/com/facebook/buck/ocaml/testdata/ocaml/.buckconfig
+
 # bootstrapper test is run in the source tree
 /test/com/facebook/buck/cli/bootstrapper/testdata/old_guava/buck-out/
 
