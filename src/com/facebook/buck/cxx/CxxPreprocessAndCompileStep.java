@@ -348,6 +348,7 @@ class CxxPreprocessAndCompileStep implements Step {
       StringBuilder strippedDepFile = new StringBuilder();
       for (var line : lines) {
         var lowerCaseLine = line.toLowerCase(Locale.ROOT);
+        lowerCaseLine = lowerCaseLine.replace("/", String.valueOf(File.separatorChar));
         var index = lowerCaseLine.indexOf(lowerCaseRootPath);
         if (index != -1) {
           // append dep file line without the root path. We need to be careful here to preserve
