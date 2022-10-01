@@ -223,6 +223,8 @@ public class KotlinLibraryDescription
     ImmutableSortedSet<BuildTarget> getFriendPaths();
 
     ImmutableMap<SourcePath, ImmutableMap<String, String>> getKotlinCompilerPlugins();
+
+    Optional<Boolean> getUseJvmAbiGen();
   }
 
   @RuleArg

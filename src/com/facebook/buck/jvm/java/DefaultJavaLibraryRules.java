@@ -383,7 +383,7 @@ public abstract class DefaultJavaLibraryRules {
 
   private boolean willProduceClassAbiPartFromLibraryTarget() {
     return willProduceClassAbi()
-        && getConfiguredCompilerFactory().shouldProduceClassAbiPartFromLibraryTarget();
+        && getConfiguredCompilerFactory().shouldProduceClassAbiPartFromLibraryTarget(getArgs());
   }
 
   private boolean willProduceCompareAbis() {

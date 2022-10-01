@@ -116,7 +116,7 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   /** No need to generate part of class-abi from library target for java */
   @Override
-  public boolean shouldProduceClassAbiPartFromLibraryTarget() {
+  public boolean shouldProduceClassAbiPartFromLibraryTarget(JavaLibraryDescription.CoreArg args) {
     return false;
   }
 

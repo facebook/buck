@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -102,7 +103,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         javacOptions,
         downwardApiConfig.isEnabledForKotlin(),
         kotlinBuckConfig.shouldGenerateAnnotationProcessingStats(),
-        kotlinBuckConfig.shouldUseJvmAbiGen(),
+        shouldUseJvmAbiGen(kotlinArgs),
         Kosabi.getPluginOptionsMappings(
             targetConfiguration, KosabiConfig.of(kotlinBuckConfig.getDelegate())),
         kotlinArgs
@@ -173,8 +174,12 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
    * be inherited from library target.
    */
   @Override
-  public boolean shouldProduceClassAbiPartFromLibraryTarget() {
-    return kotlinBuckConfig.shouldUseJvmAbiGen();
+  public boolean shouldProduceClassAbiPartFromLibraryTarget(JavaLibraryDescription.CoreArg args) {
+    return shouldUseJvmAbiGen(Objects.requireNonNull((CoreArg) args));
+  }
+
+  private Boolean shouldUseJvmAbiGen(CoreArg kotlinArgs) {
+    return kotlinArgs.getUseJvmAbiGen().orElse(kotlinBuckConfig.shouldUseJvmAbiGen());
   }
 
   @Override

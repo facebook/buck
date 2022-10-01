@@ -90,7 +90,8 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
-  public boolean shouldProduceClassAbiPartFromLibraryTarget() {
+  public boolean shouldProduceClassAbiPartFromLibraryTarget(
+      @SuppressWarnings("unused") JavaLibraryDescription.CoreArg args) {
     return false;
   }
 
