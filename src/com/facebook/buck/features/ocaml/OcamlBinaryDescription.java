@@ -42,6 +42,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -98,7 +99,12 @@ public class OcamlBinaryDescription
             context.getCellPathResolver(),
             context.getActionGraphBuilder(),
             ocamlPlatform,
-            args.getCompilerFlags(),
+            ImmutableList.copyOf(
+                Iterables.concat(
+                    args.getCompilerFlags(),
+                    Iterables.concat(
+                        args.getPlatformCompilerFlags()
+                            .getMatchingValues(ocamlPlatform.getFlavor().toString())))),
             args.getWarningsFlags());
 
     ImmutableList<Arg> ocamldepFlags =
@@ -179,6 +185,11 @@ public class OcamlBinaryDescription
     Optional<SourceSet> getSrcs();
 
     ImmutableList<StringWithMacros> getCompilerFlags();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformCompilerFlags() {
+      return PatternMatchedCollection.of();
+    }
 
     ImmutableList<String> getLinkerFlags();
 
