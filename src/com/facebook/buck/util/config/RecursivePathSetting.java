@@ -39,7 +39,9 @@ public class RecursivePathSetting<T> {
       if (node == null) {
         break;
       }
-      value = node.value;
+      if (node.value != null) {
+        value = node.value;
+      }
     }
     return Optional.ofNullable(value);
   }

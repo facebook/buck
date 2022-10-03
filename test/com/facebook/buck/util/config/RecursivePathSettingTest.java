@@ -30,6 +30,7 @@ public class RecursivePathSettingTest {
         RecursivePathSetting.<Boolean>builder()
             .set(ForwardRelPath.of("foo"), false)
             .set(ForwardRelPath.of("foo/bar"), true)
+            .set(ForwardRelPath.of("foo/blah/goo/baz"), true)
             .build();
     assertEquals(setting.get(ForwardRelPath.of("")), Optional.empty());
     assertEquals(setting.get(ForwardRelPath.of("bar")), Optional.empty());
@@ -37,5 +38,6 @@ public class RecursivePathSettingTest {
     assertEquals(setting.get(ForwardRelPath.of("foo/baz")), Optional.of(false));
     assertEquals(setting.get(ForwardRelPath.of("foo/bar")), Optional.of(true));
     assertEquals(setting.get(ForwardRelPath.of("foo/bar/baz")), Optional.of(true));
+    assertEquals(setting.get(ForwardRelPath.of("foo/blah/blah")), Optional.of(false));
   }
 }
