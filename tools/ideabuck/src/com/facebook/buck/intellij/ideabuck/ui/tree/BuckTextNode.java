@@ -66,4 +66,9 @@ public class BuckTextNode extends DefaultMutableTreeNode {
   public TextType getTextType() {
     return ((NodeObject) getUserObject()).getTextType();
   }
+
+  @Override
+  public String toString() {
+    return getText();
+  }
 }
