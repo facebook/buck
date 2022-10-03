@@ -51,6 +51,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   private final ImmutableList<Path> staticRuntimePaths;
   private final ImmutableList<Path> runtimeRunPaths;
   private final boolean prefixSerializedDebuggingOptions;
+  private final boolean canToolchainEmitObjCHeaderTextually;
 
   public SwiftToolchainBuildRule(
       BuildTarget buildTarget,
@@ -66,7 +67,8 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       ImmutableList<Path> runtimePathsForLinking,
       ImmutableList<Path> staticRuntimePaths,
       ImmutableList<Path> runtimeRunPaths,
-      boolean prefixSerializedDebuggingOptions) {
+      boolean prefixSerializedDebuggingOptions,
+      boolean canToolchainEmitObjCHeaderTextually) {
     super(buildTarget, projectFilesystem);
     this.swiftc = swiftc;
     this.swiftFlags = swiftFlags;
@@ -80,6 +82,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
     this.staticRuntimePaths = staticRuntimePaths;
     this.runtimeRunPaths = runtimeRunPaths;
     this.prefixSerializedDebuggingOptions = prefixSerializedDebuggingOptions;
+    this.canToolchainEmitObjCHeaderTextually = canToolchainEmitObjCHeaderTextually;
   }
 
   /** Provides SwiftPlatform for given Swift target triple */
@@ -102,6 +105,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setSwiftSharedLibraryRunPaths(runtimeRunPaths)
         .setDebugPrefixMap(ImmutableBiMap.of())
         .setPrefixSerializedDebuggingOptions(prefixSerializedDebuggingOptions)
+        .setCanToolchainEmitObjCHeaderTextually(canToolchainEmitObjCHeaderTextually)
         .build();
   }
 

@@ -106,6 +106,12 @@ public interface SwiftPlatform {
     return ImmutableList.of();
   }
 
+  /** @return true if the platform supports the -emit-objc-header-textually frontend flag. */
+  @Value.Default
+  default boolean getCanToolchainEmitObjCHeaderTextually() {
+    return false;
+  }
+
   static Builder builder() {
     return new Builder();
   }

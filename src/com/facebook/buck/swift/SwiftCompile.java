@@ -85,6 +85,7 @@ public class SwiftCompile extends SwiftCompileBase {
       boolean importUnderlyingModule,
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebugInfo,
+      boolean canToolchainEmitObjCHeaderTextually,
       boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
       boolean usesExplicitModules,
@@ -114,6 +115,7 @@ public class SwiftCompile extends SwiftCompileBase {
         importUnderlyingModule,
         withDownwardApi,
         hasPrefixSerializedDebugInfo,
+        canToolchainEmitObjCHeaderTextually,
         addXCTestImportPaths,
         serializeDebuggingOptions,
         usesExplicitModules,
@@ -121,8 +123,11 @@ public class SwiftCompile extends SwiftCompileBase {
 
     transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
 
+    // If the toolchain supports it, emitting textual headers from the
+    // compiler in the first place is preferred over the buck post processing method.
     this.postprocessGeneratedHeaderForNonModulesCompatibility =
-        swiftBuckConfig.getPostprocessGeneratedHeaderForNonModulesCompatibility();
+        !canToolchainEmitObjCHeaderTextually
+            && swiftBuckConfig.getPostprocessGeneratedHeaderForNonModulesCompatibility();
 
     if (postprocessGeneratedHeaderForNonModulesCompatibility) {
       ImmutableMap.Builder<String, HeaderSymlinkTreeWithModuleMap> moduleNameToSymlinkTreesBuilder =

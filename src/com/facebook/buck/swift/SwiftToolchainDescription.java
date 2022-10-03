@@ -101,7 +101,8 @@ public class SwiftToolchainDescription
             .map(Paths::get)
             .collect(ImmutableList.toImmutableList()),
         args.getRuntimeRunPaths().stream().map(Paths::get).collect(ImmutableList.toImmutableList()),
-        args.getPrefixSerializedDebugInfo());
+        args.getPrefixSerializedDebugInfo(),
+        args.getCanToolchainEmitObjCHeaderTextually());
   }
 
   private Tool resolveTool(SourcePath sourcePath, BuildRuleResolver resolver) {
@@ -148,6 +149,12 @@ public class SwiftToolchainDescription
     /** If the toolchain supports the -prefix-serialized-debugging-options flag. */
     @Value.Default
     default boolean getPrefixSerializedDebugInfo() {
+      return false;
+    }
+
+    /** If the toolchain supports the -emit-objc-header-textually frontend flag. */
+    @Value.Default
+    default boolean getCanToolchainEmitObjCHeaderTextually() {
       return false;
     }
 

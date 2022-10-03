@@ -162,7 +162,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> moduleDeps;
 
-  @AddToRuleKey private final boolean emitObjCHeaderTextually;
+  @AddToRuleKey private final boolean canToolchainEmitObjCHeaderTextually;
 
   private BuildableSupport.DepsSupplier depsSupplier;
   protected final Optional<AbsPath> argfilePath; // internal scratch temp path
@@ -195,6 +195,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean importUnderlyingModule,
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebuggingOptions,
+      boolean canToolchainEmitObjCHeaderTextually,
       boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
       boolean usesExplicitModules,
@@ -215,7 +216,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
     this.incrementalBuild = swiftBuckConfig.getIncrementalBuild();
     this.incrementalImports = swiftBuckConfig.getIncrementalImports();
-    this.emitObjCHeaderTextually = swiftBuckConfig.getEmitObjCHeaderTextually();
 
     if (incrementalBuild || incrementalImports) {
       ImmutableList.Builder<Path> objectPaths = ImmutableList.builder();
@@ -277,6 +277,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.useDebugPrefixMap = swiftBuckConfig.getUseDebugPrefixMap();
     this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
     this.prefixSerializedDebuggingOptions = hasPrefixSerializedDebuggingOptions;
+    this.canToolchainEmitObjCHeaderTextually = canToolchainEmitObjCHeaderTextually;
     this.serializeDebuggingOptions = serializeDebuggingOptions;
     this.moduleDeps = moduleDependencies;
 
@@ -434,7 +435,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         getEmitObjCHeaderPath().toString(),
         "-emit-object");
 
-    if (emitObjCHeaderTextually) {
+    if (canToolchainEmitObjCHeaderTextually) {
       argBuilder.add(frontendFlag, "-emit-objc-header-textually");
     }
 
