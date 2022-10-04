@@ -873,7 +873,7 @@ public abstract class CxxSourceRuleFactory {
 
     ImmutableSet.Builder<CxxInferCaptureRule> rules = ImmutableSet.builder();
 
-    CxxInferSourceFilter sourceFilter = new CxxInferSourceFilter(inferConfig, getPathResolver());
+    CxxInferSourceFilter sourceFilter = new CxxInferSourceFilter(inferConfig);
     for (Map.Entry<String, CxxSource> entry : sources.entrySet()) {
       String name = entry.getKey();
       CxxSource source = entry.getValue();
