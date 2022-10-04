@@ -4,7 +4,7 @@
         implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckFileType"
         fieldName="INSTANCE"
         fileNames="BUCK"
-        extensions="bzl;BUCK"
+        extensions="bxl;bzl;BUCK"
         language="Buck"/>
     <fileType name="Buckconfig"
         implementationClass="com.facebook.buck.intellij.ideabuck.lang.BcfgFileType"
