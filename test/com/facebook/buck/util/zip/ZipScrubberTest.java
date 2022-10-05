@@ -28,6 +28,10 @@ import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import org.apache.commons.compress.archivers.zip.Zip64Mode;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipUtil;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -199,6 +203,38 @@ public class ZipScrubberTest {
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(bytes))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
+      }
+    }
+  }
+
+  @Test
+  public void zip64Fields() throws Exception {
+    byte[] data = "data1".getBytes(StandardCharsets.UTF_8);
+
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(byteArrayOutputStream)) {
+      out.setUseZip64(Zip64Mode.Always);
+      for (long i = 0; i < 2 * Short.MAX_VALUE + 1; i++) {
+        ZipArchiveEntry zipEntry = new ZipArchiveEntry("file" + i);
+        zipEntry.setSize(data.length);
+        zipEntry.setCompressedSize(zipEntry.getSize());
+        out.putArchiveEntry(zipEntry);
+        out.write(data);
+        out.closeArchiveEntry();
+      }
+    }
+
+    byte[] bytes = byteArrayOutputStream.toByteArray();
+    ZipScrubber.scrubZipBuffer(
+        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+
+    // Iterate over each of the entries, expecting to see all zeros in the time fields.
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
+    try (ZipArchiveInputStream is = new ZipArchiveInputStream(new ByteArrayInputStream(bytes))) {
+      for (ZipArchiveEntry entry = is.getNextZipEntry();
+          entry != null;
+          entry = is.getNextZipEntry()) {
         assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
       }
     }

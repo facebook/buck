@@ -25,15 +25,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 
 /** Tool to eliminate non-deterministic or problematic bits of zip files. */
 public class ZipScrubber {
   private ZipScrubber() {}
 
-  private static final long ZIP64_ENDSIG = 0x06064b50L;
+  private static final long ZIP64_ENDCDL = 0x07064b50L;
+  private static final int ZIP64_ENDCDL_OFFSET = -20;
+
+  private static final int ZIP64_ENDTOT = 32; // 32 = 4 + 8 + 2 + 2 + 4 + 4 + 8
+  private static final int ZIP64_ENDOFF = 48; // 48 = 4 + 8 + 2 + 2 + 4 + 4 + 8 + 8 + 8
 
   private static final int EXTENDED_TIMESTAMP_ID = 0x5455;
+  private static final int EXTENDED_ZIP64_ID = 0x0001;
 
   private static void check(boolean expression, String msg) throws IOException {
     if (!expression) {
@@ -70,37 +76,97 @@ public class ZipScrubber {
       eocdOffset--;
     }
 
-    long cdEntries = Short.toUnsignedLong(map.getShort(eocdOffset + ZipEntry.ENDTOT));
-    if ((cdEntries & 0xffff) == 0xffff) {
-      // It's ZIP64 format and number of entries is stored in a different
-      // field: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
-      long zip64eocdOffset = eocdOffset;
-      while (map.getInt(zip64eocdOffset) != ZIP64_ENDSIG) {
-        zip64eocdOffset--;
-      }
-      // 32 = 4 + 8 + 2 + 2 + 4 + 4 + 8
-      cdEntries = map.getLong(zip64eocdOffset + 32);
+    long cdEntries, cdOffset;
+    // ZIP64 files can be identified by a separate ZIP64 EOCD section with a magic value.
+    // See https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT for more details.
+    final boolean isZip64 = map.getLong(eocdOffset + ZIP64_ENDCDL_OFFSET) == ZIP64_ENDCDL;
+
+    if (isZip64) {
+      // This is a ZIP64 format, and we need to look for fields in the ZIP64 EOCD.
+      long zip64eocdOffset = map.getLong(eocdOffset + ZIP64_ENDCDL_OFFSET + 8);
+      cdEntries = map.getLong(zip64eocdOffset + ZIP64_ENDTOT);
+      cdOffset = map.getLong(zip64eocdOffset + ZIP64_ENDOFF);
+
+    } else {
+      // This is a ZIP32, and we can use the normal places for fields.
+      cdEntries = Short.toUnsignedLong(map.getShort(eocdOffset + ZipEntry.ENDTOT));
+      cdOffset = Integer.toUnsignedLong(map.getInt(eocdOffset + ZipEntry.ENDOFF));
     }
 
-    int cdOffset = map.getInt(eocdOffset + ZipEntry.ENDOFF);
+    ArrayList<Long> localHeaderOffsets = new ArrayList<>();
+
+    // Go through each CD file entry and scrub them.
     for (long idx = 0; idx < cdEntries; idx++) {
-      // Wrap the central directory header and zero out it's timestamp.
       SlidingFileWindow entry = map.slice(cdOffset);
       check(entry.getInt(0) == ZipEntry.CENSIG, "expected central directory header signature");
 
       entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_FAKE_TIME);
-      SlidingFileWindow localEntry = map.slice(entry.getInt(ZipEntry.CENOFF));
-      scrubLocalEntry(localEntry);
-      scrubExtraFields(
-          entry.slice(
-              ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM), entry.getShort(ZipEntry.CENEXT)));
 
-      cdOffset +=
-          ZipEntry.CENHDR
-              + entry.getShort(ZipEntry.CENNAM)
-              + entry.getShort(ZipEntry.CENEXT)
-              + entry.getShort(ZipEntry.CENCOM);
+      int filenameLength = entry.getShort(ZipEntry.CENNAM);
+      int extrasLength = entry.getShort(ZipEntry.CENEXT);
+      int commentLength = entry.getShort(ZipEntry.CENCOM);
+
+      long compressedSize = Integer.toUnsignedLong(entry.getInt(ZipEntry.CENSIZ));
+      long originalSize = Integer.toUnsignedLong(entry.getInt(ZipEntry.CENLEN));
+
+      SlidingFileWindow extras =
+          entry.position(ZipEntry.CENHDR + filenameLength).slice(0, extrasLength);
+
+      // Keep track of the local headers for later...
+      localHeaderOffsets.add(
+          getLocalHeaderOffset(entry, extras, isZip64, compressedSize, originalSize));
+
+      scrubExtraFields(extras.position(0));
+
+      cdOffset += ZipEntry.CENHDR + filenameLength + extrasLength + commentLength;
     }
+
+    // Go back through the local headers spread around the archive and scrub them.
+    for (long localHeaderOffset : localHeaderOffsets) {
+      scrubLocalEntry(map.slice(localHeaderOffset));
+    }
+  }
+
+  private static long getLocalHeaderOffset(
+      SlidingFileWindow entry,
+      SlidingFileWindow extras,
+      boolean isZip64,
+      long compressedSize,
+      long originalSize)
+      throws IOException {
+    if (isZip64) {
+      /*
+       * The ZIP64 extra is made up of:  (from ZIP spec section 4.5.3)
+       *   - ID (1)                   2 bytes
+       *   - Extra Data Size          2 bytes
+       *   - Original Size            8 bytes
+       *   - Compressed Size          8 bytes
+       *   - Relative Header Offset   8 bytes
+       *     ...
+       *
+       * The Original Size and Compressed Size are only in the extra if the value in the CD record
+       * is 0xffffffff. So we need to check those sizes, and if they're there, skip them.
+       */
+      while (extras.position() < extras.limit() - 4) {
+        int id = extras.getShort();
+        int size = extras.getShort() & 0xFFFF;
+        if (id == EXTENDED_ZIP64_ID) {
+          int offset = 0;
+          if (originalSize == 0xffffffffL) {
+            offset += 8;
+          }
+          if (compressedSize == 0xffffffffL) {
+            offset += 8;
+          }
+          return extras.getLong(extras.position() + offset);
+        }
+
+        // Skip this extra.
+        extras.position(extras.position() + size);
+      }
+    }
+
+    return Integer.toUnsignedLong(entry.getInt(ZipEntry.CENOFF));
   }
 
   private static void scrubLocalEntry(SlidingFileWindow entry) throws IOException {
@@ -137,7 +203,7 @@ public class ZipScrubber {
       }
 
       int id = data.getShort();
-      int size = data.getShort() & 0xFFFF;
+      int size = Short.toUnsignedInt(data.getShort());
 
       if (id == EXTENDED_TIMESTAMP_ID) {
         // 1 byte flag
