@@ -57,7 +57,8 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
       boolean isSystemModule,
       ExplicitModuleInput moduleMapPath,
       ImmutableSet<ExplicitModuleOutput> clangModuleDeps,
-      ImmutableSet<SourcePath> headers) {
+      ImmutableSet<SourcePath> headers,
+      boolean useGmodules) {
     super(
         buildTarget,
         projectFilesystem,
@@ -72,7 +73,8 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
             isSystemModule,
             moduleMapPath,
             clangModuleDeps,
-            headers));
+            headers,
+            useGmodules));
   }
 
   @Nullable
@@ -94,6 +96,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
     @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> clangModuleDeps;
     @AddToRuleKey private final ImmutableSet<SourcePath> headers;
     @AddToRuleKey private final OutputPath output;
+    @AddToRuleKey private final boolean useGmodules;
 
     Impl(
         BuildTarget buildTarget,
@@ -105,7 +108,8 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
         boolean isSystemModule,
         ExplicitModuleInput modulemapPath,
         ImmutableSet<ExplicitModuleOutput> clangModuleDeps,
-        ImmutableSet<SourcePath> headers) {
+        ImmutableSet<SourcePath> headers,
+        boolean useGmodules) {
       this.buildTarget = buildTarget;
       this.targetTriple = targetTriple;
       this.swiftc = swiftc;
@@ -117,6 +121,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
       this.clangModuleDeps = clangModuleDeps;
       this.headers = headers;
       this.output = new OutputPath(moduleName + ".pcm");
+      this.useGmodules = useGmodules;
     }
 
     @Override
@@ -159,12 +164,6 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
           "-fno-implicit-modules",
           "-Xcc",
           "-fno-implicit-module-maps",
-          // Disable debug info in pcm files. This is required to avoid embedding absolute paths
-          // and ending up with mismatched pcm file sizes.
-          "-Xcc",
-          "-Xclang",
-          "-Xcc",
-          "-fmodule-format=raw",
           // Embed all input files into the PCM so we don't need to include module map files when
           // building remotely.
           // https://github.com/apple/llvm-project/commit/fb1e7f7d1aca7bcfc341e9214bda8b554f5ae9b6
@@ -191,6 +190,15 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
           "-Xclang",
           "-Xcc",
           "-fno-validate-pch");
+
+      if (useGmodules) {
+        // If using gmodules we need to debug prefix the working directory.
+        argsBuilder.add("-debug-prefix-map", filesystem.getRootPath().toString() + "=.");
+      } else {
+        // Disable debug info in pcm files. This is required to avoid embedding absolute paths
+        // and ending up with mismatched pcm file sizes.
+        argsBuilder.add("-Xcc", "-Xclang", "-Xcc", "-fmodule-format=raw");
+      }
 
       if (isSystemModule) {
         argsBuilder.add(

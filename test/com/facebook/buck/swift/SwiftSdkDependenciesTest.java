@@ -68,7 +68,8 @@ public class SwiftSdkDependenciesTest {
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")),
-            toolchainTarget);
+            toolchainTarget,
+            false);
 
     SwiftSdkDependencies.SwiftModule module = sdkDependencies.getSwiftModule("Foundation");
     assertThat(
@@ -106,7 +107,8 @@ public class SwiftSdkDependenciesTest {
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")),
-            toolchainTarget);
+            toolchainTarget,
+            false);
 
     ImmutableSet<ExplicitModuleOutput> swiftmoduleDeps =
         sdkDependencies.getSdkModuleDependencies("SwiftOnoneSupport", triple);
@@ -150,7 +152,8 @@ public class SwiftSdkDependenciesTest {
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")),
-            toolchainTarget);
+            toolchainTarget,
+            false);
 
     // Get the SDK deps for a module with each of the path prefixes. This will trigger the path
     // prefixing logic for each of the cases.

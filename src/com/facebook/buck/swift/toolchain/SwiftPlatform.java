@@ -112,6 +112,12 @@ public interface SwiftPlatform {
     return false;
   }
 
+  /** If explicit module builds will use gmodules. */
+  @Value.Default
+  default boolean getExplicitModulesUsesGmodules() {
+    return false;
+  }
+
   static Builder builder() {
     return new Builder();
   }

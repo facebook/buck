@@ -102,7 +102,8 @@ public class SwiftToolchainDescription
             .collect(ImmutableList.toImmutableList()),
         args.getRuntimeRunPaths().stream().map(Paths::get).collect(ImmutableList.toImmutableList()),
         args.getPrefixSerializedDebugInfo(),
-        args.getCanToolchainEmitObjCHeaderTextually());
+        args.getCanToolchainEmitObjCHeaderTextually(),
+        args.getExplicitModulesUsesGmodules());
   }
 
   private Tool resolveTool(SourcePath sourcePath, BuildRuleResolver resolver) {
@@ -174,6 +175,12 @@ public class SwiftToolchainDescription
      * execution time.
      */
     Optional<String> getSdkDependenciesPath();
+
+    /** If explicit module builds will use gmodules. */
+    @Value.Default
+    default boolean getExplicitModulesUsesGmodules() {
+      return false;
+    }
 
     /** The path to the platform dir. */
     SourcePath getPlatformPath();

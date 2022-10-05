@@ -70,6 +70,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
   private final String SdkRootPrefix = "$SDKROOT/";
 
+  private final boolean useGmodules;
+
   public SwiftSdkDependencies(
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
@@ -79,7 +81,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       SourcePath sdkPath,
       SourcePath platformPath,
       SourcePath swiftResourceDir,
-      BuildTarget toolchainBuildTarget)
+      BuildTarget toolchainBuildTarget,
+      boolean useGmodules)
       throws HumanReadableException {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
@@ -140,6 +143,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                         swiftResourceDir);
                   }
                 });
+
+    this.useGmodules = useGmodules;
   }
 
   public SwiftModule getSwiftModule(String moduleName) {
@@ -305,7 +310,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                     true,
                     moduleMapInput,
                     depsBuilder.build(),
-                    ImmutableSet.of())); // we don't track SDK headers, they are assumed immutable
+                    ImmutableSet.of(),
+                    useGmodules)); // we don't track SDK headers, they are assumed immutable
 
     depsBuilder.add(
         ExplicitModuleOutput.ofClangModule(

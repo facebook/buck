@@ -79,6 +79,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
       boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
       boolean usesExplicitModules,
+      boolean explicitModulesUsesGmodules,
       ImmutableSet<ExplicitModuleOutput> moduleDependencies) {
     super(
         swiftBuckConfig,
@@ -109,6 +110,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
         addXCTestImportPaths,
         serializeDebuggingOptions,
         usesExplicitModules,
+        explicitModulesUsesGmodules,
         moduleDependencies);
     this.outputCommandPath = RelPath.of(this.outputPath.resolve("swift_compile_commands.json"));
   }

@@ -52,6 +52,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   private final ImmutableList<Path> runtimeRunPaths;
   private final boolean prefixSerializedDebuggingOptions;
   private final boolean canToolchainEmitObjCHeaderTextually;
+  private final boolean explicitModulesUsesGmodules;
 
   public SwiftToolchainBuildRule(
       BuildTarget buildTarget,
@@ -68,7 +69,8 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       ImmutableList<Path> staticRuntimePaths,
       ImmutableList<Path> runtimeRunPaths,
       boolean prefixSerializedDebuggingOptions,
-      boolean canToolchainEmitObjCHeaderTextually) {
+      boolean canToolchainEmitObjCHeaderTextually,
+      boolean explicitModulesUsesGmodules) {
     super(buildTarget, projectFilesystem);
     this.swiftc = swiftc;
     this.swiftFlags = swiftFlags;
@@ -83,6 +85,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
     this.runtimeRunPaths = runtimeRunPaths;
     this.prefixSerializedDebuggingOptions = prefixSerializedDebuggingOptions;
     this.canToolchainEmitObjCHeaderTextually = canToolchainEmitObjCHeaderTextually;
+    this.explicitModulesUsesGmodules = explicitModulesUsesGmodules;
   }
 
   /** Provides SwiftPlatform for given Swift target triple */
@@ -106,6 +109,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setDebugPrefixMap(ImmutableBiMap.of())
         .setPrefixSerializedDebuggingOptions(prefixSerializedDebuggingOptions)
         .setCanToolchainEmitObjCHeaderTextually(canToolchainEmitObjCHeaderTextually)
+        .setExplicitModulesUsesGmodules(explicitModulesUsesGmodules)
         .build();
   }
 
@@ -140,6 +144,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
             sdkPath,
             platformPath,
             resourceDir.get(),
-            getBuildTarget()));
+            getBuildTarget(),
+            explicitModulesUsesGmodules));
   }
 }

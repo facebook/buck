@@ -361,6 +361,7 @@ public class SwiftLibraryDescription
           swiftBuckConfig.getAddXctestImportPaths(),
           args.getSerializeDebuggingOptions(),
           getUsesExplicitModules(args, swiftPlatform.get()),
+          swiftPlatform.get().getExplicitModulesUsesGmodules(),
           getModuleDependencies(
               graphBuilder,
               projectFilesystem,
@@ -371,7 +372,8 @@ public class SwiftLibraryDescription
               targetTriple,
               args,
               ImmutableSet.of(inputs),
-              cxxDeps));
+              cxxDeps,
+              swiftPlatform.get().getExplicitModulesUsesGmodules()));
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -557,6 +559,7 @@ public class SwiftLibraryDescription
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getSerializeDebuggingOptions(),
         getUsesExplicitModules(args, swiftPlatform),
+        swiftPlatform.getExplicitModulesUsesGmodules(),
         getModuleDependencies(
             graphBuilder,
             projectFilesystem,
@@ -567,7 +570,8 @@ public class SwiftLibraryDescription
             targetTriple,
             args,
             preprocessorInputs,
-            preprocessFlags));
+            preprocessFlags,
+            swiftPlatform.getExplicitModulesUsesGmodules()));
   }
 
   private static AppleCompilerTargetTriple getSwiftTarget(
@@ -664,6 +668,7 @@ public class SwiftLibraryDescription
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getSerializeDebuggingOptions(),
         getUsesExplicitModules(args, swiftPlatform),
+        swiftPlatform.getExplicitModulesUsesGmodules(),
         getModuleDependencies(
             graphBuilder,
             projectFilesystem,
@@ -674,7 +679,8 @@ public class SwiftLibraryDescription
             targetTriple,
             args,
             preprocessorInputs,
-            preprocessFlags));
+            preprocessFlags,
+            swiftPlatform.getExplicitModulesUsesGmodules()));
   }
 
   private static boolean getUsesExplicitModules(
@@ -692,7 +698,8 @@ public class SwiftLibraryDescription
       AppleCompilerTargetTriple targetTriple,
       SwiftLibraryDescriptionArg args,
       ImmutableSet<CxxPreprocessorInput> preprocessorInputs,
-      PreprocessorFlags cxxDeps) {
+      PreprocessorFlags cxxDeps,
+      boolean useGmodules) {
 
     ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
 
@@ -736,7 +743,8 @@ public class SwiftLibraryDescription
             targetTriple,
             preprocessorInputs,
             moduleMapCompileArgs,
-            pcmFlavor);
+            pcmFlavor,
+            useGmodules);
     depsBuilder.addAll(pcmDependencyRules);
 
     // If required add a rule to compile the underlying clang module for this target.
@@ -754,7 +762,8 @@ public class SwiftLibraryDescription
                 .filter(o -> !o.getIsSwiftmodule())
                 .collect(ImmutableSet.toImmutableSet()),
             moduleMapCompileArgs,
-            pcmFlavor));
+            pcmFlavor,
+            useGmodules));
 
     return depsBuilder.build();
   }
@@ -794,7 +803,8 @@ public class SwiftLibraryDescription
       AppleCompilerTargetTriple targetTriple,
       Iterable<CxxPreprocessorInput> preprocessorInputs,
       Iterable<Arg> moduleMapCompileArgs,
-      Flavor pcmFlavor) {
+      Flavor pcmFlavor,
+      boolean useGmodules) {
     // Collect all the modular inputs and create PCM rules for each of them.
     ImmutableSet.Builder<ExplicitModuleOutput> outputBuilder = ImmutableSet.builder();
     for (HeaderSymlinkTreeWithModuleMap moduleMapRule :
@@ -814,7 +824,8 @@ public class SwiftLibraryDescription
               ImmutableSet.copyOf(moduleMapRule.getLinks().values()),
               moduleMapRule.getModuleName(),
               moduleMapCompileArgs,
-              pcmFlavor));
+              pcmFlavor,
+              useGmodules));
     }
 
     return outputBuilder.build();
@@ -831,7 +842,8 @@ public class SwiftLibraryDescription
       Iterable<CxxPreprocessorInput> preprocessorInputs,
       ImmutableSet<ExplicitModuleOutput> clangModuleDependencies,
       Iterable<Arg> moduleMapCompileFlags,
-      Flavor pcmFlavor) {
+      Flavor pcmFlavor,
+      boolean useGmodules) {
     // Check if this target requires an underlying module
     if (graphBuilder
         .requireMetadata(
@@ -873,7 +885,8 @@ public class SwiftLibraryDescription
                     false,
                     moduleMapInput,
                     clangModuleDependencies,
-                    ImmutableSet.copyOf(headerSymlinkTreeRule.getLinks().values())));
+                    ImmutableSet.copyOf(headerSymlinkTreeRule.getLinks().values()),
+                    useGmodules));
     return ImmutableList.of(
         ExplicitModuleOutput.ofClangModule(
             moduleName, moduleMapInput, underlyingModuleCompileRule.getSourcePathToOutput()));
@@ -1005,7 +1018,8 @@ public class SwiftLibraryDescription
       ImmutableSet<SourcePath> headers,
       String moduleName,
       Iterable<Arg> moduleMapCompileFlags,
-      Flavor pcmFlavor) {
+      Flavor pcmFlavor,
+      boolean useGmodules) {
     BuildRule rule =
         graphBuilder.computeIfAbsent(
             buildTarget,
@@ -1028,7 +1042,8 @@ public class SwiftLibraryDescription
                       targetTriple,
                       preprocessorInputs,
                       moduleMapCompileFlags,
-                      pcmFlavor);
+                      pcmFlavor,
+                      useGmodules);
 
               // Collect this libraries preprocessor input too so that we have all include and
               // framework flags.
@@ -1062,7 +1077,8 @@ public class SwiftLibraryDescription
                   false,
                   moduleMapInput,
                   depsBuilder.build(),
-                  headers);
+                  headers,
+                  useGmodules);
             });
 
     return ExplicitModuleOutput.ofClangModule(

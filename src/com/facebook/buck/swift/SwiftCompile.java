@@ -89,6 +89,7 @@ public class SwiftCompile extends SwiftCompileBase {
       boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
       boolean usesExplicitModules,
+      boolean explicitModulesUsesGmodules,
       ImmutableSet<ExplicitModuleOutput> moduleDependencies) {
     super(
         swiftBuckConfig,
@@ -119,6 +120,7 @@ public class SwiftCompile extends SwiftCompileBase {
         addXCTestImportPaths,
         serializeDebuggingOptions,
         usesExplicitModules,
+        explicitModulesUsesGmodules,
         moduleDependencies);
 
     transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
