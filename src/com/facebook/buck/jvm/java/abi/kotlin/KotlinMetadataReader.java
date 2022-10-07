@@ -106,7 +106,6 @@ public class KotlinMetadataReader {
   private static KotlinClassHeader createHeader(AnnotationNode node) {
     Integer kind = null;
     int[] metadataVersion = null;
-    int[] bytecodeVersion = null;
     String[] data1 = null;
     String[] data2 = null;
     String extraString = null;
@@ -124,9 +123,6 @@ public class KotlinMetadataReader {
           break;
         case "mv":
           metadataVersion = listToIntArray(value);
-          break;
-        case "bv":
-          bytecodeVersion = listToIntArray(value);
           break;
         case "d1":
           data1 = listToStringArray(value);
@@ -147,7 +143,7 @@ public class KotlinMetadataReader {
     }
 
     return new KotlinClassHeader(
-        kind, metadataVersion, bytecodeVersion, data1, data2, extraString, packageName, extraInt);
+        kind, metadataVersion, data1, data2, extraString, packageName, extraInt);
   }
 
   @SuppressWarnings("unchecked")
