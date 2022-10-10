@@ -147,11 +147,7 @@ public class DarwinLinker extends DelegatingTool
       Optional<String> maybeOsoPrefix =
           OsoSymbolsContentsScrubber.computeOsoPrefixForCellRootMap(cellRootMap);
       return maybeOsoPrefix
-          .map(
-              osoPrefix ->
-                  ImmutableList.<Arg>of(
-                      StringArg.of("-Xlinker"), StringArg.of("-oso_prefix"),
-                      StringArg.of("-Xlinker"), StringArg.of(osoPrefix)))
+          .map(osoPrefix -> ImmutableList.<Arg>of(StringArg.of("-Wl,-oso_prefix," + osoPrefix)))
           .orElse(ImmutableList.of());
     }
 
