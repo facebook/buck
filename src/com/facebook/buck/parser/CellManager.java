@@ -28,7 +28,9 @@ import java.util.concurrent.ConcurrentHashMap;
 class CellManager {
 
   private final Cells cells;
+  /** Cells for which symlinkCache is initialized. */
   private final ConcurrentHashMap<CanonicalCellName, Unit> cellsMap = new ConcurrentHashMap<>();
+
   private final SymlinkCache symlinkCache;
 
   public CellManager(Cells cells, SymlinkCache symlinkCache) {
@@ -39,8 +41,10 @@ class CellManager {
 
   void register(Cell cell) {
     if (!cellsMap.containsKey(cell.getCanonicalName())) {
-      cellsMap.put(cell.getCanonicalName(), Unit.UNIT);
+      // Must call `registerCell` before marking cell initialized.
+      // It is safe to call `registerCell` more than once.
       symlinkCache.registerCell(cell);
+      cellsMap.put(cell.getCanonicalName(), Unit.UNIT);
     }
   }
 
