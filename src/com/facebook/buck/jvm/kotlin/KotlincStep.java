@@ -226,6 +226,9 @@ public class KotlincStep extends IsolatedStep {
         builder.add("plugin:com.facebook.jvm.abi.gen:outputDir=" + outputPaths.getClassesDir());
         builder.add(PLUGIN);
         builder.add("plugin:com.facebook.jvm.abi.gen:earlyTermination=true");
+        // Kosabi can only works with legacy jvm abi gen which use AnalysisHandlerExtension
+        builder.add(PLUGIN);
+        builder.add("plugin:com.facebook.jvm.abi.gen:useLegacyAbiGen=true");
       }
 
       addClasspath(builder, this.sourceOnlyAbiClasspath);

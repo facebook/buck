@@ -351,6 +351,8 @@ public class DaemonKotlincToJarStepFactory extends BaseCompileToJarStepFactory<K
                         getGenPath(buckPaths, invokingRule))));
         extraArguments.add(PLUGIN);
         extraArguments.add("plugin:com.facebook.jvm.abi.gen:earlyTermination=false");
+        extraArguments.add(PLUGIN);
+        extraArguments.add("plugin:com.facebook.jvm.abi.gen:useLegacyAbiGen=false");
       }
 
       steps.add(
