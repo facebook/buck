@@ -522,7 +522,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
     // Java 9 adds module info, which we don't need on Android as we don't run with the Java 9+
     // runtime, and we need to ignore these classes so we don't get clashes between different jars.
-    ImmutableSet<String> ignoredClassNames = ImmutableSet.of("META-INF/versions/9/module-info");
+    ImmutableSet<String> ignoredClassNames =
+        ImmutableSet.of("META-INF/versions/9/module-info", "module-info");
 
     ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
     steps.add(
