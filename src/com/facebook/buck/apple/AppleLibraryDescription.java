@@ -1108,6 +1108,7 @@ public class AppleLibraryDescription
 
             CxxPreprocessorInput.Builder inputBuilder = CxxPreprocessorInput.builder();
             inputBuilder.setPreprocessorFlags(argBuilder.build());
+            inputBuilder.setFrameworks(args.getFrameworks());
 
             return Optional.of(inputBuilder.build()).map(metadataClass::cast);
           }

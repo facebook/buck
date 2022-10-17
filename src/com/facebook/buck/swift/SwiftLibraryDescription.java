@@ -1130,6 +1130,21 @@ public class SwiftLibraryDescription
       argBuilder.add(StringArg.of("-Xcc"), StringArg.of(arg));
     }
 
+    AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> frameworkPathToSearchPath =
+        CxxDescriptionEnhancer.frameworkPathToSearchPath(
+            cxxPlatform, graphBuilder.getSourcePathResolver(), false);
+    ImmutableSortedSet<Path> frameworkSearchPaths =
+        StreamSupport.stream(preprocessorInputs.spliterator(), false)
+            .flatMap(input -> input.getFrameworks().stream())
+            .map(frameworkPathToSearchPath)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    for (Path searchPath : frameworkSearchPaths) {
+      argBuilder.add(StringArg.of("-Xcc"));
+      argBuilder.add(StringArg.of("-F" + searchPath));
+    }
+
     return argBuilder.build();
   }
 
