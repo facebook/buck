@@ -147,11 +147,11 @@ public class ExoHelper {
    *     instance of the Fragment subclass.
    * @throws RuntimeException if the given className cannot be found or instantiated as a fragment
    */
-  public static android.support.v4.app.Fragment createSupportFragment(
+  public static androidx.fragment.app.Fragment createSupportFragment(
       String className, Bundle args) {
     try {
-      final android.support.v4.app.Fragment instance =
-          (android.support.v4.app.Fragment) Class.forName(className).newInstance();
+      final androidx.fragment.app.Fragment instance =
+          (androidx.fragment.app.Fragment) Class.forName(className).newInstance();
       instance.setArguments(args);
       return instance;
     } catch (IllegalAccessException | InstantiationException e) {
@@ -168,7 +168,7 @@ public class ExoHelper {
    *
    * @param fragment the fragment to refresh
    */
-  public static void refreshFragment(android.support.v4.app.Fragment fragment) {
+  public static void refreshFragment(androidx.fragment.app.Fragment fragment) {
     refreshFragment(fragment, true);
   }
 
@@ -181,24 +181,24 @@ public class ExoHelper {
    *     the new instance of the fragment
    */
   public static void refreshFragment(
-      android.support.v4.app.Fragment fragment, boolean preserveState) {
+      androidx.fragment.app.Fragment fragment, boolean preserveState) {
     assertIsUiThread();
-    android.support.v4.app.FragmentManager manager = fragment.getFragmentManager();
+    androidx.fragment.app.FragmentManager manager = fragment.getFragmentManager();
     final Bundle args = fragment.getArguments();
-    android.support.v4.app.Fragment replacement =
+    androidx.fragment.app.Fragment replacement =
         createSupportFragment(fragment.getClass().getName(), args);
 
     String tag = fragment.getTag();
 
     if (preserveState) {
       // Restore any state that's possible
-      final android.support.v4.app.Fragment.SavedState savedState =
+      final androidx.fragment.app.Fragment.SavedState savedState =
           manager.saveFragmentInstanceState(fragment);
       replacement.setInitialSavedState(savedState);
     }
 
     int containerViewId = ((View) fragment.getView().getParent()).getId();
-    final android.support.v4.app.FragmentTransaction transaction = manager.beginTransaction();
+    final androidx.fragment.app.FragmentTransaction transaction = manager.beginTransaction();
     transaction.remove(fragment);
     if (tag != null) {
       transaction.add(containerViewId, replacement, tag);

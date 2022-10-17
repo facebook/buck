@@ -14,19 +14,29 @@
  * limitations under the License.
  */
 
-package android.support.v4.app;
+package androidx.fragment.app;
 
 /** Stub! */
-public class FragmentManager {
+public class FragmentTransaction {
   // STUB ONLY
 
   /** Stub! */
-  public Fragment.SavedState saveFragmentInstanceState(Fragment fragment) {
+  public FragmentTransaction remove(Fragment fragment) {
     throw new UnsupportedOperationException("STUB!");
   }
 
   /** Stub! */
-  public FragmentTransaction beginTransaction() {
+  public FragmentTransaction add(int id, Fragment fragment) {
+    throw new UnsupportedOperationException("STUB!");
+  }
+
+  /** Stub! */
+  public FragmentTransaction add(int id, Fragment fragment, String tag) {
+    throw new UnsupportedOperationException("STUB!");
+  }
+
+  /** Stub! */
+  public int commit() {
     throw new UnsupportedOperationException("STUB!");
   }
 }
