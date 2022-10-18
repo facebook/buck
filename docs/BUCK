@@ -1,3 +1,5 @@
+oncall("build_infra")
+
 python_test(
     name = "buckconfig_aliases_clean",
     srcs = [
