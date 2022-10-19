@@ -42,6 +42,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -498,6 +499,17 @@ public class PrebuiltCxxLibraryDescription
                     exportedLangPlatformPreprocessorFlagsBuilder.asMap(),
                     PatternMatchedCollection::concat));
 
+    Optional<String> soname =
+        Optionals.firstOf(
+            Optionals.bind(
+                selectedVersions,
+                versions ->
+                    args.getVersionedSoname()
+                        .map(
+                            versionedSoname ->
+                                versionedSoname.getOnlyMatchingValue("soname", versions))),
+            args.getSoname());
+
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args);
@@ -536,8 +548,9 @@ public class PrebuiltCxxLibraryDescription
       }
 
       private String getSoname(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        Optional<String> soname = args.getSoname();
-        if (!soname.isPresent() && cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS) {
+        Optional<String> innerSoname = soname;
+        if (!innerSoname.isPresent()
+            && cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS) {
           // TODO(fishb): We should allow `shared_lib` to be absent (ex. link against import lib
           //  of pre-deployed DLL)
           SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, false, graphBuilder);
@@ -560,10 +573,10 @@ public class PrebuiltCxxLibraryDescription
           // extension.
           if (getImportLibrary(cxxPlatform, graphBuilder).isPresent()
               || !Files.getFileExtension(sharedLibraryFilename).equalsIgnoreCase("lib")) {
-            soname = Optional.of(sharedLibraryFilename);
+            innerSoname = Optional.of(sharedLibraryFilename);
           }
         }
-        return PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname);
+        return PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, innerSoname);
       }
 
       private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -1206,6 +1219,8 @@ public class PrebuiltCxxLibraryDescription
     }
 
     Optional<String> getSoname();
+
+    Optional<VersionMatchedCollection<String>> getVersionedSoname();
 
     @Value.Default
     default boolean getLinkWithoutSoname() {
