@@ -1,7 +1,6 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library", "buck_prebuilt_jar")
 
 ZIP_SCRUBBER_SRCS = [
-    "SlidingFileWindow.java",
     "ZipScrubber.java",
     "ZipConstants.java",
 ]

@@ -19,6 +19,7 @@ package com.facebook.buck.util.zip;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
 
+import com.facebook.buck.util.nio.LargeByteBuffer;
 import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -62,7 +63,7 @@ public class ZipScrubberTest {
     byte[] bytes = bytesOutputStream.toByteArray();
     // Execute the zip scrubber step.
     ZipScrubber.scrubZipBuffer(
-        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+        LargeByteBuffer.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -89,7 +90,7 @@ public class ZipScrubberTest {
 
     byte[] bytes = byteArrayOutputStream.toByteArray();
     ZipScrubber.scrubZipBuffer(
-        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+        LargeByteBuffer.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -116,7 +117,7 @@ public class ZipScrubberTest {
 
     byte[] bytes = byteArrayOutputStream.toByteArray();
     ZipScrubber.scrubZipBuffer(
-        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+        LargeByteBuffer.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -136,7 +137,7 @@ public class ZipScrubberTest {
 
     // Execute the zip scrubber step.
     ZipScrubber.scrubZipBuffer(
-        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+        LargeByteBuffer.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -156,7 +157,7 @@ public class ZipScrubberTest {
 
     // Execute the zip scrubber step.
     ZipScrubber.scrubZipBuffer(
-        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+        LargeByteBuffer.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -176,7 +177,7 @@ public class ZipScrubberTest {
 
     // Execute the zip scrubber step.
     ZipScrubber.scrubZipBuffer(
-        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+        LargeByteBuffer.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -197,7 +198,7 @@ public class ZipScrubberTest {
     byte[] bytes = Resources.toByteArray(sample);
 
     // Execute the zip scrubber step with the smallest window possible.
-    ZipScrubber.scrubZipBuffer(SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), 8));
+    ZipScrubber.scrubZipBuffer(LargeByteBuffer.withByteBuffer(ByteBuffer.wrap(bytes), 8));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -227,7 +228,7 @@ public class ZipScrubberTest {
 
     byte[] bytes = byteArrayOutputStream.toByteArray();
     ZipScrubber.scrubZipBuffer(
-        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+        LargeByteBuffer.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -249,7 +250,7 @@ public class ZipScrubberTest {
 
     byte[] bytes = byteArrayOutputStream.toByteArray();
     ZipScrubber.scrubZipBuffer(
-        SlidingFileWindow.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
+        LargeByteBuffer.withByteBuffer(ByteBuffer.wrap(bytes), Integer.MAX_VALUE));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     try (ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(bytes))) {

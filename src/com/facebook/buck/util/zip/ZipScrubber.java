@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.zip;
 
+import com.facebook.buck.util.nio.LargeByteBuffer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
@@ -50,17 +51,14 @@ public class ZipScrubber {
   public static void scrubZip(Path zipPath) throws IOException {
     try (FileChannel channel =
         FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-      SlidingFileWindow buffer = new SlidingFileWindow(channel);
-      try {
+      try (LargeByteBuffer.Scoped buffer = LargeByteBuffer.withFileChannel(channel)) {
         scrubZipBuffer(buffer);
-      } finally {
-        buffer.close();
       }
     }
   }
 
   @VisibleForTesting
-  static void scrubZipBuffer(SlidingFileWindow map) throws IOException {
+  static void scrubZipBuffer(LargeByteBuffer map) throws IOException {
     map.order(ByteOrder.LITTLE_ENDIAN);
 
     // Search backwards from the end of the ZIP file, searching for the EOCD signature, which
@@ -93,7 +91,7 @@ public class ZipScrubber {
 
     // Go through each CD file entry and scrub them.
     for (long idx = 0; idx < cdEntries; idx++) {
-      SlidingFileWindow entry = map.slice(cdOffset);
+      LargeByteBuffer entry = map.slice(cdOffset);
       check(entry.getInt(0) == ZipEntry.CENSIG, "expected central directory header signature");
 
       entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_FAKE_TIME);
@@ -105,7 +103,7 @@ public class ZipScrubber {
       long compressedSize = Integer.toUnsignedLong(entry.getInt(ZipEntry.CENSIZ));
       long originalSize = Integer.toUnsignedLong(entry.getInt(ZipEntry.CENLEN));
 
-      SlidingFileWindow extras =
+      LargeByteBuffer extras =
           entry.position(ZipEntry.CENHDR + filenameLength).slice(0, extrasLength);
 
       // Keep track of the local headers for later...
@@ -124,8 +122,8 @@ public class ZipScrubber {
   }
 
   private static long getLocalHeaderOffset(
-      SlidingFileWindow entry,
-      SlidingFileWindow extras,
+      LargeByteBuffer entry,
+      LargeByteBuffer extras,
       boolean isZip64,
       long compressedSize,
       long originalSize)
@@ -165,7 +163,7 @@ public class ZipScrubber {
     return Integer.toUnsignedLong(entry.getInt(ZipEntry.CENOFF));
   }
 
-  private static void scrubLocalEntry(SlidingFileWindow entry) throws IOException {
+  private static void scrubLocalEntry(LargeByteBuffer entry) throws IOException {
     check(entry.getInt(0) == ZipEntry.LOCSIG, "expected local header signature");
     entry.putInt(ZipEntry.LOCTIM, ZipConstants.DOS_FAKE_TIME);
     scrubExtraFields(
@@ -173,7 +171,7 @@ public class ZipScrubber {
             ZipEntry.LOCHDR + entry.getShort(ZipEntry.LOCNAM), entry.getShort(ZipEntry.LOCEXT)));
   }
 
-  private static void scrubExtraFields(SlidingFileWindow data) throws IOException {
+  private static void scrubExtraFields(LargeByteBuffer data) throws IOException {
     // See http://mdfs.net/Docs/Comp/Archiving/Zip/ExtraField for structure of extra fields.
     //
     // Additionally, tools like zipalign inject zero values for padding, which seem to violate
@@ -225,7 +223,7 @@ public class ZipScrubber {
 
   /** Read the name of a zip file from a local entry. Useful for debugging. */
   @SuppressWarnings("unused")
-  private static String localEntryName(SlidingFileWindow entry) throws IOException {
+  private static String localEntryName(LargeByteBuffer entry) throws IOException {
     byte[] nameBytes = new byte[entry.getShort(ZipEntry.LOCNAM)];
     entry.slice().position(ZipEntry.LOCHDR).get(nameBytes);
     return new String(nameBytes);
