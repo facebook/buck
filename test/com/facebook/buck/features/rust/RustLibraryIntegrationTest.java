@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -159,9 +160,11 @@ public class RustLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
     workspace.setUp();
 
-    // Requires nightly or it will complain about `-Z unstable-options`
-    // If it's loading `rustup`'s `rustc` set your default toolchain to nightly
-    workspace.runBuckBuild("//:foo_with_extern_dep#rlib").assertSuccess();
+    workspace
+        .runBuckBuild(
+            // Requires nightly or rustc will complain about `-Zunstable-options`.
+            ImmutableMap.of("RUSTC_BOOTSTRAP", "1"), "//:foo_with_extern_dep#rlib")
+        .assertSuccess();
   }
 
   @Test
@@ -170,9 +173,10 @@ public class RustLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
     workspace.setUp();
 
-    // Requires nightly or it will complain about `-Z unstable-options`
-    // If it's loading `rustup`'s `rustc` set your default toolchain to nightly
-    ProcessResult shouldFail = workspace.runBuckBuild("//:foo_without_extern_dep#rlib");
+    ProcessResult shouldFail =
+        workspace.runBuckBuild(
+            // Requires nightly or rustc will complain about `-Zunstable-options`.
+            ImmutableMap.of("RUSTC_BOOTSTRAP", "1"), "//:foo_without_extern_dep#rlib");
     shouldFail.assertFailure();
     assertThat(
         shouldFail.getStderr(),
@@ -185,9 +189,11 @@ public class RustLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
     workspace.setUp();
 
-    // Requires nightly or it will complain about `-Z unstable-options`
-    // If it's loading `rustup`'s `rustc` set your default toolchain to nightly
-    workspace.runBuckBuild("//:foo_with_extern_dep_platform#rlib").assertSuccess();
+    workspace
+        .runBuckBuild(
+            // Requires nightly or rustc will complain about `-Zunstable-options`.
+            ImmutableMap.of("RUSTC_BOOTSTRAP", "1"), "//:foo_with_extern_dep_platform#rlib")
+        .assertSuccess();
   }
 
   @Test
@@ -196,9 +202,10 @@ public class RustLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
     workspace.setUp();
 
-    // Requires nightly or it will complain about `-Z unstable-options`
-    // If it's loading `rustup`'s `rustc` set your default toolchain to nightly
-    ProcessResult shouldFail = workspace.runBuckBuild("//:foo_without_extern_dep_platform#rlib");
+    ProcessResult shouldFail =
+        workspace.runBuckBuild(
+            // Requires nightly or rustc will complain about `-Zunstable-options`.
+            ImmutableMap.of("RUSTC_BOOTSTRAP", "1"), "//:foo_without_extern_dep_platform#rlib");
     shouldFail.assertFailure();
     assertThat(
         shouldFail.getStderr(),
@@ -323,11 +330,13 @@ public class RustLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
     workspace.setUp();
 
-    RustAssumptions.assumeNightly(workspace);
-
     workspace
         .runBuckBuild(
-            "--config", "rust.rustc_check_flags=-Dwarnings", "//messenger:messenger#save-analysis")
+            // Requires nightly or rustc will complain about `-Zsave-analysis`.
+            ImmutableMap.of("RUSTC_BOOTSTRAP", "1"),
+            "--config",
+            "rust.rustc_check_flags=-Dwarnings",
+            "//messenger:messenger#save-analysis")
         .assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//messenger:messenger#save-analysis,default");

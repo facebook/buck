@@ -32,6 +32,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -141,15 +142,17 @@ public class RustBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
-    RustAssumptions.assumeNightly(workspace);
-
     File output =
         workspace
             .getGenPath(BuildTargetFactory.newInstance("//:xyzzy#default,save-analysis"), "%s")
             .resolve("save-analysis/xyzzy-bf3e2606cfd1e9e1.json")
             .toFile();
 
-    workspace.runBuckBuild("//:xyzzy#save-analysis").assertSuccess();
+    workspace
+        .runBuckBuild(
+            // Requires nightly or rustc will complain about `-Zsave-analysis`.
+            ImmutableMap.of("RUSTC_BOOTSTRAP", "1"), "//:xyzzy#save-analysis")
+        .assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:xyzzy#save-analysis");
     workspace.resetBuildLogFile();
@@ -169,8 +172,6 @@ public class RustBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
-    RustAssumptions.assumeNightly(workspace);
-
     File output =
         workspace
             .getGenPath(BuildTargetFactory.newInstance("//:xyzzy#default,save-analysis"), "%s")
@@ -179,7 +180,12 @@ public class RustBinaryIntegrationTest {
 
     workspace
         .runBuckCommand(
-            "build", "--config", "rust.unflavored_binaries=true", "//:xyzzy#save-analysis")
+            // Requires nightly or rustc will complain about `-Zsave-analysis`.
+            ImmutableMap.of("RUSTC_BOOTSTRAP", "1"),
+            "build",
+            "--config",
+            "rust.unflavored_binaries=true",
+            "//:xyzzy#save-analysis")
         .assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:xyzzy#save-analysis");

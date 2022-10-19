@@ -40,12 +40,6 @@ abstract class RustAssumptions {
     assumeNoException(exception);
   }
 
-  public static void assumeNightly(ProjectWorkspace workspace)
-      throws IOException, InterruptedException {
-    Result res = workspace.runCommand(RustTestUtils.getRustc(), "-Zhelp");
-    assumeTrue("Requires nightly Rust", res.getExitCode() == 0);
-  }
-
   public static void assumeVersion(ProjectWorkspace workspace, String version)
       throws IOException, InterruptedException {
     String[] versionParts = version.split("\\.");
