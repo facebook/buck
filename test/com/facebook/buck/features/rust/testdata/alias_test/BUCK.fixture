@@ -1,0 +1,28 @@
+rust_library(
+    name = "original_lib",
+    crate_root = "empty.rs",
+    srcs = ["empty.rs"],
+)
+
+alias(
+    name = "aliased_lib",
+    actual = ":original_lib",
+)
+
+rust_library(
+    name = "alias_in_deps",
+    crate_root = "use_original_lib.rs",
+    srcs = ["use_original_lib.rs"],
+    deps = [
+        ":aliased_lib",
+    ],
+)
+
+rust_library(
+    name = "alias_in_named_deps",
+    crate_root = "use_named_lib.rs",
+    srcs = ["use_named_lib.rs"],
+    named_deps = {
+        "named_lib": ":aliased_lib",
+    },
+)

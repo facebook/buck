@@ -510,6 +510,16 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
+  public void rustLibraryDepAlias() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "alias_test", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:alias_in_deps#rlib").assertSuccess();
+    workspace.runBuckBuild("//:alias_in_named_deps#rlib").assertSuccess();
+  }
+
+  @Test
   public void sharedLibraryCdylibSoname() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "soname", tmp);

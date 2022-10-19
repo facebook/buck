@@ -159,6 +159,7 @@ standard_java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/features/alias:alias",
         "//src/com/facebook/buck/features/python:python",
         "//src/com/facebook/buck/features/rust:rust",
         "//src/com/facebook/buck/io:executable-finder",

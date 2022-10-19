@@ -257,7 +257,7 @@ public class RustCompileUtils {
       boolean forceRlib,
       boolean preferStatic,
       Iterable<BuildRule> depRules,
-      ImmutableMap<String, BuildTarget> depsRenames,
+      ImmutableMap<String, BuildTarget> depsRenamesUnresolved,
       ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
       PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
           platformDepsFlags,
@@ -360,7 +360,10 @@ public class RustCompileUtils {
     // nothing here then the default name is used.
     Multimap<BuildTarget, String> revRenameMap =
         Multimaps.invertFrom(
-            Multimaps.forMap(depsRenames), MultimapBuilder.hashKeys().arrayListValues().build());
+            Multimaps.forMap(
+                Maps.transformValues(
+                    depsRenamesUnresolved, v -> graphBuilder.getRule(v).getBuildTarget())),
+            MultimapBuilder.hashKeys().arrayListValues().build());
 
     Optional<String> htmlRootUrlPrefix = rustConfig.getRustdocExternHtmlRootUrlPrefix();
 
