@@ -114,7 +114,7 @@ public class RustCompileUtils {
       boolean forceRlib,
       boolean preferStatic,
       Iterable<BuildRule> deps,
-      ImmutableMap<String, BuildTarget> depsAliases,
+      ImmutableMap<String, BuildTarget> depsRenames,
       ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
       PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
           platformDepsFlags,
@@ -145,7 +145,7 @@ public class RustCompileUtils {
                     forceRlib,
                     preferStatic,
                     deps,
-                    depsAliases,
+                    depsRenames,
                     depsFlags,
                     platformDepsFlags,
                     incremental));
@@ -257,7 +257,7 @@ public class RustCompileUtils {
       boolean forceRlib,
       boolean preferStatic,
       Iterable<BuildRule> depRules,
-      ImmutableMap<String, BuildTarget> depsAliases,
+      ImmutableMap<String, BuildTarget> depsRenames,
       ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
       PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
           platformDepsFlags,
@@ -355,12 +355,12 @@ public class RustCompileUtils {
         break;
     }
 
-    // Build reverse mapping from build targets to aliases. This might be a 1:many relationship
+    // Build reverse mapping from build targets to renames. This might be a 1:many relationship
     // (ie, the crate may import another crate multiple times under multiple names). If there's
     // nothing here then the default name is used.
-    Multimap<BuildTarget, String> revAliasMap =
+    Multimap<BuildTarget, String> revRenameMap =
         Multimaps.invertFrom(
-            Multimaps.forMap(depsAliases), MultimapBuilder.hashKeys().arrayListValues().build());
+            Multimaps.forMap(depsRenames), MultimapBuilder.hashKeys().arrayListValues().build());
 
     Optional<String> htmlRootUrlPrefix = rustConfig.getRustdocExternHtmlRootUrlPrefix();
 
@@ -386,7 +386,7 @@ public class RustCompileUtils {
             rustPlatform,
             crateType,
             depArgs,
-            revAliasMap,
+            revRenameMap,
             depsFlagsBuilder.build(),
             rustDepType,
             Optional.of(target),
@@ -404,19 +404,19 @@ public class RustCompileUtils {
           String depAbsTarget = rule.getBuildTarget().getCellRelativeName();
           String depTarget = depAbsTarget.replaceAll("^/+", "");
 
-          Collection<String> depAliasesColl = revAliasMap.get(buildTarget);
-          Stream<Optional<String>> depAliases;
-          if (depAliasesColl.isEmpty()) {
-            depAliases = Stream.of(Optional.empty());
+          Collection<String> depRenamesColl = revRenameMap.get(buildTarget);
+          Stream<Optional<String>> depRenames;
+          if (depRenamesColl.isEmpty()) {
+            depRenames = Stream.of(Optional.empty());
           } else {
-            depAliases = depAliasesColl.stream().map(Optional::of);
+            depRenames = depRenamesColl.stream().map(Optional::of);
           }
-          depAliases.forEach(
-              alias ->
+          depRenames.forEach(
+              rename ->
                   depArgs.add(
                       StringArg.of(
                           "--extern-html-root-url="
-                              + alias.orElse(depCrate)
+                              + rename.orElse(depCrate)
                               + "="
                               + htmlRootUrlPrefix.get()
                               + "/"
@@ -449,7 +449,7 @@ public class RustCompileUtils {
               rustPlatform,
               crateType,
               depArgs,
-              revAliasMap,
+              revRenameMap,
               ImmutableList.of(), /* depsFlags */
               rustDepType,
               Optional.empty(),
@@ -554,22 +554,22 @@ public class RustCompileUtils {
       RustPlatform rustPlatform,
       CrateType crateType,
       ImmutableList.Builder<Arg> depArgs,
-      Multimap<BuildTarget, String> revAliasMap,
+      Multimap<BuildTarget, String> revRenameMap,
       ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
       LinkableDepType rustDepType,
       Optional<BuildTarget> directDependent,
       ProjectFilesystem dependentFilesystem) {
     BuildTarget target = rule.getBuildTarget();
-    Collection<String> coll = revAliasMap.get(target);
-    Stream<Optional<String>> aliases;
+    Collection<String> coll = revRenameMap.get(target);
+    Stream<Optional<String>> renames;
     if (coll.isEmpty()) {
-      aliases = Stream.of(Optional.empty());
+      renames = Stream.of(Optional.empty());
     } else {
-      aliases = coll.stream().map(Optional::of);
+      renames = coll.stream().map(Optional::of);
     }
-    aliases // now stream of Optional<alias>
+    renames // now stream of Optional<rename>
         .map(
-            alias ->
+            rename ->
                 ((RustLinkable) rule)
                     .getLinkerArg(
                         directDependent,
@@ -577,7 +577,7 @@ public class RustCompileUtils {
                         crateType,
                         rustPlatform,
                         rustDepType,
-                        alias,
+                        rename,
                         FlaggedDeps.getFlagsForTarget(depsFlags, target)))
         .forEach(depArgs::add);
   }
@@ -656,7 +656,7 @@ public class RustCompileUtils {
       ImmutableSet<String> defaultRoots,
       CrateType crateType,
       Iterable<BuildRule> deps,
-      ImmutableMap<String, BuildTarget> depsAliases,
+      ImmutableMap<String, BuildTarget> depsRenames,
       ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
       PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
           platformDepsFlags) {
@@ -768,7 +768,7 @@ public class RustCompileUtils {
                         forceRlib,
                         preferStatic,
                         deps,
-                        depsAliases,
+                        depsRenames,
                         depsFlags,
                         platformDepsFlags,
                         rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName())));

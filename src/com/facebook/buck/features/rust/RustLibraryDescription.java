@@ -115,7 +115,7 @@ public class RustLibraryDescription
       LinkableDepType depType,
       RustLibraryDescriptionArg args,
       Iterable<BuildRule> deps,
-      ImmutableMap<String, BuildTarget> depsAliases,
+      ImmutableMap<String, BuildTarget> depsRenames,
       ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
       PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
           platformDepsFlags) {
@@ -150,7 +150,7 @@ public class RustLibraryDescription
         rustBuckConfig.getForceRlib(),
         rustBuckConfig.getPreferStaticLibs(),
         deps,
-        depsAliases,
+        depsRenames,
         depsFlags,
         platformDepsFlags,
         rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName()));
