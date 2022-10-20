@@ -140,8 +140,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean importUnderlyingModule;
 
-  @AddToRuleKey private final boolean useArgfile;
-
   @AddToRuleKey protected final boolean withDownwardApi;
 
   @AddToRuleKey private final boolean inputBasedEnabled;
@@ -161,7 +159,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   @AddToRuleKey private final boolean explicitModulesUsesGmodules;
 
   private BuildableSupport.DepsSupplier depsSupplier;
-  protected final Optional<AbsPath> argfilePath; // internal scratch temp path
+  protected final AbsPath argfilePath; // internal scratch temp path
 
   // We can't make the debug prefix map part of the rulekey as it is machine specific.
   private final ImmutableBiMap<Path, String> debugPrefixMap;
@@ -246,13 +244,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     RelPath scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
 
-    this.useArgfile = swiftBuckConfig.getUseArgfile();
     this.argfilePath =
-        (this.useArgfile
-            ? Optional.of(
-                getProjectFilesystem().getRootPath().resolve(scratchDir.resolve("swiftc.argfile")))
-            : Optional.empty());
-
+        getProjectFilesystem().getRootPath().resolve(scratchDir.resolve("swiftc.argfile"));
     this.modulePath = outputPath.resolve(moduleName + ".swiftmodule");
 
     this.shouldEmitSwiftdocs = swiftBuckConfig.getEmitSwiftdocs();

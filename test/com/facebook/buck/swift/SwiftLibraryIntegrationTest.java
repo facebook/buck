@@ -95,7 +95,6 @@ public class SwiftLibraryIntegrationTest {
   private ProjectWorkspace createProjectWorkspaceForScenario(String scenario) throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmpDir);
-    workspace.addBuckConfigLocalOption("swift", "use_argfile", "true");
     return workspace;
   }
 

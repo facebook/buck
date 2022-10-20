@@ -1150,8 +1150,7 @@ public class AppleLibraryIntegrationTest {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    testBuildAppleLibraryThatHasSwiftWithLocalConfig(
-        ImmutableMap.of("swift", ImmutableMap.of("use_argfile", "true")));
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(ImmutableMap.of());
   }
 
   @Test

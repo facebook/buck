@@ -198,7 +198,7 @@ public class SwiftCompile extends SwiftCompileBase {
         commandPrefix,
         compilerArgs,
         projectFilesystem,
-        argfilePath,
+        Optional.of(argfilePath),
         withDownwardApi,
         transformErrorsToAbsolutePaths);
   }

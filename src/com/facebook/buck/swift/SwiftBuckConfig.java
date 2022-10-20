@@ -32,7 +32,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
       "swift_postprocessing_module_to_header_mappings";
   public static final String COMPILER_FLAGS_NAME = "compiler_flags";
   public static final String VERSION_NAME = "version";
-  public static final String USE_ARGFILE = "use_argfile";
   public static final String PROJECT_WMO = "project_wmo";
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
   public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
@@ -77,11 +76,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
 
   public Optional<String> getVersion() {
     return delegate.getValue(SECTION_NAME, VERSION_NAME);
-  }
-
-  public boolean getUseArgfile() {
-    // See https://github.com/apple/swift/pull/15853
-    return delegate.getBooleanValue(SECTION_NAME, USE_ARGFILE, false);
   }
 
   /**
