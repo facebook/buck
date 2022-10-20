@@ -146,8 +146,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean inputBasedEnabled;
 
-  @AddToRuleKey protected final boolean shouldEmitClangModuleBreadcrumbs;
-
   @AddToRuleKey protected final boolean prefixSerializedDebuggingOptions;
 
   @AddToRuleKey private final boolean addXCTestImportPaths;
@@ -276,7 +274,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
     this.inputBasedEnabled = swiftBuckConfig.getInputBasedCompileEnabled();
     this.debugPrefixMap = debugPrefixMap;
-    this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
     this.prefixSerializedDebuggingOptions = hasPrefixSerializedDebuggingOptions;
     this.canToolchainEmitObjCHeaderTextually = canToolchainEmitObjCHeaderTextually;
     this.serializeDebuggingOptions = serializeDebuggingOptions;
@@ -523,7 +520,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     // When using gmodules we have debug info as part of the Clang module output. In this case
     // we want to embed the clang module breadcrumbs in the debug info.
     boolean usingGmodules = usesExplicitModules && explicitModulesUsesGmodules;
-    if (!usingGmodules && !shouldEmitClangModuleBreadcrumbs) {
+    if (!usingGmodules) {
       // Disable Clang module breadcrumbs in the DWARF info. These will not be debug prefix mapped
       // and are not shareable across machines.
       argBuilder.add(frontendFlag, "-no-clang-module-breadcrumbs");

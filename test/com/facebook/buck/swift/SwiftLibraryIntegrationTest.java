@@ -263,7 +263,7 @@ public class SwiftLibraryIntegrationTest {
   }
 
   @Test
-  public void testEmitClangModuleBreadcrumbArgsAreIncludedInCompilerCommand() {
+  public void testNoClangModuleBreadcrumbArgsAreIncludedInCompilerCommand() {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
@@ -271,10 +271,7 @@ public class SwiftLibraryIntegrationTest {
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections("[swift]", "emit_clang_module_breadcrumbs = False")
-            .build();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
 
     SwiftLibraryDescription swiftLibraryDescription =
         FakeAppleRuleDescriptions.createSwiftLibraryDescription(buckConfig);
