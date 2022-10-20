@@ -527,28 +527,24 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     }
 
     // When using gmodules we have debug info as part of the Clang module output. In this case
-    // we want to embed the clang module breadcrumbs in the debug info. We also do not want to
-    // serialize debugging options, as all the modules are already compiled and available to the
-    // debugger.
+    // we want to embed the clang module breadcrumbs in the debug info.
     boolean usingGmodules = usesExplicitModules && explicitModulesUsesGmodules;
-    if (!usingGmodules) {
-      if (!shouldEmitClangModuleBreadcrumbs) {
-        // Disable Clang module breadcrumbs in the DWARF info. These will not be debug prefix mapped
-        // and are not shareable across machines.
-        argBuilder.add(frontendFlag, "-no-clang-module-breadcrumbs");
-      }
+    if (!usingGmodules && !shouldEmitClangModuleBreadcrumbs) {
+      // Disable Clang module breadcrumbs in the DWARF info. These will not be debug prefix mapped
+      // and are not shareable across machines.
+      argBuilder.add(frontendFlag, "-no-clang-module-breadcrumbs");
+    }
 
-      if (serializeDebuggingOptions) {
-        // We only want to serialize debug info for top level modules. This reduces the amount of
-        // work done by the debugger when constructing type contexts and speeds up attach time.
-        // Tests will pass this in their constructor args explicitly.
-        argBuilder.add(frontendFlag, "-serialize-debugging-options");
-      }
+    if (serializeDebuggingOptions) {
+      // We only want to serialize debug info for top level modules. This reduces the amount of
+      // work done by the debugger when constructing type contexts and speeds up attach time.
+      // Tests will pass this in their constructor args explicitly.
+      argBuilder.add(frontendFlag, "-serialize-debugging-options");
+    }
 
-      if (prefixSerializedDebuggingOptions) {
-        // Apply path prefixes to swiftmodule debug info to make compiler output cacheable.
-        argBuilder.add(frontendFlag, "-prefix-serialized-debugging-options");
-      }
+    if (prefixSerializedDebuggingOptions) {
+      // Apply path prefixes to swiftmodule debug info to make compiler output cacheable.
+      argBuilder.add(frontendFlag, "-prefix-serialized-debugging-options");
     }
 
     return argBuilder.build();
