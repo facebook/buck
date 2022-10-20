@@ -45,7 +45,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
       "transform_errors_to_absolute_paths";
   public static final String PREFIX_SERIALIZED_DEBUGGING_OPTIONS =
       "prefix_serialized_debugging_options";
-  public static final String ALLOW_PRIVATE_SWIFT_DEPS = "allow_private_swift_deps";
   public static final String INCREMENTAL_BUILDS = "incremental";
   public static final String INCREMENTAL_IMPORTS = "incremental_imports";
   public static final String POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY =
@@ -167,15 +166,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getPrefixSerializedDebuggingOptions() {
     return delegate.getBooleanValue(SECTION_NAME, PREFIX_SERIALIZED_DEBUGGING_OPTIONS, false);
-  }
-
-  /**
-   * If true, both "exported_deps" and "deps" will be used as preprocessor inputs which will allow
-   * apple_libraries with Swift to contain private deps, not exported to consumers. Otherwise, only
-   * targets from "exported_deps" will be passed to the Swift compiler.
-   */
-  public boolean getAllowPrivateSwiftDeps() {
-    return delegate.getBooleanValue(SECTION_NAME, ALLOW_PRIVATE_SWIFT_DEPS, false);
   }
 
   /**

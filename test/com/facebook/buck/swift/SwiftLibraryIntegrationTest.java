@@ -460,13 +460,7 @@ public class SwiftLibraryIntegrationTest {
     assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
 
     BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                "[swift]",
-                "allow_private_swift_deps = True",
-                "[apple]",
-                "use_swift_delegate = False")
-            .build();
+        FakeBuckConfig.builder().setSections("[apple]", "use_swift_delegate = False").build();
 
     BuildTarget privateDepLibTarget = BuildTargetFactory.newInstance("//swift:private_dep");
     TargetNode<?> privateDepNode =

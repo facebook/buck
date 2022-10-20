@@ -194,28 +194,14 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       CxxPlatform platform,
-      AppleNativeTargetDescriptionArg arg,
-      SwiftBuckConfig swiftBuckConfig) {
+      AppleNativeTargetDescriptionArg arg) {
     CxxLibraryGroup lib = (CxxLibraryGroup) graphBuilder.requireRule(target.withFlavors());
 
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
-
-    // If Swift's private dependencies are enabled, we start calculating Preprocessor Inputs
-    // from all direct dependencies which include "exported_deps" and "deps".
-    // Otherwise, with the legacy behaviour, only "exported_deps" and its transitive dependencies
-    // will go into PP inputs set.
-    if (swiftBuckConfig.getAllowPrivateSwiftDeps()) {
-      for (CxxPreprocessorDep directDep : lib.getDirectCxxDeps(platform, graphBuilder)) {
-        ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
-            TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
-                platform, directDep, true, graphBuilder);
-        builder.addAll(transitiveMap.values());
-      }
-    } else {
+    for (CxxPreprocessorDep directDep : lib.getDirectCxxDeps(platform, graphBuilder)) {
       ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
           TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
-              platform, lib, false, graphBuilder);
-
+              platform, directDep, true, graphBuilder);
       builder.addAll(transitiveMap.values());
     }
 
