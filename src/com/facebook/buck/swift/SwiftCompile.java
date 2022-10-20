@@ -236,8 +236,7 @@ public class SwiftCompile extends SwiftCompileBase {
     // See https://github.com/bazelbuild/rules_swift/tree/c29e0a07b4253047f9b3021db2bb5349bb7cff1f
     return !bridgingHeader.isPresent()
         && !shouldEmitClangModuleBreadcrumbs
-        && prefixSerializedDebuggingOptions
-        && useDebugPrefixMap;
+        && prefixSerializedDebuggingOptions;
   }
 
   @Override

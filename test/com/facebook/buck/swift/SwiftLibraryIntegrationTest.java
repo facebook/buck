@@ -305,8 +305,7 @@ public class SwiftLibraryIntegrationTest {
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder().setSections("[swift]", "use_debug_prefix_map = True").build();
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
 
     SwiftLibraryDescription swiftLibraryDescription =
         FakeAppleRuleDescriptions.createSwiftLibraryDescription(buckConfig);

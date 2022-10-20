@@ -146,8 +146,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean inputBasedEnabled;
 
-  @AddToRuleKey protected final boolean useDebugPrefixMap;
-
   @AddToRuleKey protected final boolean shouldEmitClangModuleBreadcrumbs;
 
   @AddToRuleKey protected final boolean prefixSerializedDebuggingOptions;
@@ -278,7 +276,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
     this.inputBasedEnabled = swiftBuckConfig.getInputBasedCompileEnabled();
     this.debugPrefixMap = debugPrefixMap;
-    this.useDebugPrefixMap = swiftBuckConfig.getUseDebugPrefixMap();
     this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
     this.prefixSerializedDebuggingOptions = hasPrefixSerializedDebuggingOptions;
     this.canToolchainEmitObjCHeaderTextually = canToolchainEmitObjCHeaderTextually;
@@ -508,23 +505,20 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       argBuilder.add(resolver.getCellUnsafeRelPath(sourcePath).toString());
     }
 
-    if (useDebugPrefixMap) {
-      // The Swift compiler always adds an implicit -working-directory flag which we need to remap.
-      argBuilder.add(DEBUG_PREFIX_MAP_FLAG, getProjectFilesystem().getRootPath().toString() + "=.");
+    // The Swift compiler always adds an implicit -working-directory flag which we need to remap.
+    argBuilder.add(DEBUG_PREFIX_MAP_FLAG, getProjectFilesystem().getRootPath().toString() + "=.");
 
-      // We reverse sort the paths by length as we want the longer paths to take precedence over
-      // the shorter paths.
-      debugPrefixMap.entrySet().stream()
-          .sorted(
-              Comparator.<Map.Entry<Path, String>>comparingInt(
-                      entry -> entry.getKey().getNameCount())
-                  .reversed()
-                  .thenComparing(entry -> entry.getKey()))
-          .forEach(
-              entry ->
-                  argBuilder.add(
-                      DEBUG_PREFIX_MAP_FLAG, entry.getKey().toString() + "=" + entry.getValue()));
-    }
+    // We reverse sort the paths by length as we want the longer paths to take precedence over
+    // the shorter paths.
+    debugPrefixMap.entrySet().stream()
+        .sorted(
+            Comparator.<Map.Entry<Path, String>>comparingInt(entry -> entry.getKey().getNameCount())
+                .reversed()
+                .thenComparing(entry -> entry.getKey()))
+        .forEach(
+            entry ->
+                argBuilder.add(
+                    DEBUG_PREFIX_MAP_FLAG, entry.getKey().toString() + "=" + entry.getValue()));
 
     // When using gmodules we have debug info as part of the Clang module output. In this case
     // we want to embed the clang module breadcrumbs in the debug info.

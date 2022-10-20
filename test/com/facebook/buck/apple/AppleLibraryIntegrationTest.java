@@ -1528,7 +1528,6 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_debug_info", tmp);
     workspace.setUp();
     workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
-    workspace.addBuckConfigLocalOption("swift", "use_debug_prefix_map", "true");
     BuildTarget target = workspace.newBuildTarget("//:Bar#macosx-x86_64,static");
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
