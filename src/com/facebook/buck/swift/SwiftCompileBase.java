@@ -152,7 +152,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean usesExplicitModules;
 
-  @AddToRuleKey private final boolean serializeDebuggingOptions;
+  @AddToRuleKey protected final boolean serializeDebuggingOptions;
 
   @AddToRuleKey private final Optional<SourcePath> platformPath;
 

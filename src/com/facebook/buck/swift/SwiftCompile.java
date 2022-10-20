@@ -234,7 +234,8 @@ public class SwiftCompile extends SwiftCompileBase {
     //     the debugger to be able to recreate the clang modules successfully.
     //
     // See https://github.com/bazelbuild/rules_swift/tree/c29e0a07b4253047f9b3021db2bb5349bb7cff1f
-    return !bridgingHeader.isPresent() && prefixSerializedDebuggingOptions;
+    return !bridgingHeader.isPresent()
+        && (prefixSerializedDebuggingOptions || !serializeDebuggingOptions);
   }
 
   @Override
