@@ -642,13 +642,11 @@ public class AppleTestDescription
       builder.addLinkerFlags(StringWithMacros.ofConstantString(linkerArg));
     }
 
-    if (swiftBuckConfig.getAddXctestImportPaths()) {
-      // When importing XCTest in Swift, we will need to add the linker search paths to
-      // find libXCTestSupport.dylib and XCTest.framework.
-      builder.addLinkerFlags(
-          StringWithMacros.ofConstantString("-L$PLATFORM_DIR/Developer/usr/lib"),
-          StringWithMacros.ofConstantString("-F$PLATFORM_DIR/Developer/Library/Frameworks"));
-    }
+    // When importing XCTest in Swift, we will need to add the linker search paths to
+    // find libXCTestSupport.dylib and XCTest.framework.
+    builder.addLinkerFlags(
+        StringWithMacros.ofConstantString("-L$PLATFORM_DIR/Developer/usr/lib"),
+        StringWithMacros.ofConstantString("-F$PLATFORM_DIR/Developer/Library/Frameworks"));
 
     return builder.build();
   }

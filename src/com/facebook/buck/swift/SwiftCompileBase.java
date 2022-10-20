@@ -148,8 +148,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey protected final boolean prefixSerializedDebuggingOptions;
 
-  @AddToRuleKey private final boolean addXCTestImportPaths;
-
   @AddToRuleKey private final boolean usesExplicitModules;
 
   @AddToRuleKey protected final boolean serializeDebuggingOptions;
@@ -194,7 +192,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebuggingOptions,
       boolean canToolchainEmitObjCHeaderTextually,
-      boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
       boolean usesExplicitModules,
       boolean explicitModulesUsesGmodules,
@@ -208,7 +205,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.outputPath = outputPath;
     this.platformPath = platformPath;
     this.importUnderlyingModule = importUnderlyingModule;
-    this.addXCTestImportPaths = addXCTestImportPaths;
     this.usesExplicitModules = usesExplicitModules;
     this.explicitModulesUsesGmodules = explicitModulesUsesGmodules;
     this.headerPath = outputPath.resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + ".h");
@@ -414,9 +410,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
           MoreIterables.zipAndConcat(
               Iterables.cycle("-Fsystem"), Arg.stringify(systemFrameworkSearchPaths, resolver)));
 
-      if (addXCTestImportPaths) {
-        argBuilder.addAll(xctestImportArgs(resolver));
-      }
+      argBuilder.addAll(xctestImportArgs(resolver));
 
       argBuilder.addAll(
           Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())

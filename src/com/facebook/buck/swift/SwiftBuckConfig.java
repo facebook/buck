@@ -45,7 +45,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
       "transform_errors_to_absolute_paths";
   public static final String PREFIX_SERIALIZED_DEBUGGING_OPTIONS =
       "prefix_serialized_debugging_options";
-  public static final String ADD_XCTEST_IMPORT_PATHS = "add_xctest_import_paths";
   public static final String ALLOW_PRIVATE_SWIFT_DEPS = "allow_private_swift_deps";
   public static final String INCREMENTAL_BUILDS = "incremental";
   public static final String INCREMENTAL_IMPORTS = "incremental_imports";
@@ -168,14 +167,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getPrefixSerializedDebuggingOptions() {
     return delegate.getBooleanValue(SECTION_NAME, PREFIX_SERIALIZED_DEBUGGING_OPTIONS, false);
-  }
-
-  /**
-   * If true, add -I$PLATFORM_DIR/Developer/usr/lib so that libXCTestSwiftSupport.dylib can be found
-   * at compile time.
-   */
-  public boolean getAddXctestImportPaths() {
-    return delegate.getBooleanValue(SECTION_NAME, ADD_XCTEST_IMPORT_PATHS, true);
   }
 
   /**

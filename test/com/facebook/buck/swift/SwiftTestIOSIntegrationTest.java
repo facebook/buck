@@ -135,7 +135,6 @@ public class SwiftTestIOSIntegrationTest {
     workspace.addBuckConfigLocalOption(
         "apple", "xctool_default_destination_specifier", XCTOOL_DEFAULT_DEST_FOR_TESTS);
     workspace.addBuckConfigLocalOption("apple", "embed_xctest_in_test_bundles", "true");
-    workspace.addBuckConfigLocalOption("swift", "add_xctest_import_paths", "true");
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -204,7 +203,6 @@ public class SwiftTestIOSIntegrationTest {
     workspace.addBuckConfigLocalOption(
         "apple", "xctool_default_destination_specifier", XCTOOL_DEFAULT_DEST_FOR_TESTS);
     workspace.addBuckConfigLocalOption("apple", "embed_xctest_in_test_bundles", "true");
-    workspace.addBuckConfigLocalOption("swift", "add_xctest_import_paths", "true");
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -264,7 +262,6 @@ public class SwiftTestIOSIntegrationTest {
         Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
     workspace.addBuckConfigLocalOption("apple", "embed_xctest_in_test_bundles", "true");
-    workspace.addBuckConfigLocalOption("swift", "add_xctest_import_paths", "true");
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
