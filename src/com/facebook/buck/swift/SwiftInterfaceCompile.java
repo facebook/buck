@@ -148,8 +148,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
               argsBuilder.build(),
               filesystem,
               Optional.empty(),
-              withDownwardApi,
-              false));
+              withDownwardApi));
     }
   }
 }

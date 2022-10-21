@@ -240,8 +240,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
               argsBuilder.build(),
               filesystem,
               Optional.empty(),
-              withDownwardApi,
-              false));
+              withDownwardApi));
     }
 
     private boolean isFrameworkPath(Path modulemapPath) {

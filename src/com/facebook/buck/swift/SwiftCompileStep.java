@@ -49,7 +49,6 @@ class SwiftCompileStep extends SwiftCompileStepBase {
 
   private final ImmutableMap<String, String> compilerEnvironment;
   private final Optional<AbsPath> argfilePath;
-  private final boolean transformErrorsToAbsolutePaths;
 
   SwiftCompileStep(
       AbsPath compilerCwd,
@@ -58,13 +57,11 @@ class SwiftCompileStep extends SwiftCompileStepBase {
       ImmutableList<String> compilerCommandArguments,
       ProjectFilesystem filesystem,
       Optional<AbsPath> argfilePath,
-      boolean withDownwardApi,
-      boolean transformErrorsToAbsolutePaths) {
+      boolean withDownwardApi) {
     super(
         compilerCwd, compilerCommandPrefix, compilerCommandArguments, filesystem, withDownwardApi);
     this.compilerEnvironment = ImmutableMap.copyOf(compilerEnvironment);
     this.argfilePath = argfilePath;
-    this.transformErrorsToAbsolutePaths = transformErrorsToAbsolutePaths;
   }
 
   @Override
@@ -120,8 +117,7 @@ class SwiftCompileStep extends SwiftCompileStepBase {
 
     LOG.debug("%s", getRawCommand());
 
-    boolean willTransformStderr =
-        transformErrorsToAbsolutePaths && context.shouldReportAbsolutePaths();
+    boolean willTransformStderr = context.shouldReportAbsolutePaths();
 
     // When we transform the stderr output, we need to use an executor that will not output to
     // stderr by default. Otherwise, we'll print any compiler errors twice: once with a relative

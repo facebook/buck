@@ -51,7 +51,6 @@ import java.util.Optional;
 
 /** A build rule which compiles one or more Swift sources into a Swift module. */
 public class SwiftCompile extends SwiftCompileBase {
-  @AddToRuleKey private final boolean transformErrorsToAbsolutePaths;
   @AddToRuleKey private final boolean postprocessGeneratedHeaderForNonModulesCompatibility;
 
   @AddToRuleKey
@@ -120,8 +119,6 @@ public class SwiftCompile extends SwiftCompileBase {
         usesExplicitModules,
         explicitModulesUsesGmodules,
         moduleDependencies);
-
-    transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
 
     // If the toolchain supports it, emitting textual headers from the
     // compiler in the first place is preferred over the buck post processing method.
@@ -199,8 +196,7 @@ public class SwiftCompile extends SwiftCompileBase {
         compilerArgs,
         projectFilesystem,
         Optional.of(argfilePath),
-        withDownwardApi,
-        transformErrorsToAbsolutePaths);
+        withDownwardApi);
   }
 
   /**
