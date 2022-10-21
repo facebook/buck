@@ -1,7 +1,9 @@
 # Ant
+ant-out
 /ant-out/
 
 # IntelliJ build
+intellij-out
 /intellij-out/
 /starlark/intellij-out/
 
