@@ -34,7 +34,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String VERSION_NAME = "version";
   public static final String PROJECT_WMO = "project_wmo";
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
-  public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
   public static final String COPY_STDLIB_TO_FRAMEWORKS = "copy_stdlib_to_frameworks";
   public static final String EMIT_SWIFTDOCS = "emit_swiftdocs";
   public static final String SLICE_APP_PACKAGE_RUNTIME = "slice_app_package_runtime";
@@ -89,14 +88,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   /** If enabled, turns on Whole Module Optimization for any targets that contain Swift. */
   public boolean getProjectWMO() {
     return delegate.getBooleanValue(SECTION_NAME, PROJECT_WMO, false);
-  }
-
-  /**
-   * If enabled, AST paths to the .swiftmodules will be added as part of the linker invocation. This
-   * is necessary for lldb to be able to debug statically linked Swift libraries.
-   */
-  public boolean getProjectAddASTPaths() {
-    return delegate.getBooleanValue(SECTION_NAME, PROJECT_ADD_AST_PATHS, false);
   }
 
   /**

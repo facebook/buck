@@ -151,9 +151,7 @@ class FlagParser {
 
     ImmutableList.Builder<String> swiftDebugLinkerFlagsBuilder = ImmutableList.builder();
 
-    if (includeFrameworks
-        && !swiftDepTargets.isEmpty()
-        && swiftBuckConfig.getProjectAddASTPaths()) {
+    if (includeFrameworks && !swiftDepTargets.isEmpty()) {
       for (TargetNode<?> swiftNode : swiftDepTargets) {
         String swiftModulePath =
             String.format(

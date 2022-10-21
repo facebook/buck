@@ -4362,11 +4362,7 @@ public class ProjectGeneratorTest {
   @Test
   public void testSwiftAddASTPathsLinkerFlags() throws IOException, InterruptedException {
     ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of(
-            "swift",
-            ImmutableMap.of(
-                "version", "3.0",
-                "project_add_ast_paths", "true"));
+        ImmutableMap.of("swift", ImmutableMap.of("version", "3.0"));
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder().setFilesystem(projectFilesystem).setSections(sections).build();

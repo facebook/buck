@@ -1580,9 +1580,7 @@ public class ProjectGenerator {
           swiftDepsSettingsBuilder.put("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
         }
 
-        if (includeFrameworks
-            && !swiftDepTargets.isEmpty()
-            && swiftBuckConfig.getProjectAddASTPaths()) {
+        if (includeFrameworks && !swiftDepTargets.isEmpty()) {
           for (TargetNode<?> swiftNode : swiftDepTargets) {
             if (!isLibraryFocused(swiftNode)) {
               // Unfocused targets will not be built by Xcode, so we cannot refer to their
