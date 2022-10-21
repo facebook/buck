@@ -140,7 +140,6 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<String> codesignIdentitySubjectName;
 
-  @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
   @AddToRuleKey private final Optional<Boolean> skipCopyingSwiftStdlib;
 
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
@@ -203,7 +202,6 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList<String> codesignFlags,
       Optional<String> codesignIdentity,
       Duration codesignTimeout,
-      boolean copySwiftStdlibToFrameworks,
       Optional<Boolean> skipCopyingSwiftStdlib,
       boolean sliceAppPackageSwiftRuntime,
       boolean sliceAppBundleSwiftRuntime,
@@ -265,7 +263,6 @@ public class AppleBundle extends AbstractBuildRule
     this.lipo = appleCxxPlatform.getLipo();
 
     this.codesignTimeout = codesignTimeout;
-    this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
     this.skipCopyingSwiftStdlib = skipCopyingSwiftStdlib;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
 
@@ -1088,8 +1085,7 @@ public class AppleBundle extends AbstractBuildRule
     boolean shouldCopySwiftStdlib =
         !skipCopyingSwiftStdlib.orElse(false)
             && !extension.equals(AppleBundleExtension.APPEX.fileExtension)
-            && (!extension.equals(AppleBundleExtension.FRAMEWORK.fileExtension)
-                || copySwiftStdlibToFrameworks);
+            && !extension.equals(AppleBundleExtension.FRAMEWORK.fileExtension);
 
     if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
       String tempDirPattern = isForPackaging ? "__swift_packaging_temp__%s" : "__swift_temp__%s";

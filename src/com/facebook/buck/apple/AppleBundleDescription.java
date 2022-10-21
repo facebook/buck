@@ -233,7 +233,6 @@ public class AppleBundleDescription
         args.getIbtoolModuleFlag(),
         args.getIbtoolFlags(),
         appleConfig.getCodesignTimeout(),
-        swiftBuckConfig.getCopyStdlibToFrameworks(),
         args.getSkipCopyingSwiftStdlib(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),

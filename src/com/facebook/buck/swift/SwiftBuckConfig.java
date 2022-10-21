@@ -34,7 +34,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String VERSION_NAME = "version";
   public static final String PROJECT_WMO = "project_wmo";
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
-  public static final String COPY_STDLIB_TO_FRAMEWORKS = "copy_stdlib_to_frameworks";
   public static final String EMIT_SWIFTDOCS = "emit_swiftdocs";
   public static final String SLICE_APP_PACKAGE_RUNTIME = "slice_app_package_runtime";
   public static final String SLICE_APP_BUNDLE_RUNTIME = "slice_app_bundle_runtime";
@@ -85,17 +84,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   /** If enabled, turns on Whole Module Optimization for any targets that contain Swift. */
   public boolean getProjectWMO() {
     return delegate.getBooleanValue(SECTION_NAME, PROJECT_WMO, false);
-  }
-
-  /**
-   * If enabled, swift-stdlib-tool will be run on .framework bundles, copying the Swift standard
-   * library into them. This is usually not what you want - it will lead to multiple redundant
-   * copies of the libraries being embedded in both the app bundle and any descendant framework
-   * bundles. Even if Swift is only used in a framework, and not in the app binary, Buck and
-   * swift-stdlib-tool will handle that correctly and embed the libraries.
-   */
-  public boolean getCopyStdlibToFrameworks() {
-    return delegate.getBooleanValue(SECTION_NAME, COPY_STDLIB_TO_FRAMEWORKS, false);
   }
 
   /**

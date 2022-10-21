@@ -379,7 +379,6 @@ public class AppleTestDescription
                         Optional.empty(),
                         Optional.empty(),
                         appleConfig.getCodesignTimeout(),
-                        swiftBuckConfig.getCopyStdlibToFrameworks(),
                         args.getSkipCopyingSwiftStdlib(),
                         cxxBuckConfig.shouldCacheStrip(),
                         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
