@@ -38,7 +38,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String EMIT_SWIFTDOCS = "emit_swiftdocs";
   public static final String SLICE_APP_PACKAGE_RUNTIME = "slice_app_package_runtime";
   public static final String SLICE_APP_BUNDLE_RUNTIME = "slice_app_bundle_runtime";
-  public static final String INPUT_BASED_COMPILE_ENABLED = "input_based_compile_enabled";
   public static final String PREFIX_SERIALIZED_DEBUGGING_OPTIONS =
       "prefix_serialized_debugging_options";
   public static final String INCREMENTAL_BUILDS = "incremental";
@@ -123,15 +122,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getSliceAppBundleSwiftRuntime() {
     return delegate.getBooleanValue(SECTION_NAME, SLICE_APP_BUNDLE_RUNTIME, false);
-  }
-
-  /**
-   * Defines whether the Swift compile rule will be treated as an input-based rule. NB: This is a
-   * temporary, internal configuration for the purposes of rolling back if needed.
-   */
-  public boolean getInputBasedCompileEnabled() {
-    // TODO(#67788442): Remove config option once behavior correctness has been verified
-    return delegate.getBooleanValue(SECTION_NAME, INPUT_BASED_COMPILE_ENABLED, true);
   }
 
   /**

@@ -142,8 +142,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey protected final boolean withDownwardApi;
 
-  @AddToRuleKey private final boolean inputBasedEnabled;
-
   @AddToRuleKey protected final boolean prefixSerializedDebuggingOptions;
 
   @AddToRuleKey private final boolean usesExplicitModules;
@@ -261,7 +259,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.cxxDeps = cxxDeps;
     this.withDownwardApi = withDownwardApi;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
-    this.inputBasedEnabled = swiftBuckConfig.getInputBasedCompileEnabled();
     this.debugPrefixMap = debugPrefixMap;
     this.prefixSerializedDebuggingOptions = hasPrefixSerializedDebuggingOptions;
     this.canToolchainEmitObjCHeaderTextually = canToolchainEmitObjCHeaderTextually;
@@ -273,7 +270,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @Override
   public boolean inputBasedRuleKeyIsEnabled() {
-    return inputBasedEnabled;
+    return true;
   }
 
   private void performChecks(BuildTarget buildTarget) {
