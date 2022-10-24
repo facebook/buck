@@ -55,6 +55,8 @@ public interface ArchiverProvider {
             return new BsdArchiver(archiver);
           case GNU:
             return new GnuArchiver(archiver);
+          case LLVM:
+            return new LlvmArchiver(archiver);
           case WINDOWS:
             return new WindowsArchiver(archiver);
           case WINDOWS_CLANG:
@@ -79,6 +81,7 @@ public interface ArchiverProvider {
   enum Type {
     BSD,
     GNU,
+    LLVM,
     WINDOWS,
     WINDOWS_CLANG,
   }
