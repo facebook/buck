@@ -88,7 +88,6 @@ public class AppleToolchainIntegrationTest {
     workspace.addBuckConfigLocalOption(
         "apple", "toolchain_set_target", "//apple_toolchain:toolchain");
     workspace.setUp();
-    workspace.runBuckBuild("//apple_toolchain/tools:lipo");
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64,iphoneos-armv7");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
     RelPath sdkPath =

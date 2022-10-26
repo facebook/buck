@@ -35,6 +35,9 @@ import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
+import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
+import com.facebook.buck.rules.modern.impl.DepsComputingVisitor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -180,11 +183,20 @@ public class MultiarchFileInfos {
           appleCxxPlatformsFlavorDomain
               .getValue(info.getRepresentativePlatformFlavor())
               .resolve(graphBuilder);
+
+      // Include any deps required to genereate the Lipo tool
+      ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
+      depsBuilder.addAll(thinRules);
+      DepsComputingVisitor visitor =
+          new DepsComputingVisitor(new DefaultInputRuleResolver(graphBuilder), depsBuilder::add);
+      visitor.visitDynamic(
+          applePlatform.getLipo(), DefaultClassInfoFactory.forInstance(applePlatform.getLipo()));
+
       MultiarchFile multiarchFile =
           new MultiarchFile(
               buildTarget,
               projectFilesystem,
-              params.withoutDeclaredDeps().withExtraDeps(thinRules),
+              params.withoutDeclaredDeps().withExtraDeps(depsBuilder.build()),
               graphBuilder,
               applePlatform.getLipo(),
               inputs,
