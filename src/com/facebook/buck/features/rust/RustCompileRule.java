@@ -382,6 +382,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
             public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
               ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
               env.putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()));
+              env.putAll(linker.getEnvironment(buildContext.getSourcePathResolver()));
               env.putAll(
                   Maps.transformValues(
                       environment, v -> Arg.stringify(v, buildContext.getSourcePathResolver())));
