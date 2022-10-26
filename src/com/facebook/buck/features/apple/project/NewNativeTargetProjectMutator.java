@@ -668,6 +668,8 @@ class NewNativeTargetProjectMutator {
         return PBXCopyFilesBuildPhase.Destination.XPC;
       case LOGINITEMS:
         return PBXCopyFilesBuildPhase.Destination.LOGINITEMS;
+      case SYSTEMEXTENSIONS:
+        return PBXCopyFilesBuildPhase.Destination.SYSTEMEXTENSIONS;
     }
     throw new IllegalStateException("Unhandled AppleResourceBundleDestination " + destination);
   }

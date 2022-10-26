@@ -27,7 +27,8 @@ public enum AppleResourceBundleDestination {
   EXECUTABLES,
   PLUGINS,
   XPCSERVICES,
-  LOGINITEMS;
+  LOGINITEMS,
+  SYSTEMEXTENSIONS;
 
   public static AppleResourceBundleDestination defaultValue() {
     return RESOURCES;
@@ -48,6 +49,8 @@ public enum AppleResourceBundleDestination {
         return AppleBundleDestination.XPCSERVICES;
       case LOGINITEMS:
         return AppleBundleDestination.LOGINITEMS;
+      case SYSTEMEXTENSIONS:
+        return AppleBundleDestination.SYSTEMEXTENSIONS;
     }
     throw new IllegalStateException("Unhandled AppleResourceBundleDestination " + this);
   }

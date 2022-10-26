@@ -36,7 +36,8 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
     JAVA_RESOURCES(15),
     PRODUCTS(16),
     XPC(16),
-    QLGENERATOR(16);
+    QLGENERATOR(16),
+    SYSTEMEXTENSIONS(16);
 
     private int value;
 
