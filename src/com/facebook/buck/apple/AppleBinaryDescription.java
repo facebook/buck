@@ -67,7 +67,6 @@ import com.facebook.buck.file.CopyFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.modern.OutputPath;
-import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
@@ -114,7 +113,6 @@ public class AppleBinaryDescription
   private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final AppleConfig appleConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final SwiftBuckConfig swiftBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
   private final CxxBinaryFactory cxxBinaryFactory;
@@ -127,7 +125,6 @@ public class AppleBinaryDescription
       SwiftLibraryDescription swiftDelegate,
       AppleConfig appleConfig,
       CxxBuckConfig cxxBuckConfig,
-      SwiftBuckConfig swiftBuckConfig,
       DownwardApiConfig downwardApiConfig,
       CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
       CxxBinaryFactory cxxBinaryFactory,
@@ -139,7 +136,6 @@ public class AppleBinaryDescription
     this.swiftDelegate = Optional.of(swiftDelegate);
     this.appleConfig = appleConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.swiftBuckConfig = swiftBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
     this.cxxBinaryFactory = cxxBinaryFactory;
@@ -426,8 +422,6 @@ public class AppleBinaryDescription
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
         Predicates.alwaysTrue(),
-        swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
-        swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
         downwardApiConfig.isEnabledForApple(),
         args.getTargetSdkVersion(),
         appleConfig.getIncrementalBundlingEnabled(),

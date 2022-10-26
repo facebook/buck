@@ -134,16 +134,11 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<Tool> swiftStdlibTool;
 
-  @AddToRuleKey private final Tool lipo;
-
   @AddToRuleKey private final ImmutableList<String> codesignFlags;
 
   @AddToRuleKey private final Optional<String> codesignIdentitySubjectName;
 
   @AddToRuleKey private final Optional<Boolean> skipCopyingSwiftStdlib;
-
-  @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
-  @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
 
   private final Path sdkPath;
 
@@ -203,8 +198,6 @@ public class AppleBundle extends AbstractBuildRule
       Optional<String> codesignIdentity,
       Duration codesignTimeout,
       Optional<Boolean> skipCopyingSwiftStdlib,
-      boolean sliceAppPackageSwiftRuntime,
-      boolean sliceAppBundleSwiftRuntime,
       boolean withDownwardApi,
       Optional<SourcePath> maybeEntitlementsFile,
       boolean dryRunCodeSigning,
@@ -260,14 +253,10 @@ public class AppleBundle extends AbstractBuildRule
         appleCxxPlatform.getSwiftPlatform().isPresent()
             ? appleCxxPlatform.getSwiftPlatform().get().getSwiftStdlibTool()
             : Optional.empty();
-    this.lipo = appleCxxPlatform.getLipo();
 
     this.codesignTimeout = codesignTimeout;
     this.skipCopyingSwiftStdlib = skipCopyingSwiftStdlib;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
-
-    this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
-    this.sliceAppBundleSwiftRuntime = sliceAppBundleSwiftRuntime;
     this.infoPlistBundlePath = bundleRoot.resolve(infoPlistPathRelativeToBundle.getPath());
     this.nonProcessedResourcesContentHashesFileSourcePath =
         nonProcessedResourcesContentHashesFileSourcePath;
@@ -1094,8 +1083,6 @@ public class AppleBundle extends AbstractBuildRule
 
       stepsBuilder.addAll(MakeCleanDirectoryStep.of(BuildCellRelativePath.of(tempPath)));
 
-      boolean sliceArchitectures =
-          (isForPackaging ? sliceAppPackageSwiftRuntime : sliceAppBundleSwiftRuntime);
       stepsBuilder.add(
           new SwiftStdlibStep(
               getProjectFilesystem().getRootPath(),
@@ -1103,13 +1090,11 @@ public class AppleBundle extends AbstractBuildRule
               sdkPath,
               destinationPath,
               swiftStdlibTool.get().getCommandPrefix(resolver),
-              lipo.getCommandPrefix(resolver),
               bundleBinaryPath,
               ImmutableSet.of(
                   bundleRoot.resolve(destinations.getFrameworksPath()),
                   bundleRoot.resolve(destinations.getPlugInsPath())),
               codeSignIdentitySupplier,
-              sliceArchitectures,
               withDownwardApi));
     }
   }

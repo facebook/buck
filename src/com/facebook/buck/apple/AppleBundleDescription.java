@@ -55,7 +55,6 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -92,7 +91,6 @@ public class AppleBundleDescription
   private final AppleLibraryDescription appleLibraryDescription;
   private final AppleConfig appleConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final SwiftBuckConfig swiftBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
 
   public AppleBundleDescription(
@@ -102,7 +100,6 @@ public class AppleBundleDescription
       AppleLibraryDescription appleLibraryDescription,
       AppleConfig appleConfig,
       CxxBuckConfig cxxBuckConfig,
-      SwiftBuckConfig swiftBuckConfig,
       DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.xcodeDescriptions = xcodeDescriptions;
@@ -110,7 +107,6 @@ public class AppleBundleDescription
     this.appleLibraryDescription = appleLibraryDescription;
     this.appleConfig = appleConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.swiftBuckConfig = swiftBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
   }
 
@@ -237,8 +233,6 @@ public class AppleBundleDescription
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
         resourceFilter,
-        swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
-        swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
         downwardApiConfig.isEnabledForApple(),
         minOSVersion,
         args.getIncrementalBundlingEnabled().orElse(appleConfig.getIncrementalBundlingEnabled()),

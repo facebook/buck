@@ -83,7 +83,6 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.unarchive.UnzipStep;
@@ -141,7 +140,6 @@ public class AppleTestDescription
   private final XCodeDescriptions xcodeDescriptions;
   private final AppleConfig appleConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final SwiftBuckConfig swiftBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final AppleLibraryDescription appleLibraryDescription;
 
@@ -150,14 +148,12 @@ public class AppleTestDescription
       XCodeDescriptions xcodeDescriptions,
       AppleConfig appleConfig,
       CxxBuckConfig cxxBuckConfig,
-      SwiftBuckConfig swiftBuckConfig,
       DownwardApiConfig downwardApiConfig,
       AppleLibraryDescription appleLibraryDescription) {
     this.toolchainProvider = toolchainProvider;
     this.xcodeDescriptions = xcodeDescriptions;
     this.appleConfig = appleConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.swiftBuckConfig = swiftBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.appleLibraryDescription = appleLibraryDescription;
   }
@@ -383,8 +379,6 @@ public class AppleTestDescription
                         cxxBuckConfig.shouldCacheStrip(),
                         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
                         Predicates.alwaysTrue(),
-                        swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
-                        swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
                         downwardApiConfig.isEnabledForApple(),
                         args.getTargetSdkVersion(),
                         args.getIncrementalBundlingEnabled()

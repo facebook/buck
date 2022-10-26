@@ -17,7 +17,6 @@
 package com.facebook.buck.swift;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -79,48 +78,6 @@ public class SwiftIOSBundleIntegrationTest {
                     "%s")
                 .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
-  }
-
-  @Test
-  public void swiftStdLibsContainNeededArchsOnly() throws Exception {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_swift_application_bundle", tmp);
-    workspace.addBuckConfigLocalOption("swift", "slice_app_bundle_runtime", "true");
-    workspace.setUp();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
-
-    String[][] expectedArchs = {{"x86_64"}};
-    String[] archFlavors = {"iphonesimulator-x86_64"};
-
-    for (int i = 0; i < expectedArchs.length; i++) {
-      BuildTarget target = workspace.newBuildTarget("//:DemoApp#" + archFlavors[i] + ",no-debug");
-
-      workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-
-      Path appPath =
-          workspace.getPath(
-              BuildTargetPaths.getGenPath(
-                      filesystem.getBuckPaths(),
-                      target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-                      "%s")
-                  .resolve(target.getShortName() + ".app"));
-      Path swiftcorePath = appPath.resolve("Frameworks/libswiftCore.dylib");
-      assumeThat(Files.exists(swiftcorePath), is(true));
-
-      String[] actualArchs =
-          workspace
-              .runCommand("lipo", "-archs", swiftcorePath.toString())
-              .getStdout()
-              .get()
-              .trim()
-              .split(" ");
-
-      assertThat(actualArchs, arrayContainingInAnyOrder(expectedArchs[i]));
-    }
   }
 
   @Test

@@ -594,8 +594,6 @@ public class AppleLibraryDescription
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
         Predicates.alwaysTrue(),
-        swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
-        swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
         downwardApiConfig.isEnabledForApple(),
         args.getTargetSdkVersion(),
         appleConfig.getIncrementalBundlingEnabled(),

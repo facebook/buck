@@ -35,8 +35,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROJECT_WMO = "project_wmo";
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
   public static final String EMIT_SWIFTDOCS = "emit_swiftdocs";
-  public static final String SLICE_APP_PACKAGE_RUNTIME = "slice_app_package_runtime";
-  public static final String SLICE_APP_BUNDLE_RUNTIME = "slice_app_bundle_runtime";
   public static final String PREFIX_SERIALIZED_DEBUGGING_OPTIONS =
       "prefix_serialized_debugging_options";
   public static final String INCREMENTAL_BUILDS = "incremental";
@@ -92,24 +90,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getEmitSwiftdocs() {
     return delegate.getBooleanValue(SECTION_NAME, EMIT_SWIFTDOCS, false);
-  }
-
-  /**
-   * If true, after running swift-stdlib-tool to copy the Swift runtime into the "SwiftSupport"
-   * directory in the .ipa, unused architectures will be removed using lipo. If false, the dylibs
-   * will be left untouched.
-   */
-  public boolean getSliceAppPackageSwiftRuntime() {
-    return delegate.getBooleanValue(SECTION_NAME, SLICE_APP_PACKAGE_RUNTIME, false);
-  }
-
-  /**
-   * If true, after running swift-stdlib-tool to copy the Swift runtime into the Frameworks
-   * directory, unused architectures will be removed using lipo. If false, the dylibs will be left
-   * untouched.
-   */
-  public boolean getSliceAppBundleSwiftRuntime() {
-    return delegate.getBooleanValue(SECTION_NAME, SLICE_APP_BUNDLE_RUNTIME, false);
   }
 
   /**
