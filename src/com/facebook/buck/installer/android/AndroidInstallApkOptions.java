@@ -30,6 +30,7 @@ import java.util.TreeMap;
  */
 public class AndroidInstallApkOptions {
 
+  public final String adbExecutable;
   public final boolean restartAdbOnFailure;
   public final boolean skipInstallMetadata;
   public final boolean alwaysUseJavaAgent;
@@ -40,6 +41,7 @@ public class AndroidInstallApkOptions {
     JsonParser parser = ObjectMappers.createParser(jsonArtifactPath);
     Map<String, String> jsonData =
         parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+    this.adbExecutable = jsonData.get("adb_executable");
     this.restartAdbOnFailure = readBoolean(jsonData, "adb_restart_on_failure");
     this.skipInstallMetadata = readBoolean(jsonData, "skip_install_metadata");
     this.alwaysUseJavaAgent = readBoolean(jsonData, "skip_install_metadata");

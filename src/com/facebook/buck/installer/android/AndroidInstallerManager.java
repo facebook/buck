@@ -189,8 +189,6 @@ class AndroidInstallerManager implements InstallCommand {
                   androidArtifacts.getAndroidManifestPath(), androidArtifacts.getApk()),
               isolatedExopackageInfo,
               androidArtifacts.getAgentApk(),
-              // TODO: msemko read from toolchains. Need to pass from buck2
-              "/opt/android_sdk/platform-tools/adb",
               installId);
       return androidInstaller.installApk();
 
