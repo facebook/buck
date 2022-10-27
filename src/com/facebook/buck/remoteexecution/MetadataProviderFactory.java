@@ -78,7 +78,6 @@ public class MetadataProviderFactory {
       String repository,
       String scheduleType,
       String reSessionLabel,
-      String tenantId,
       String useCaseId,
       String auxiliaryBuildTag,
       String projectPrefix,
@@ -109,7 +108,6 @@ public class MetadataProviderFactory {
                 .setRepository(repository)
                 .setScheduleType(scheduleType)
                 .setReSessionLabel(reSessionLabel)
-                .setTenantId(tenantId)
                 .build();
         metadata =
             RemoteExecutionMetadata.newBuilder()

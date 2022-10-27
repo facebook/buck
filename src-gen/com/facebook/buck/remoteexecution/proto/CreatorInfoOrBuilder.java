@@ -36,4 +36,21 @@ public interface CreatorInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getClientTypeBytes();
+
+  /**
+   * <pre>
+   * Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.Networks client_network = 3;</code>
+   */
+  int getClientNetworkValue();
+  /**
+   * <pre>
+   * Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.Networks client_network = 3;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.Networks getClientNetwork();
 }

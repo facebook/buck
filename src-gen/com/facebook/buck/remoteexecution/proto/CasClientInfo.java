@@ -21,6 +21,7 @@ private static final long serialVersionUID = 0L;
     name_ = "";
     jobId_ = "";
     streamingMode_ = 0;
+    operatingSystem_ = "";
   }
 
   @java.lang.Override
@@ -76,6 +77,32 @@ private static final long serialVersionUID = 0L;
               manifoldBucket_ = subBuilder.buildPartial();
             }
 
+            break;
+          }
+          case 40: {
+
+            skipQuotaChecks_ = input.readBool();
+            break;
+          }
+          case 48: {
+
+            requestStartTimestampsMs_ = input.readUInt64();
+            break;
+          }
+          case 56: {
+
+            logRequest_ = input.readBool();
+            break;
+          }
+          case 66: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            operatingSystem_ = s;
+            break;
+          }
+          case 72: {
+
+            skipDecompression_ = input.readBool();
             break;
           }
           default: {
@@ -350,6 +377,97 @@ private static final long serialVersionUID = 0L;
     return getManifoldBucket();
   }
 
+  public static final int SKIP_QUOTA_CHECKS_FIELD_NUMBER = 5;
+  private boolean skipQuotaChecks_;
+  /**
+   * <pre>
+   * This allows skipping quota checks when uploading action results
+   * </pre>
+   *
+   * <code>bool skip_quota_checks = 5;</code>
+   */
+  public boolean getSkipQuotaChecks() {
+    return skipQuotaChecks_;
+  }
+
+  public static final int REQUEST_START_TIMESTAMPS_MS_FIELD_NUMBER = 6;
+  private long requestStartTimestampsMs_;
+  /**
+   * <code>uint64 request_start_timestamps_ms = 6;</code>
+   */
+  public long getRequestStartTimestampsMs() {
+    return requestStartTimestampsMs_;
+  }
+
+  public static final int LOG_REQUEST_FIELD_NUMBER = 7;
+  private boolean logRequest_;
+  /**
+   * <pre>
+   * Make CAS server log this request to scuba (i.e. bypass any sampling). Might be useful for
+   * debugging.
+   * </pre>
+   *
+   * <code>bool log_request = 7;</code>
+   */
+  public boolean getLogRequest() {
+    return logRequest_;
+  }
+
+  public static final int OPERATING_SYSTEM_FIELD_NUMBER = 8;
+  private volatile java.lang.Object operatingSystem_;
+  /**
+   * <pre>
+   * Platform the client is on
+   * </pre>
+   *
+   * <code>string operating_system = 8;</code>
+   */
+  public java.lang.String getOperatingSystem() {
+    java.lang.Object ref = operatingSystem_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      operatingSystem_ = s;
+      return s;
+    }
+  }
+  /**
+   * <pre>
+   * Platform the client is on
+   * </pre>
+   *
+   * <code>string operating_system = 8;</code>
+   */
+  public com.google.protobuf.ByteString
+      getOperatingSystemBytes() {
+    java.lang.Object ref = operatingSystem_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      operatingSystem_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int SKIP_DECOMPRESSION_FIELD_NUMBER = 9;
+  private boolean skipDecompression_;
+  /**
+   * <pre>
+   * whether the server should skip the decompression
+   * </pre>
+   *
+   * <code>bool skip_decompression = 9;</code>
+   */
+  public boolean getSkipDecompression() {
+    return skipDecompression_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -376,6 +494,21 @@ private static final long serialVersionUID = 0L;
     if (manifoldBucket_ != null) {
       output.writeMessage(4, getManifoldBucket());
     }
+    if (skipQuotaChecks_ != false) {
+      output.writeBool(5, skipQuotaChecks_);
+    }
+    if (requestStartTimestampsMs_ != 0L) {
+      output.writeUInt64(6, requestStartTimestampsMs_);
+    }
+    if (logRequest_ != false) {
+      output.writeBool(7, logRequest_);
+    }
+    if (!getOperatingSystemBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 8, operatingSystem_);
+    }
+    if (skipDecompression_ != false) {
+      output.writeBool(9, skipDecompression_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -398,6 +531,25 @@ private static final long serialVersionUID = 0L;
     if (manifoldBucket_ != null) {
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(4, getManifoldBucket());
+    }
+    if (skipQuotaChecks_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(5, skipQuotaChecks_);
+    }
+    if (requestStartTimestampsMs_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt64Size(6, requestStartTimestampsMs_);
+    }
+    if (logRequest_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(7, logRequest_);
+    }
+    if (!getOperatingSystemBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, operatingSystem_);
+    }
+    if (skipDecompression_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(9, skipDecompression_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -424,6 +576,16 @@ private static final long serialVersionUID = 0L;
       if (!getManifoldBucket()
           .equals(other.getManifoldBucket())) return false;
     }
+    if (getSkipQuotaChecks()
+        != other.getSkipQuotaChecks()) return false;
+    if (getRequestStartTimestampsMs()
+        != other.getRequestStartTimestampsMs()) return false;
+    if (getLogRequest()
+        != other.getLogRequest()) return false;
+    if (!getOperatingSystem()
+        .equals(other.getOperatingSystem())) return false;
+    if (getSkipDecompression()
+        != other.getSkipDecompression()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -445,6 +607,20 @@ private static final long serialVersionUID = 0L;
       hash = (37 * hash) + MANIFOLD_BUCKET_FIELD_NUMBER;
       hash = (53 * hash) + getManifoldBucket().hashCode();
     }
+    hash = (37 * hash) + SKIP_QUOTA_CHECKS_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getSkipQuotaChecks());
+    hash = (37 * hash) + REQUEST_START_TIMESTAMPS_MS_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getRequestStartTimestampsMs());
+    hash = (37 * hash) + LOG_REQUEST_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getLogRequest());
+    hash = (37 * hash) + OPERATING_SYSTEM_FIELD_NUMBER;
+    hash = (53 * hash) + getOperatingSystem().hashCode();
+    hash = (37 * hash) + SKIP_DECOMPRESSION_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getSkipDecompression());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -590,6 +766,16 @@ private static final long serialVersionUID = 0L;
         manifoldBucket_ = null;
         manifoldBucketBuilder_ = null;
       }
+      skipQuotaChecks_ = false;
+
+      requestStartTimestampsMs_ = 0L;
+
+      logRequest_ = false;
+
+      operatingSystem_ = "";
+
+      skipDecompression_ = false;
+
       return this;
     }
 
@@ -624,6 +810,11 @@ private static final long serialVersionUID = 0L;
       } else {
         result.manifoldBucket_ = manifoldBucketBuilder_.build();
       }
+      result.skipQuotaChecks_ = skipQuotaChecks_;
+      result.requestStartTimestampsMs_ = requestStartTimestampsMs_;
+      result.logRequest_ = logRequest_;
+      result.operatingSystem_ = operatingSystem_;
+      result.skipDecompression_ = skipDecompression_;
       onBuilt();
       return result;
     }
@@ -685,6 +876,22 @@ private static final long serialVersionUID = 0L;
       }
       if (other.hasManifoldBucket()) {
         mergeManifoldBucket(other.getManifoldBucket());
+      }
+      if (other.getSkipQuotaChecks() != false) {
+        setSkipQuotaChecks(other.getSkipQuotaChecks());
+      }
+      if (other.getRequestStartTimestampsMs() != 0L) {
+        setRequestStartTimestampsMs(other.getRequestStartTimestampsMs());
+      }
+      if (other.getLogRequest() != false) {
+        setLogRequest(other.getLogRequest());
+      }
+      if (!other.getOperatingSystem().isEmpty()) {
+        operatingSystem_ = other.operatingSystem_;
+        onChanged();
+      }
+      if (other.getSkipDecompression() != false) {
+        setSkipDecompression(other.getSkipDecompression());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1109,6 +1316,238 @@ private static final long serialVersionUID = 0L;
         manifoldBucket_ = null;
       }
       return manifoldBucketBuilder_;
+    }
+
+    private boolean skipQuotaChecks_ ;
+    /**
+     * <pre>
+     * This allows skipping quota checks when uploading action results
+     * </pre>
+     *
+     * <code>bool skip_quota_checks = 5;</code>
+     */
+    public boolean getSkipQuotaChecks() {
+      return skipQuotaChecks_;
+    }
+    /**
+     * <pre>
+     * This allows skipping quota checks when uploading action results
+     * </pre>
+     *
+     * <code>bool skip_quota_checks = 5;</code>
+     */
+    public Builder setSkipQuotaChecks(boolean value) {
+      
+      skipQuotaChecks_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * This allows skipping quota checks when uploading action results
+     * </pre>
+     *
+     * <code>bool skip_quota_checks = 5;</code>
+     */
+    public Builder clearSkipQuotaChecks() {
+      
+      skipQuotaChecks_ = false;
+      onChanged();
+      return this;
+    }
+
+    private long requestStartTimestampsMs_ ;
+    /**
+     * <code>uint64 request_start_timestamps_ms = 6;</code>
+     */
+    public long getRequestStartTimestampsMs() {
+      return requestStartTimestampsMs_;
+    }
+    /**
+     * <code>uint64 request_start_timestamps_ms = 6;</code>
+     */
+    public Builder setRequestStartTimestampsMs(long value) {
+      
+      requestStartTimestampsMs_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>uint64 request_start_timestamps_ms = 6;</code>
+     */
+    public Builder clearRequestStartTimestampsMs() {
+      
+      requestStartTimestampsMs_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private boolean logRequest_ ;
+    /**
+     * <pre>
+     * Make CAS server log this request to scuba (i.e. bypass any sampling). Might be useful for
+     * debugging.
+     * </pre>
+     *
+     * <code>bool log_request = 7;</code>
+     */
+    public boolean getLogRequest() {
+      return logRequest_;
+    }
+    /**
+     * <pre>
+     * Make CAS server log this request to scuba (i.e. bypass any sampling). Might be useful for
+     * debugging.
+     * </pre>
+     *
+     * <code>bool log_request = 7;</code>
+     */
+    public Builder setLogRequest(boolean value) {
+      
+      logRequest_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Make CAS server log this request to scuba (i.e. bypass any sampling). Might be useful for
+     * debugging.
+     * </pre>
+     *
+     * <code>bool log_request = 7;</code>
+     */
+    public Builder clearLogRequest() {
+      
+      logRequest_ = false;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object operatingSystem_ = "";
+    /**
+     * <pre>
+     * Platform the client is on
+     * </pre>
+     *
+     * <code>string operating_system = 8;</code>
+     */
+    public java.lang.String getOperatingSystem() {
+      java.lang.Object ref = operatingSystem_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        operatingSystem_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Platform the client is on
+     * </pre>
+     *
+     * <code>string operating_system = 8;</code>
+     */
+    public com.google.protobuf.ByteString
+        getOperatingSystemBytes() {
+      java.lang.Object ref = operatingSystem_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        operatingSystem_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Platform the client is on
+     * </pre>
+     *
+     * <code>string operating_system = 8;</code>
+     */
+    public Builder setOperatingSystem(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      operatingSystem_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Platform the client is on
+     * </pre>
+     *
+     * <code>string operating_system = 8;</code>
+     */
+    public Builder clearOperatingSystem() {
+      
+      operatingSystem_ = getDefaultInstance().getOperatingSystem();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Platform the client is on
+     * </pre>
+     *
+     * <code>string operating_system = 8;</code>
+     */
+    public Builder setOperatingSystemBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      operatingSystem_ = value;
+      onChanged();
+      return this;
+    }
+
+    private boolean skipDecompression_ ;
+    /**
+     * <pre>
+     * whether the server should skip the decompression
+     * </pre>
+     *
+     * <code>bool skip_decompression = 9;</code>
+     */
+    public boolean getSkipDecompression() {
+      return skipDecompression_;
+    }
+    /**
+     * <pre>
+     * whether the server should skip the decompression
+     * </pre>
+     *
+     * <code>bool skip_decompression = 9;</code>
+     */
+    public Builder setSkipDecompression(boolean value) {
+      
+      skipDecompression_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * whether the server should skip the decompression
+     * </pre>
+     *
+     * <code>bool skip_decompression = 9;</code>
+     */
+    public Builder clearSkipDecompression() {
+      
+      skipDecompression_ = false;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

@@ -102,4 +102,82 @@ public interface ExecutedActionInfoOrBuilder extends
    * <code>bool deduplicated = 10;</code>
    */
   boolean getDeduplicated();
+
+  /**
+   * <pre>
+   * digest of bpftrace output (if bpftrace was run)
+   * deprecated in favour of server_logs
+   * </pre>
+   *
+   * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+   */
+  boolean hasTraceDigest();
+  /**
+   * <pre>
+   * digest of bpftrace output (if bpftrace was run)
+   * deprecated in favour of server_logs
+   * </pre>
+   *
+   * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+   */
+  build.bazel.remote.execution.v2.Digest getTraceDigest();
+  /**
+   * <pre>
+   * digest of bpftrace output (if bpftrace was run)
+   * deprecated in favour of server_logs
+   * </pre>
+   *
+   * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+   */
+  build.bazel.remote.execution.v2.DigestOrBuilder getTraceDigestOrBuilder();
+
+  /**
+   * <pre>
+   * reflects if the action was ran on a a worker with an experimental setup
+   * </pre>
+   *
+   * <code>bool executed_on_experimental_setup = 12;</code>
+   */
+  boolean getExecutedOnExperimentalSetup();
+
+  /**
+   * <pre>
+   * input space used by the task for materialization
+   * </pre>
+   *
+   * <code>int64 used_input_size = 13;</code>
+   */
+  long getUsedInputSize();
+
+  /**
+   * <pre>
+   * action result ttl reflecting the minimal ttl of just executed action result outputs
+   * </pre>
+   *
+   * <code>int64 action_result_ttl = 14;</code>
+   */
+  long getActionResultTtl();
+
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+   */
+  boolean hasExecutedActionStorageStats();
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats getExecutedActionStorageStats();
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStatsOrBuilder getExecutedActionStorageStatsOrBuilder();
+
+  /**
+   * <code>uint64 reserved_memory = 16;</code>
+   */
+  long getReservedMemory();
+
+  /**
+   * <code>uint64 cpu_units = 17;</code>
+   */
+  long getCpuUnits();
 }

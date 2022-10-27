@@ -86,4 +86,55 @@ public interface CasClientInfoOrBuilder extends
    * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
    */
   com.facebook.buck.remoteexecution.proto.ManifoldBucketOrBuilder getManifoldBucketOrBuilder();
+
+  /**
+   * <pre>
+   * This allows skipping quota checks when uploading action results
+   * </pre>
+   *
+   * <code>bool skip_quota_checks = 5;</code>
+   */
+  boolean getSkipQuotaChecks();
+
+  /**
+   * <code>uint64 request_start_timestamps_ms = 6;</code>
+   */
+  long getRequestStartTimestampsMs();
+
+  /**
+   * <pre>
+   * Make CAS server log this request to scuba (i.e. bypass any sampling). Might be useful for
+   * debugging.
+   * </pre>
+   *
+   * <code>bool log_request = 7;</code>
+   */
+  boolean getLogRequest();
+
+  /**
+   * <pre>
+   * Platform the client is on
+   * </pre>
+   *
+   * <code>string operating_system = 8;</code>
+   */
+  java.lang.String getOperatingSystem();
+  /**
+   * <pre>
+   * Platform the client is on
+   * </pre>
+   *
+   * <code>string operating_system = 8;</code>
+   */
+  com.google.protobuf.ByteString
+      getOperatingSystemBytes();
+
+  /**
+   * <pre>
+   * whether the server should skip the decompression
+   * </pre>
+   *
+   * <code>bool skip_decompression = 9;</code>
+   */
+  boolean getSkipDecompression();
 }

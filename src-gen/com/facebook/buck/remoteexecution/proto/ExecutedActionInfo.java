@@ -106,6 +106,57 @@ private static final long serialVersionUID = 0L;
             deduplicated_ = input.readBool();
             break;
           }
+          case 90: {
+            build.bazel.remote.execution.v2.Digest.Builder subBuilder = null;
+            if (traceDigest_ != null) {
+              subBuilder = traceDigest_.toBuilder();
+            }
+            traceDigest_ = input.readMessage(build.bazel.remote.execution.v2.Digest.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(traceDigest_);
+              traceDigest_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
+          case 96: {
+
+            executedOnExperimentalSetup_ = input.readBool();
+            break;
+          }
+          case 104: {
+
+            usedInputSize_ = input.readInt64();
+            break;
+          }
+          case 112: {
+
+            actionResultTtl_ = input.readInt64();
+            break;
+          }
+          case 122: {
+            com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.Builder subBuilder = null;
+            if (executedActionStorageStats_ != null) {
+              subBuilder = executedActionStorageStats_.toBuilder();
+            }
+            executedActionStorageStats_ = input.readMessage(com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(executedActionStorageStats_);
+              executedActionStorageStats_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
+          case 128: {
+
+            reservedMemory_ = input.readUInt64();
+            break;
+          }
+          case 136: {
+
+            cpuUnits_ = input.readUInt64();
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -276,6 +327,120 @@ private static final long serialVersionUID = 0L;
     return deduplicated_;
   }
 
+  public static final int TRACE_DIGEST_FIELD_NUMBER = 11;
+  private build.bazel.remote.execution.v2.Digest traceDigest_;
+  /**
+   * <pre>
+   * digest of bpftrace output (if bpftrace was run)
+   * deprecated in favour of server_logs
+   * </pre>
+   *
+   * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+   */
+  public boolean hasTraceDigest() {
+    return traceDigest_ != null;
+  }
+  /**
+   * <pre>
+   * digest of bpftrace output (if bpftrace was run)
+   * deprecated in favour of server_logs
+   * </pre>
+   *
+   * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+   */
+  public build.bazel.remote.execution.v2.Digest getTraceDigest() {
+    return traceDigest_ == null ? build.bazel.remote.execution.v2.Digest.getDefaultInstance() : traceDigest_;
+  }
+  /**
+   * <pre>
+   * digest of bpftrace output (if bpftrace was run)
+   * deprecated in favour of server_logs
+   * </pre>
+   *
+   * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+   */
+  public build.bazel.remote.execution.v2.DigestOrBuilder getTraceDigestOrBuilder() {
+    return getTraceDigest();
+  }
+
+  public static final int EXECUTED_ON_EXPERIMENTAL_SETUP_FIELD_NUMBER = 12;
+  private boolean executedOnExperimentalSetup_;
+  /**
+   * <pre>
+   * reflects if the action was ran on a a worker with an experimental setup
+   * </pre>
+   *
+   * <code>bool executed_on_experimental_setup = 12;</code>
+   */
+  public boolean getExecutedOnExperimentalSetup() {
+    return executedOnExperimentalSetup_;
+  }
+
+  public static final int USED_INPUT_SIZE_FIELD_NUMBER = 13;
+  private long usedInputSize_;
+  /**
+   * <pre>
+   * input space used by the task for materialization
+   * </pre>
+   *
+   * <code>int64 used_input_size = 13;</code>
+   */
+  public long getUsedInputSize() {
+    return usedInputSize_;
+  }
+
+  public static final int ACTION_RESULT_TTL_FIELD_NUMBER = 14;
+  private long actionResultTtl_;
+  /**
+   * <pre>
+   * action result ttl reflecting the minimal ttl of just executed action result outputs
+   * </pre>
+   *
+   * <code>int64 action_result_ttl = 14;</code>
+   */
+  public long getActionResultTtl() {
+    return actionResultTtl_;
+  }
+
+  public static final int EXECUTED_ACTION_STORAGE_STATS_FIELD_NUMBER = 15;
+  private com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats executedActionStorageStats_;
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+   */
+  public boolean hasExecutedActionStorageStats() {
+    return executedActionStorageStats_ != null;
+  }
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats getExecutedActionStorageStats() {
+    return executedActionStorageStats_ == null ? com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.getDefaultInstance() : executedActionStorageStats_;
+  }
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStatsOrBuilder getExecutedActionStorageStatsOrBuilder() {
+    return getExecutedActionStorageStats();
+  }
+
+  public static final int RESERVED_MEMORY_FIELD_NUMBER = 16;
+  private long reservedMemory_;
+  /**
+   * <code>uint64 reserved_memory = 16;</code>
+   */
+  public long getReservedMemory() {
+    return reservedMemory_;
+  }
+
+  public static final int CPU_UNITS_FIELD_NUMBER = 17;
+  private long cpuUnits_;
+  /**
+   * <code>uint64 cpu_units = 17;</code>
+   */
+  public long getCpuUnits() {
+    return cpuUnits_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -319,6 +484,27 @@ private static final long serialVersionUID = 0L;
     }
     if (deduplicated_ != false) {
       output.writeBool(10, deduplicated_);
+    }
+    if (traceDigest_ != null) {
+      output.writeMessage(11, getTraceDigest());
+    }
+    if (executedOnExperimentalSetup_ != false) {
+      output.writeBool(12, executedOnExperimentalSetup_);
+    }
+    if (usedInputSize_ != 0L) {
+      output.writeInt64(13, usedInputSize_);
+    }
+    if (actionResultTtl_ != 0L) {
+      output.writeInt64(14, actionResultTtl_);
+    }
+    if (executedActionStorageStats_ != null) {
+      output.writeMessage(15, getExecutedActionStorageStats());
+    }
+    if (reservedMemory_ != 0L) {
+      output.writeUInt64(16, reservedMemory_);
+    }
+    if (cpuUnits_ != 0L) {
+      output.writeUInt64(17, cpuUnits_);
     }
     unknownFields.writeTo(output);
   }
@@ -369,6 +555,34 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeBoolSize(10, deduplicated_);
     }
+    if (traceDigest_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(11, getTraceDigest());
+    }
+    if (executedOnExperimentalSetup_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(12, executedOnExperimentalSetup_);
+    }
+    if (usedInputSize_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(13, usedInputSize_);
+    }
+    if (actionResultTtl_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(14, actionResultTtl_);
+    }
+    if (executedActionStorageStats_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(15, getExecutedActionStorageStats());
+    }
+    if (reservedMemory_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt64Size(16, reservedMemory_);
+    }
+    if (cpuUnits_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt64Size(17, cpuUnits_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -407,6 +621,26 @@ private static final long serialVersionUID = 0L;
         != other.getExecutedOnElasticCapacity()) return false;
     if (getDeduplicated()
         != other.getDeduplicated()) return false;
+    if (hasTraceDigest() != other.hasTraceDigest()) return false;
+    if (hasTraceDigest()) {
+      if (!getTraceDigest()
+          .equals(other.getTraceDigest())) return false;
+    }
+    if (getExecutedOnExperimentalSetup()
+        != other.getExecutedOnExperimentalSetup()) return false;
+    if (getUsedInputSize()
+        != other.getUsedInputSize()) return false;
+    if (getActionResultTtl()
+        != other.getActionResultTtl()) return false;
+    if (hasExecutedActionStorageStats() != other.hasExecutedActionStorageStats()) return false;
+    if (hasExecutedActionStorageStats()) {
+      if (!getExecutedActionStorageStats()
+          .equals(other.getExecutedActionStorageStats())) return false;
+    }
+    if (getReservedMemory()
+        != other.getReservedMemory()) return false;
+    if (getCpuUnits()
+        != other.getCpuUnits()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -449,6 +683,29 @@ private static final long serialVersionUID = 0L;
     hash = (37 * hash) + DEDUPLICATED_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
         getDeduplicated());
+    if (hasTraceDigest()) {
+      hash = (37 * hash) + TRACE_DIGEST_FIELD_NUMBER;
+      hash = (53 * hash) + getTraceDigest().hashCode();
+    }
+    hash = (37 * hash) + EXECUTED_ON_EXPERIMENTAL_SETUP_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getExecutedOnExperimentalSetup());
+    hash = (37 * hash) + USED_INPUT_SIZE_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getUsedInputSize());
+    hash = (37 * hash) + ACTION_RESULT_TTL_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getActionResultTtl());
+    if (hasExecutedActionStorageStats()) {
+      hash = (37 * hash) + EXECUTED_ACTION_STORAGE_STATS_FIELD_NUMBER;
+      hash = (53 * hash) + getExecutedActionStorageStats().hashCode();
+    }
+    hash = (37 * hash) + RESERVED_MEMORY_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getReservedMemory());
+    hash = (37 * hash) + CPU_UNITS_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getCpuUnits());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -610,6 +867,28 @@ private static final long serialVersionUID = 0L;
 
       deduplicated_ = false;
 
+      if (traceDigestBuilder_ == null) {
+        traceDigest_ = null;
+      } else {
+        traceDigest_ = null;
+        traceDigestBuilder_ = null;
+      }
+      executedOnExperimentalSetup_ = false;
+
+      usedInputSize_ = 0L;
+
+      actionResultTtl_ = 0L;
+
+      if (executedActionStorageStatsBuilder_ == null) {
+        executedActionStorageStats_ = null;
+      } else {
+        executedActionStorageStats_ = null;
+        executedActionStorageStatsBuilder_ = null;
+      }
+      reservedMemory_ = 0L;
+
+      cpuUnits_ = 0L;
+
       return this;
     }
 
@@ -650,6 +929,21 @@ private static final long serialVersionUID = 0L;
       result.taskTotalMem_ = taskTotalMem_;
       result.executedOnElasticCapacity_ = executedOnElasticCapacity_;
       result.deduplicated_ = deduplicated_;
+      if (traceDigestBuilder_ == null) {
+        result.traceDigest_ = traceDigest_;
+      } else {
+        result.traceDigest_ = traceDigestBuilder_.build();
+      }
+      result.executedOnExperimentalSetup_ = executedOnExperimentalSetup_;
+      result.usedInputSize_ = usedInputSize_;
+      result.actionResultTtl_ = actionResultTtl_;
+      if (executedActionStorageStatsBuilder_ == null) {
+        result.executedActionStorageStats_ = executedActionStorageStats_;
+      } else {
+        result.executedActionStorageStats_ = executedActionStorageStatsBuilder_.build();
+      }
+      result.reservedMemory_ = reservedMemory_;
+      result.cpuUnits_ = cpuUnits_;
       onBuilt();
       return result;
     }
@@ -727,6 +1021,27 @@ private static final long serialVersionUID = 0L;
       }
       if (other.getDeduplicated() != false) {
         setDeduplicated(other.getDeduplicated());
+      }
+      if (other.hasTraceDigest()) {
+        mergeTraceDigest(other.getTraceDigest());
+      }
+      if (other.getExecutedOnExperimentalSetup() != false) {
+        setExecutedOnExperimentalSetup(other.getExecutedOnExperimentalSetup());
+      }
+      if (other.getUsedInputSize() != 0L) {
+        setUsedInputSize(other.getUsedInputSize());
+      }
+      if (other.getActionResultTtl() != 0L) {
+        setActionResultTtl(other.getActionResultTtl());
+      }
+      if (other.hasExecutedActionStorageStats()) {
+        mergeExecutedActionStorageStats(other.getExecutedActionStorageStats());
+      }
+      if (other.getReservedMemory() != 0L) {
+        setReservedMemory(other.getReservedMemory());
+      }
+      if (other.getCpuUnits() != 0L) {
+        setCpuUnits(other.getCpuUnits());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1212,6 +1527,451 @@ private static final long serialVersionUID = 0L;
     public Builder clearDeduplicated() {
       
       deduplicated_ = false;
+      onChanged();
+      return this;
+    }
+
+    private build.bazel.remote.execution.v2.Digest traceDigest_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        build.bazel.remote.execution.v2.Digest, build.bazel.remote.execution.v2.Digest.Builder, build.bazel.remote.execution.v2.DigestOrBuilder> traceDigestBuilder_;
+    /**
+     * <pre>
+     * digest of bpftrace output (if bpftrace was run)
+     * deprecated in favour of server_logs
+     * </pre>
+     *
+     * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+     */
+    public boolean hasTraceDigest() {
+      return traceDigestBuilder_ != null || traceDigest_ != null;
+    }
+    /**
+     * <pre>
+     * digest of bpftrace output (if bpftrace was run)
+     * deprecated in favour of server_logs
+     * </pre>
+     *
+     * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+     */
+    public build.bazel.remote.execution.v2.Digest getTraceDigest() {
+      if (traceDigestBuilder_ == null) {
+        return traceDigest_ == null ? build.bazel.remote.execution.v2.Digest.getDefaultInstance() : traceDigest_;
+      } else {
+        return traceDigestBuilder_.getMessage();
+      }
+    }
+    /**
+     * <pre>
+     * digest of bpftrace output (if bpftrace was run)
+     * deprecated in favour of server_logs
+     * </pre>
+     *
+     * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+     */
+    public Builder setTraceDigest(build.bazel.remote.execution.v2.Digest value) {
+      if (traceDigestBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        traceDigest_ = value;
+        onChanged();
+      } else {
+        traceDigestBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * digest of bpftrace output (if bpftrace was run)
+     * deprecated in favour of server_logs
+     * </pre>
+     *
+     * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+     */
+    public Builder setTraceDigest(
+        build.bazel.remote.execution.v2.Digest.Builder builderForValue) {
+      if (traceDigestBuilder_ == null) {
+        traceDigest_ = builderForValue.build();
+        onChanged();
+      } else {
+        traceDigestBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * digest of bpftrace output (if bpftrace was run)
+     * deprecated in favour of server_logs
+     * </pre>
+     *
+     * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+     */
+    public Builder mergeTraceDigest(build.bazel.remote.execution.v2.Digest value) {
+      if (traceDigestBuilder_ == null) {
+        if (traceDigest_ != null) {
+          traceDigest_ =
+            build.bazel.remote.execution.v2.Digest.newBuilder(traceDigest_).mergeFrom(value).buildPartial();
+        } else {
+          traceDigest_ = value;
+        }
+        onChanged();
+      } else {
+        traceDigestBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * digest of bpftrace output (if bpftrace was run)
+     * deprecated in favour of server_logs
+     * </pre>
+     *
+     * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+     */
+    public Builder clearTraceDigest() {
+      if (traceDigestBuilder_ == null) {
+        traceDigest_ = null;
+        onChanged();
+      } else {
+        traceDigest_ = null;
+        traceDigestBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * digest of bpftrace output (if bpftrace was run)
+     * deprecated in favour of server_logs
+     * </pre>
+     *
+     * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+     */
+    public build.bazel.remote.execution.v2.Digest.Builder getTraceDigestBuilder() {
+      
+      onChanged();
+      return getTraceDigestFieldBuilder().getBuilder();
+    }
+    /**
+     * <pre>
+     * digest of bpftrace output (if bpftrace was run)
+     * deprecated in favour of server_logs
+     * </pre>
+     *
+     * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+     */
+    public build.bazel.remote.execution.v2.DigestOrBuilder getTraceDigestOrBuilder() {
+      if (traceDigestBuilder_ != null) {
+        return traceDigestBuilder_.getMessageOrBuilder();
+      } else {
+        return traceDigest_ == null ?
+            build.bazel.remote.execution.v2.Digest.getDefaultInstance() : traceDigest_;
+      }
+    }
+    /**
+     * <pre>
+     * digest of bpftrace output (if bpftrace was run)
+     * deprecated in favour of server_logs
+     * </pre>
+     *
+     * <code>.build.bazel.remote.execution.v2.Digest trace_digest = 11;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        build.bazel.remote.execution.v2.Digest, build.bazel.remote.execution.v2.Digest.Builder, build.bazel.remote.execution.v2.DigestOrBuilder> 
+        getTraceDigestFieldBuilder() {
+      if (traceDigestBuilder_ == null) {
+        traceDigestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            build.bazel.remote.execution.v2.Digest, build.bazel.remote.execution.v2.Digest.Builder, build.bazel.remote.execution.v2.DigestOrBuilder>(
+                getTraceDigest(),
+                getParentForChildren(),
+                isClean());
+        traceDigest_ = null;
+      }
+      return traceDigestBuilder_;
+    }
+
+    private boolean executedOnExperimentalSetup_ ;
+    /**
+     * <pre>
+     * reflects if the action was ran on a a worker with an experimental setup
+     * </pre>
+     *
+     * <code>bool executed_on_experimental_setup = 12;</code>
+     */
+    public boolean getExecutedOnExperimentalSetup() {
+      return executedOnExperimentalSetup_;
+    }
+    /**
+     * <pre>
+     * reflects if the action was ran on a a worker with an experimental setup
+     * </pre>
+     *
+     * <code>bool executed_on_experimental_setup = 12;</code>
+     */
+    public Builder setExecutedOnExperimentalSetup(boolean value) {
+      
+      executedOnExperimentalSetup_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * reflects if the action was ran on a a worker with an experimental setup
+     * </pre>
+     *
+     * <code>bool executed_on_experimental_setup = 12;</code>
+     */
+    public Builder clearExecutedOnExperimentalSetup() {
+      
+      executedOnExperimentalSetup_ = false;
+      onChanged();
+      return this;
+    }
+
+    private long usedInputSize_ ;
+    /**
+     * <pre>
+     * input space used by the task for materialization
+     * </pre>
+     *
+     * <code>int64 used_input_size = 13;</code>
+     */
+    public long getUsedInputSize() {
+      return usedInputSize_;
+    }
+    /**
+     * <pre>
+     * input space used by the task for materialization
+     * </pre>
+     *
+     * <code>int64 used_input_size = 13;</code>
+     */
+    public Builder setUsedInputSize(long value) {
+      
+      usedInputSize_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * input space used by the task for materialization
+     * </pre>
+     *
+     * <code>int64 used_input_size = 13;</code>
+     */
+    public Builder clearUsedInputSize() {
+      
+      usedInputSize_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private long actionResultTtl_ ;
+    /**
+     * <pre>
+     * action result ttl reflecting the minimal ttl of just executed action result outputs
+     * </pre>
+     *
+     * <code>int64 action_result_ttl = 14;</code>
+     */
+    public long getActionResultTtl() {
+      return actionResultTtl_;
+    }
+    /**
+     * <pre>
+     * action result ttl reflecting the minimal ttl of just executed action result outputs
+     * </pre>
+     *
+     * <code>int64 action_result_ttl = 14;</code>
+     */
+    public Builder setActionResultTtl(long value) {
+      
+      actionResultTtl_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * action result ttl reflecting the minimal ttl of just executed action result outputs
+     * </pre>
+     *
+     * <code>int64 action_result_ttl = 14;</code>
+     */
+    public Builder clearActionResultTtl() {
+      
+      actionResultTtl_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats executedActionStorageStats_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats, com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.Builder, com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStatsOrBuilder> executedActionStorageStatsBuilder_;
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+     */
+    public boolean hasExecutedActionStorageStats() {
+      return executedActionStorageStatsBuilder_ != null || executedActionStorageStats_ != null;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats getExecutedActionStorageStats() {
+      if (executedActionStorageStatsBuilder_ == null) {
+        return executedActionStorageStats_ == null ? com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.getDefaultInstance() : executedActionStorageStats_;
+      } else {
+        return executedActionStorageStatsBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+     */
+    public Builder setExecutedActionStorageStats(com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats value) {
+      if (executedActionStorageStatsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        executedActionStorageStats_ = value;
+        onChanged();
+      } else {
+        executedActionStorageStatsBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+     */
+    public Builder setExecutedActionStorageStats(
+        com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.Builder builderForValue) {
+      if (executedActionStorageStatsBuilder_ == null) {
+        executedActionStorageStats_ = builderForValue.build();
+        onChanged();
+      } else {
+        executedActionStorageStatsBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+     */
+    public Builder mergeExecutedActionStorageStats(com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats value) {
+      if (executedActionStorageStatsBuilder_ == null) {
+        if (executedActionStorageStats_ != null) {
+          executedActionStorageStats_ =
+            com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.newBuilder(executedActionStorageStats_).mergeFrom(value).buildPartial();
+        } else {
+          executedActionStorageStats_ = value;
+        }
+        onChanged();
+      } else {
+        executedActionStorageStatsBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+     */
+    public Builder clearExecutedActionStorageStats() {
+      if (executedActionStorageStatsBuilder_ == null) {
+        executedActionStorageStats_ = null;
+        onChanged();
+      } else {
+        executedActionStorageStats_ = null;
+        executedActionStorageStatsBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.Builder getExecutedActionStorageStatsBuilder() {
+      
+      onChanged();
+      return getExecutedActionStorageStatsFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStatsOrBuilder getExecutedActionStorageStatsOrBuilder() {
+      if (executedActionStorageStatsBuilder_ != null) {
+        return executedActionStorageStatsBuilder_.getMessageOrBuilder();
+      } else {
+        return executedActionStorageStats_ == null ?
+            com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.getDefaultInstance() : executedActionStorageStats_;
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionStorageStats executed_action_storage_stats = 15;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats, com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.Builder, com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStatsOrBuilder> 
+        getExecutedActionStorageStatsFieldBuilder() {
+      if (executedActionStorageStatsBuilder_ == null) {
+        executedActionStorageStatsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats, com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStats.Builder, com.facebook.buck.remoteexecution.proto.ExecutedActionStorageStatsOrBuilder>(
+                getExecutedActionStorageStats(),
+                getParentForChildren(),
+                isClean());
+        executedActionStorageStats_ = null;
+      }
+      return executedActionStorageStatsBuilder_;
+    }
+
+    private long reservedMemory_ ;
+    /**
+     * <code>uint64 reserved_memory = 16;</code>
+     */
+    public long getReservedMemory() {
+      return reservedMemory_;
+    }
+    /**
+     * <code>uint64 reserved_memory = 16;</code>
+     */
+    public Builder setReservedMemory(long value) {
+      
+      reservedMemory_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>uint64 reserved_memory = 16;</code>
+     */
+    public Builder clearReservedMemory() {
+      
+      reservedMemory_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private long cpuUnits_ ;
+    /**
+     * <code>uint64 cpu_units = 17;</code>
+     */
+    public long getCpuUnits() {
+      return cpuUnits_;
+    }
+    /**
+     * <code>uint64 cpu_units = 17;</code>
+     */
+    public Builder setCpuUnits(long value) {
+      
+      cpuUnits_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>uint64 cpu_units = 17;</code>
+     */
+    public Builder clearCpuUnits() {
+      
+      cpuUnits_ = 0L;
       onChanged();
       return this;
     }

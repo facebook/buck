@@ -10,7 +10,25 @@ public interface DebugInfoOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>uint32 pause_before_clean_timeout = 1;</code>
+   * <code>uint32 pause_before_clean_timeout = 1 [deprecated = true];</code>
    */
-  int getPauseBeforeCleanTimeout();
+  @java.lang.Deprecated int getPauseBeforeCleanTimeout();
+
+  /**
+   * <pre>
+   * should skip cleanup on the worker
+   * </pre>
+   *
+   * <code>bool skip_cleanup = 2;</code>
+   */
+  boolean getSkipCleanup();
+
+  /**
+   * <code>.facebook.remote_execution.DebugInfo.BpftraceFilter bpftrace_filter = 3;</code>
+   */
+  int getBpftraceFilterValue();
+  /**
+   * <code>.facebook.remote_execution.DebugInfo.BpftraceFilter bpftrace_filter = 3;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter getBpftraceFilter();
 }

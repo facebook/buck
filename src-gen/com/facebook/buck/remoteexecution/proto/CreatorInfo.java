@@ -25,6 +25,7 @@ private static final long serialVersionUID = 0L;
   private CreatorInfo() {
     username_ = "";
     clientType_ = "";
+    clientNetwork_ = 0;
   }
 
   @java.lang.Override
@@ -61,6 +62,12 @@ private static final long serialVersionUID = 0L;
             java.lang.String s = input.readStringRequireUtf8();
 
             clientType_ = s;
+            break;
+          }
+          case 24: {
+            int rawValue = input.readEnum();
+
+            clientNetwork_ = rawValue;
             break;
           }
           default: {
@@ -171,6 +178,31 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int CLIENT_NETWORK_FIELD_NUMBER = 3;
+  private int clientNetwork_;
+  /**
+   * <pre>
+   * Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.Networks client_network = 3;</code>
+   */
+  public int getClientNetworkValue() {
+    return clientNetwork_;
+  }
+  /**
+   * <pre>
+   * Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.Networks client_network = 3;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.Networks getClientNetwork() {
+    @SuppressWarnings("deprecation")
+    com.facebook.buck.remoteexecution.proto.Networks result = com.facebook.buck.remoteexecution.proto.Networks.valueOf(clientNetwork_);
+    return result == null ? com.facebook.buck.remoteexecution.proto.Networks.UNRECOGNIZED : result;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -191,6 +223,9 @@ private static final long serialVersionUID = 0L;
     if (!getClientTypeBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, clientType_);
     }
+    if (clientNetwork_ != com.facebook.buck.remoteexecution.proto.Networks.UNKNOWN.getNumber()) {
+      output.writeEnum(3, clientNetwork_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -205,6 +240,10 @@ private static final long serialVersionUID = 0L;
     }
     if (!getClientTypeBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, clientType_);
+    }
+    if (clientNetwork_ != com.facebook.buck.remoteexecution.proto.Networks.UNKNOWN.getNumber()) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeEnumSize(3, clientNetwork_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -225,6 +264,7 @@ private static final long serialVersionUID = 0L;
         .equals(other.getUsername())) return false;
     if (!getClientType()
         .equals(other.getClientType())) return false;
+    if (clientNetwork_ != other.clientNetwork_) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -240,6 +280,8 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getUsername().hashCode();
     hash = (37 * hash) + CLIENT_TYPE_FIELD_NUMBER;
     hash = (53 * hash) + getClientType().hashCode();
+    hash = (37 * hash) + CLIENT_NETWORK_FIELD_NUMBER;
+    hash = (53 * hash) + clientNetwork_;
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -382,6 +424,8 @@ private static final long serialVersionUID = 0L;
 
       clientType_ = "";
 
+      clientNetwork_ = 0;
+
       return this;
     }
 
@@ -410,6 +454,7 @@ private static final long serialVersionUID = 0L;
       com.facebook.buck.remoteexecution.proto.CreatorInfo result = new com.facebook.buck.remoteexecution.proto.CreatorInfo(this);
       result.username_ = username_;
       result.clientType_ = clientType_;
+      result.clientNetwork_ = clientNetwork_;
       onBuilt();
       return result;
     }
@@ -465,6 +510,9 @@ private static final long serialVersionUID = 0L;
       if (!other.getClientType().isEmpty()) {
         clientType_ = other.clientType_;
         onChanged();
+      }
+      if (other.clientNetwork_ != 0) {
+        setClientNetworkValue(other.getClientNetworkValue());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -649,6 +697,71 @@ private static final long serialVersionUID = 0L;
   checkByteStringIsUtf8(value);
       
       clientType_ = value;
+      onChanged();
+      return this;
+    }
+
+    private int clientNetwork_ = 0;
+    /**
+     * <pre>
+     * Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.Networks client_network = 3;</code>
+     */
+    public int getClientNetworkValue() {
+      return clientNetwork_;
+    }
+    /**
+     * <pre>
+     * Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.Networks client_network = 3;</code>
+     */
+    public Builder setClientNetworkValue(int value) {
+      clientNetwork_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.Networks client_network = 3;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.Networks getClientNetwork() {
+      @SuppressWarnings("deprecation")
+      com.facebook.buck.remoteexecution.proto.Networks result = com.facebook.buck.remoteexecution.proto.Networks.valueOf(clientNetwork_);
+      return result == null ? com.facebook.buck.remoteexecution.proto.Networks.UNRECOGNIZED : result;
+    }
+    /**
+     * <pre>
+     * Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.Networks client_network = 3;</code>
+     */
+    public Builder setClientNetwork(com.facebook.buck.remoteexecution.proto.Networks value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      
+      clientNetwork_ = value.getNumber();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.Networks client_network = 3;</code>
+     */
+    public Builder clearClientNetwork() {
+      
+      clientNetwork_ = 0;
       onChanged();
       return this;
     }

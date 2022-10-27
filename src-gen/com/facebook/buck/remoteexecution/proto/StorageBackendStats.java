@@ -5,20 +5,20 @@
 package com.facebook.buck.remoteexecution.proto;
 
 /**
- * Protobuf type {@code facebook.remote_execution.CapabilityValue}
+ * Protobuf type {@code facebook.remote_execution.StorageBackendStats}
  */
-@javax.annotation.Generated(value="protoc", comments="annotations:CapabilityValue.java.pb.meta")
-public  final class CapabilityValue extends
+@javax.annotation.Generated(value="protoc", comments="annotations:StorageBackendStats.java.pb.meta")
+public  final class StorageBackendStats extends
     com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:facebook.remote_execution.CapabilityValue)
-    CapabilityValueOrBuilder {
+    // @@protoc_insertion_point(message_implements:facebook.remote_execution.StorageBackendStats)
+    StorageBackendStatsOrBuilder {
 private static final long serialVersionUID = 0L;
-  // Use CapabilityValue.newBuilder() to construct.
-  private CapabilityValue(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  // Use StorageBackendStats.newBuilder() to construct.
+  private StorageBackendStats(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private CapabilityValue() {
-    value_ = "";
+  private StorageBackendStats() {
+    backend_ = "";
   }
 
   @java.lang.Override
@@ -26,7 +26,7 @@ private static final long serialVersionUID = 0L;
   getUnknownFields() {
     return this.unknownFields;
   }
-  private CapabilityValue(
+  private StorageBackendStats(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -45,10 +45,20 @@ private static final long serialVersionUID = 0L;
           case 0:
             done = true;
             break;
-          case 10: {
+          case 8: {
+
+            bytes_ = input.readUInt64();
+            break;
+          }
+          case 16: {
+
+            queriesCount_ = input.readUInt64();
+            break;
+          }
+          case 26: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            value_ = s;
+            backend_ = s;
             break;
           }
           default: {
@@ -72,45 +82,63 @@ private static final long serialVersionUID = 0L;
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_descriptor;
+    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_StorageBackendStats_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_fieldAccessorTable
+    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_StorageBackendStats_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.facebook.buck.remoteexecution.proto.CapabilityValue.class, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder.class);
+            com.facebook.buck.remoteexecution.proto.StorageBackendStats.class, com.facebook.buck.remoteexecution.proto.StorageBackendStats.Builder.class);
   }
 
-  public static final int VALUE_FIELD_NUMBER = 1;
-  private volatile java.lang.Object value_;
+  public static final int BYTES__FIELD_NUMBER = 1;
+  private long bytes_;
   /**
-   * <code>string value = 1;</code>
+   * <code>uint64 bytes_ = 1;</code>
    */
-  public java.lang.String getValue() {
-    java.lang.Object ref = value_;
+  public long getBytes() {
+    return bytes_;
+  }
+
+  public static final int QUERIES_COUNT_FIELD_NUMBER = 2;
+  private long queriesCount_;
+  /**
+   * <code>uint64 queries_count = 2;</code>
+   */
+  public long getQueriesCount() {
+    return queriesCount_;
+  }
+
+  public static final int BACKEND_FIELD_NUMBER = 3;
+  private volatile java.lang.Object backend_;
+  /**
+   * <code>string backend = 3;</code>
+   */
+  public java.lang.String getBackend() {
+    java.lang.Object ref = backend_;
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
-      value_ = s;
+      backend_ = s;
       return s;
     }
   }
   /**
-   * <code>string value = 1;</code>
+   * <code>string backend = 3;</code>
    */
   public com.google.protobuf.ByteString
-      getValueBytes() {
-    java.lang.Object ref = value_;
+      getBackendBytes() {
+    java.lang.Object ref = backend_;
     if (ref instanceof java.lang.String) {
       com.google.protobuf.ByteString b = 
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
-      value_ = b;
+      backend_ = b;
       return b;
     } else {
       return (com.google.protobuf.ByteString) ref;
@@ -131,8 +159,14 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getValueBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, value_);
+    if (bytes_ != 0L) {
+      output.writeUInt64(1, bytes_);
+    }
+    if (queriesCount_ != 0L) {
+      output.writeUInt64(2, queriesCount_);
+    }
+    if (!getBackendBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, backend_);
     }
     unknownFields.writeTo(output);
   }
@@ -143,8 +177,16 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (!getValueBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, value_);
+    if (bytes_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt64Size(1, bytes_);
+    }
+    if (queriesCount_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt64Size(2, queriesCount_);
+    }
+    if (!getBackendBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, backend_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -156,13 +198,17 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof com.facebook.buck.remoteexecution.proto.CapabilityValue)) {
+    if (!(obj instanceof com.facebook.buck.remoteexecution.proto.StorageBackendStats)) {
       return super.equals(obj);
     }
-    com.facebook.buck.remoteexecution.proto.CapabilityValue other = (com.facebook.buck.remoteexecution.proto.CapabilityValue) obj;
+    com.facebook.buck.remoteexecution.proto.StorageBackendStats other = (com.facebook.buck.remoteexecution.proto.StorageBackendStats) obj;
 
-    if (!getValue()
-        .equals(other.getValue())) return false;
+    if (getBytes()
+        != other.getBytes()) return false;
+    if (getQueriesCount()
+        != other.getQueriesCount()) return false;
+    if (!getBackend()
+        .equals(other.getBackend())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -174,76 +220,82 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + VALUE_FIELD_NUMBER;
-    hash = (53 * hash) + getValue().hashCode();
+    hash = (37 * hash) + BYTES__FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getBytes());
+    hash = (37 * hash) + QUERIES_COUNT_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getQueriesCount());
+    hash = (37 * hash) + BACKEND_FIELD_NUMBER;
+    hash = (53 * hash) + getBackend().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
   }
 
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(byte[] data)
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(java.io.InputStream input)
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseDelimitedFrom(java.io.InputStream input)
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseDelimitedFrom(
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -256,7 +308,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.facebook.buck.remoteexecution.proto.CapabilityValue prototype) {
+  public static Builder newBuilder(com.facebook.buck.remoteexecution.proto.StorageBackendStats prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -272,26 +324,26 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
-   * Protobuf type {@code facebook.remote_execution.CapabilityValue}
+   * Protobuf type {@code facebook.remote_execution.StorageBackendStats}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:facebook.remote_execution.CapabilityValue)
-      com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder {
+      // @@protoc_insertion_point(builder_implements:facebook.remote_execution.StorageBackendStats)
+      com.facebook.buck.remoteexecution.proto.StorageBackendStatsOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_descriptor;
+      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_StorageBackendStats_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_fieldAccessorTable
+      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_StorageBackendStats_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.facebook.buck.remoteexecution.proto.CapabilityValue.class, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder.class);
+              com.facebook.buck.remoteexecution.proto.StorageBackendStats.class, com.facebook.buck.remoteexecution.proto.StorageBackendStats.Builder.class);
     }
 
-    // Construct using com.facebook.buck.remoteexecution.proto.CapabilityValue.newBuilder()
+    // Construct using com.facebook.buck.remoteexecution.proto.StorageBackendStats.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -309,7 +361,11 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      value_ = "";
+      bytes_ = 0L;
+
+      queriesCount_ = 0L;
+
+      backend_ = "";
 
       return this;
     }
@@ -317,17 +373,17 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_descriptor;
+      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_StorageBackendStats_descriptor;
     }
 
     @java.lang.Override
-    public com.facebook.buck.remoteexecution.proto.CapabilityValue getDefaultInstanceForType() {
-      return com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance();
+    public com.facebook.buck.remoteexecution.proto.StorageBackendStats getDefaultInstanceForType() {
+      return com.facebook.buck.remoteexecution.proto.StorageBackendStats.getDefaultInstance();
     }
 
     @java.lang.Override
-    public com.facebook.buck.remoteexecution.proto.CapabilityValue build() {
-      com.facebook.buck.remoteexecution.proto.CapabilityValue result = buildPartial();
+    public com.facebook.buck.remoteexecution.proto.StorageBackendStats build() {
+      com.facebook.buck.remoteexecution.proto.StorageBackendStats result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -335,9 +391,11 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public com.facebook.buck.remoteexecution.proto.CapabilityValue buildPartial() {
-      com.facebook.buck.remoteexecution.proto.CapabilityValue result = new com.facebook.buck.remoteexecution.proto.CapabilityValue(this);
-      result.value_ = value_;
+    public com.facebook.buck.remoteexecution.proto.StorageBackendStats buildPartial() {
+      com.facebook.buck.remoteexecution.proto.StorageBackendStats result = new com.facebook.buck.remoteexecution.proto.StorageBackendStats(this);
+      result.bytes_ = bytes_;
+      result.queriesCount_ = queriesCount_;
+      result.backend_ = backend_;
       onBuilt();
       return result;
     }
@@ -376,18 +434,24 @@ private static final long serialVersionUID = 0L;
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.facebook.buck.remoteexecution.proto.CapabilityValue) {
-        return mergeFrom((com.facebook.buck.remoteexecution.proto.CapabilityValue)other);
+      if (other instanceof com.facebook.buck.remoteexecution.proto.StorageBackendStats) {
+        return mergeFrom((com.facebook.buck.remoteexecution.proto.StorageBackendStats)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.facebook.buck.remoteexecution.proto.CapabilityValue other) {
-      if (other == com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance()) return this;
-      if (!other.getValue().isEmpty()) {
-        value_ = other.value_;
+    public Builder mergeFrom(com.facebook.buck.remoteexecution.proto.StorageBackendStats other) {
+      if (other == com.facebook.buck.remoteexecution.proto.StorageBackendStats.getDefaultInstance()) return this;
+      if (other.getBytes() != 0L) {
+        setBytes(other.getBytes());
+      }
+      if (other.getQueriesCount() != 0L) {
+        setQueriesCount(other.getQueriesCount());
+      }
+      if (!other.getBackend().isEmpty()) {
+        backend_ = other.backend_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -405,11 +469,11 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      com.facebook.buck.remoteexecution.proto.CapabilityValue parsedMessage = null;
+      com.facebook.buck.remoteexecution.proto.StorageBackendStats parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (com.facebook.buck.remoteexecution.proto.CapabilityValue) e.getUnfinishedMessage();
+        parsedMessage = (com.facebook.buck.remoteexecution.proto.StorageBackendStats) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -419,71 +483,123 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.lang.Object value_ = "";
+    private long bytes_ ;
     /**
-     * <code>string value = 1;</code>
+     * <code>uint64 bytes_ = 1;</code>
      */
-    public java.lang.String getValue() {
-      java.lang.Object ref = value_;
+    public long getBytes() {
+      return bytes_;
+    }
+    /**
+     * <code>uint64 bytes_ = 1;</code>
+     */
+    public Builder setBytes(long value) {
+      
+      bytes_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>uint64 bytes_ = 1;</code>
+     */
+    public Builder clearBytes() {
+      
+      bytes_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private long queriesCount_ ;
+    /**
+     * <code>uint64 queries_count = 2;</code>
+     */
+    public long getQueriesCount() {
+      return queriesCount_;
+    }
+    /**
+     * <code>uint64 queries_count = 2;</code>
+     */
+    public Builder setQueriesCount(long value) {
+      
+      queriesCount_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>uint64 queries_count = 2;</code>
+     */
+    public Builder clearQueriesCount() {
+      
+      queriesCount_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object backend_ = "";
+    /**
+     * <code>string backend = 3;</code>
+     */
+    public java.lang.String getBackend() {
+      java.lang.Object ref = backend_;
       if (!(ref instanceof java.lang.String)) {
         com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        value_ = s;
+        backend_ = s;
         return s;
       } else {
         return (java.lang.String) ref;
       }
     }
     /**
-     * <code>string value = 1;</code>
+     * <code>string backend = 3;</code>
      */
     public com.google.protobuf.ByteString
-        getValueBytes() {
-      java.lang.Object ref = value_;
+        getBackendBytes() {
+      java.lang.Object ref = backend_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        value_ = b;
+        backend_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
     /**
-     * <code>string value = 1;</code>
+     * <code>string backend = 3;</code>
      */
-    public Builder setValue(
+    public Builder setBackend(
         java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
   
-      value_ = value;
+      backend_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>string value = 1;</code>
+     * <code>string backend = 3;</code>
      */
-    public Builder clearValue() {
+    public Builder clearBackend() {
       
-      value_ = getDefaultInstance().getValue();
+      backend_ = getDefaultInstance().getBackend();
       onChanged();
       return this;
     }
     /**
-     * <code>string value = 1;</code>
+     * <code>string backend = 3;</code>
      */
-    public Builder setValueBytes(
+    public Builder setBackendBytes(
         com.google.protobuf.ByteString value) {
       if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
       
-      value_ = value;
+      backend_ = value;
       onChanged();
       return this;
     }
@@ -500,41 +616,41 @@ private static final long serialVersionUID = 0L;
     }
 
 
-    // @@protoc_insertion_point(builder_scope:facebook.remote_execution.CapabilityValue)
+    // @@protoc_insertion_point(builder_scope:facebook.remote_execution.StorageBackendStats)
   }
 
-  // @@protoc_insertion_point(class_scope:facebook.remote_execution.CapabilityValue)
-  private static final com.facebook.buck.remoteexecution.proto.CapabilityValue DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:facebook.remote_execution.StorageBackendStats)
+  private static final com.facebook.buck.remoteexecution.proto.StorageBackendStats DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new com.facebook.buck.remoteexecution.proto.CapabilityValue();
+    DEFAULT_INSTANCE = new com.facebook.buck.remoteexecution.proto.StorageBackendStats();
   }
 
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue getDefaultInstance() {
+  public static com.facebook.buck.remoteexecution.proto.StorageBackendStats getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<CapabilityValue>
-      PARSER = new com.google.protobuf.AbstractParser<CapabilityValue>() {
+  private static final com.google.protobuf.Parser<StorageBackendStats>
+      PARSER = new com.google.protobuf.AbstractParser<StorageBackendStats>() {
     @java.lang.Override
-    public CapabilityValue parsePartialFrom(
+    public StorageBackendStats parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return new CapabilityValue(input, extensionRegistry);
+      return new StorageBackendStats(input, extensionRegistry);
     }
   };
 
-  public static com.google.protobuf.Parser<CapabilityValue> parser() {
+  public static com.google.protobuf.Parser<StorageBackendStats> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<CapabilityValue> getParserForType() {
+  public com.google.protobuf.Parser<StorageBackendStats> getParserForType() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.facebook.buck.remoteexecution.proto.CapabilityValue getDefaultInstanceForType() {
+  public com.facebook.buck.remoteexecution.proto.StorageBackendStats getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

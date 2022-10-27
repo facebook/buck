@@ -181,22 +181,30 @@ public interface RemoteExecutionMetadataOrBuilder extends
   build.bazel.remote.execution.v2.PlatformOrBuilder getPlatformOrBuilder();
 
   /**
-   * <pre>
-   * use case (and related configuration) to use to execute this action.
-   * </pre>
-   *
-   * <code>string use_case_id = 18;</code>
+   * <code>.facebook.remote_execution.ResourceRequirements resource_requirements = 16;</code>
    */
-  java.lang.String getUseCaseId();
+  boolean hasResourceRequirements();
   /**
-   * <pre>
-   * use case (and related configuration) to use to execute this action.
-   * </pre>
-   *
-   * <code>string use_case_id = 18;</code>
+   * <code>.facebook.remote_execution.ResourceRequirements resource_requirements = 16;</code>
    */
-  com.google.protobuf.ByteString
-      getUseCaseIdBytes();
+  com.facebook.buck.remoteexecution.proto.ResourceRequirements getResourceRequirements();
+  /**
+   * <code>.facebook.remote_execution.ResourceRequirements resource_requirements = 16;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ResourceRequirementsOrBuilder getResourceRequirementsOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.HostResourceRequirements host_resource_requirements = 17;</code>
+   */
+  boolean hasHostResourceRequirements();
+  /**
+   * <code>.facebook.remote_execution.HostResourceRequirements host_resource_requirements = 17;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.HostResourceRequirements getHostResourceRequirements();
+  /**
+   * <code>.facebook.remote_execution.HostResourceRequirements host_resource_requirements = 17;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.HostResourceRequirementsOrBuilder getHostResourceRequirementsOrBuilder();
 
   /**
    * <code>.facebook.remote_execution.ActionHistoryInfo action_history_info = 19;</code>
@@ -210,4 +218,103 @@ public interface RemoteExecutionMetadataOrBuilder extends
    * <code>.facebook.remote_execution.ActionHistoryInfo action_history_info = 19;</code>
    */
   com.facebook.buck.remoteexecution.proto.ActionHistoryInfoOrBuilder getActionHistoryInfoOrBuilder();
+
+  /**
+   * <pre>
+   * Name of the use case (and related configuration) to use to execute this action.
+   * </pre>
+   *
+   * <code>string use_case_id = 18;</code>
+   */
+  java.lang.String getUseCaseId();
+  /**
+   * <pre>
+   * Name of the use case (and related configuration) to use to execute this action.
+   * </pre>
+   *
+   * <code>string use_case_id = 18;</code>
+   */
+  com.google.protobuf.ByteString
+      getUseCaseIdBytes();
+
+  /**
+   * <code>bool do_not_deduplicate = 20;</code>
+   */
+  boolean getDoNotDeduplicate();
+
+  /**
+   * <code>.facebook.remote_execution.RequestInfo request_info = 21;</code>
+   */
+  boolean hasRequestInfo();
+  /**
+   * <code>.facebook.remote_execution.RequestInfo request_info = 21;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.RequestInfo getRequestInfo();
+  /**
+   * <code>.facebook.remote_execution.RequestInfo request_info = 21;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.RequestInfoOrBuilder getRequestInfoOrBuilder();
+
+  /**
+   * <pre>
+   * 1000-2000 reserved for RE internal protobufs.
+   * NOTE: This is an odd one, some clients use it, but it should be internal
+   * Firstly set by the client (buck, tps, etc.), could be given without the lcs descriptors
+   * Then if present should be enriched by the engine
+   * 1000 - is deprecated
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.EngineActionSchedulingInfo engine_action_scheduling_info = 1001;</code>
+   */
+  boolean hasEngineActionSchedulingInfo();
+  /**
+   * <pre>
+   * 1000-2000 reserved for RE internal protobufs.
+   * NOTE: This is an odd one, some clients use it, but it should be internal
+   * Firstly set by the client (buck, tps, etc.), could be given without the lcs descriptors
+   * Then if present should be enriched by the engine
+   * 1000 - is deprecated
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.EngineActionSchedulingInfo engine_action_scheduling_info = 1001;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.EngineActionSchedulingInfo getEngineActionSchedulingInfo();
+  /**
+   * <pre>
+   * 1000-2000 reserved for RE internal protobufs.
+   * NOTE: This is an odd one, some clients use it, but it should be internal
+   * Firstly set by the client (buck, tps, etc.), could be given without the lcs descriptors
+   * Then if present should be enriched by the engine
+   * 1000 - is deprecated
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.EngineActionSchedulingInfo engine_action_scheduling_info = 1001;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.EngineActionSchedulingInfoOrBuilder getEngineActionSchedulingInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.DataflowTraceInfo dataflow_trace_info = 1002;</code>
+   */
+  boolean hasDataflowTraceInfo();
+  /**
+   * <code>.facebook.remote_execution.DataflowTraceInfo dataflow_trace_info = 1002;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.DataflowTraceInfo getDataflowTraceInfo();
+  /**
+   * <code>.facebook.remote_execution.DataflowTraceInfo dataflow_trace_info = 1002;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.DataflowTraceInfoOrBuilder getDataflowTraceInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.REClientInfo re_client_info = 1003;</code>
+   */
+  boolean hasReClientInfo();
+  /**
+   * <code>.facebook.remote_execution.REClientInfo re_client_info = 1003;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.REClientInfo getReClientInfo();
+  /**
+   * <code>.facebook.remote_execution.REClientInfo re_client_info = 1003;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.REClientInfoOrBuilder getReClientInfoOrBuilder();
 }

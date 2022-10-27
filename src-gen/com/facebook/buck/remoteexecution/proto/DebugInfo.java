@@ -18,6 +18,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private DebugInfo() {
+    bpftraceFilter_ = 0;
   }
 
   @java.lang.Override
@@ -47,6 +48,17 @@ private static final long serialVersionUID = 0L;
           case 8: {
 
             pauseBeforeCleanTimeout_ = input.readUInt32();
+            break;
+          }
+          case 16: {
+
+            skipCleanup_ = input.readBool();
+            break;
+          }
+          case 24: {
+            int rawValue = input.readEnum();
+
+            bpftraceFilter_ = rawValue;
             break;
           }
           default: {
@@ -81,13 +93,168 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.remoteexecution.proto.DebugInfo.class, com.facebook.buck.remoteexecution.proto.DebugInfo.Builder.class);
   }
 
+  /**
+   * Protobuf enum {@code facebook.remote_execution.DebugInfo.BpftraceFilter}
+   */
+  public enum BpftraceFilter
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>NONE = 0;</code>
+     */
+    NONE(0),
+    /**
+     * <code>EXEC = 1;</code>
+     */
+    EXEC(1),
+    /**
+     * <code>KILL = 2;</code>
+     */
+    KILL(2),
+    /**
+     * <code>OPEN = 3;</code>
+     */
+    OPEN(3),
+    /**
+     * <code>TCP = 4;</code>
+     */
+    TCP(4),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>NONE = 0;</code>
+     */
+    public static final int NONE_VALUE = 0;
+    /**
+     * <code>EXEC = 1;</code>
+     */
+    public static final int EXEC_VALUE = 1;
+    /**
+     * <code>KILL = 2;</code>
+     */
+    public static final int KILL_VALUE = 2;
+    /**
+     * <code>OPEN = 3;</code>
+     */
+    public static final int OPEN_VALUE = 3;
+    /**
+     * <code>TCP = 4;</code>
+     */
+    public static final int TCP_VALUE = 4;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static BpftraceFilter valueOf(int value) {
+      return forNumber(value);
+    }
+
+    public static BpftraceFilter forNumber(int value) {
+      switch (value) {
+        case 0: return NONE;
+        case 1: return EXEC;
+        case 2: return KILL;
+        case 3: return OPEN;
+        case 4: return TCP;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<BpftraceFilter>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        BpftraceFilter> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<BpftraceFilter>() {
+            public BpftraceFilter findValueByNumber(int number) {
+              return BpftraceFilter.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return com.facebook.buck.remoteexecution.proto.DebugInfo.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final BpftraceFilter[] VALUES = values();
+
+    public static BpftraceFilter valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private BpftraceFilter(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:facebook.remote_execution.DebugInfo.BpftraceFilter)
+  }
+
   public static final int PAUSE_BEFORE_CLEAN_TIMEOUT_FIELD_NUMBER = 1;
   private int pauseBeforeCleanTimeout_;
   /**
-   * <code>uint32 pause_before_clean_timeout = 1;</code>
+   * <code>uint32 pause_before_clean_timeout = 1 [deprecated = true];</code>
    */
-  public int getPauseBeforeCleanTimeout() {
+  @java.lang.Deprecated public int getPauseBeforeCleanTimeout() {
     return pauseBeforeCleanTimeout_;
+  }
+
+  public static final int SKIP_CLEANUP_FIELD_NUMBER = 2;
+  private boolean skipCleanup_;
+  /**
+   * <pre>
+   * should skip cleanup on the worker
+   * </pre>
+   *
+   * <code>bool skip_cleanup = 2;</code>
+   */
+  public boolean getSkipCleanup() {
+    return skipCleanup_;
+  }
+
+  public static final int BPFTRACE_FILTER_FIELD_NUMBER = 3;
+  private int bpftraceFilter_;
+  /**
+   * <code>.facebook.remote_execution.DebugInfo.BpftraceFilter bpftrace_filter = 3;</code>
+   */
+  public int getBpftraceFilterValue() {
+    return bpftraceFilter_;
+  }
+  /**
+   * <code>.facebook.remote_execution.DebugInfo.BpftraceFilter bpftrace_filter = 3;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter getBpftraceFilter() {
+    @SuppressWarnings("deprecation")
+    com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter result = com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter.valueOf(bpftraceFilter_);
+    return result == null ? com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter.UNRECOGNIZED : result;
   }
 
   private byte memoizedIsInitialized = -1;
@@ -107,6 +274,12 @@ private static final long serialVersionUID = 0L;
     if (pauseBeforeCleanTimeout_ != 0) {
       output.writeUInt32(1, pauseBeforeCleanTimeout_);
     }
+    if (skipCleanup_ != false) {
+      output.writeBool(2, skipCleanup_);
+    }
+    if (bpftraceFilter_ != com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter.NONE.getNumber()) {
+      output.writeEnum(3, bpftraceFilter_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -119,6 +292,14 @@ private static final long serialVersionUID = 0L;
     if (pauseBeforeCleanTimeout_ != 0) {
       size += com.google.protobuf.CodedOutputStream
         .computeUInt32Size(1, pauseBeforeCleanTimeout_);
+    }
+    if (skipCleanup_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(2, skipCleanup_);
+    }
+    if (bpftraceFilter_ != com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter.NONE.getNumber()) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeEnumSize(3, bpftraceFilter_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -137,6 +318,9 @@ private static final long serialVersionUID = 0L;
 
     if (getPauseBeforeCleanTimeout()
         != other.getPauseBeforeCleanTimeout()) return false;
+    if (getSkipCleanup()
+        != other.getSkipCleanup()) return false;
+    if (bpftraceFilter_ != other.bpftraceFilter_) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -150,6 +334,11 @@ private static final long serialVersionUID = 0L;
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + PAUSE_BEFORE_CLEAN_TIMEOUT_FIELD_NUMBER;
     hash = (53 * hash) + getPauseBeforeCleanTimeout();
+    hash = (37 * hash) + SKIP_CLEANUP_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getSkipCleanup());
+    hash = (37 * hash) + BPFTRACE_FILTER_FIELD_NUMBER;
+    hash = (53 * hash) + bpftraceFilter_;
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -285,6 +474,10 @@ private static final long serialVersionUID = 0L;
       super.clear();
       pauseBeforeCleanTimeout_ = 0;
 
+      skipCleanup_ = false;
+
+      bpftraceFilter_ = 0;
+
       return this;
     }
 
@@ -312,6 +505,8 @@ private static final long serialVersionUID = 0L;
     public com.facebook.buck.remoteexecution.proto.DebugInfo buildPartial() {
       com.facebook.buck.remoteexecution.proto.DebugInfo result = new com.facebook.buck.remoteexecution.proto.DebugInfo(this);
       result.pauseBeforeCleanTimeout_ = pauseBeforeCleanTimeout_;
+      result.skipCleanup_ = skipCleanup_;
+      result.bpftraceFilter_ = bpftraceFilter_;
       onBuilt();
       return result;
     }
@@ -363,6 +558,12 @@ private static final long serialVersionUID = 0L;
       if (other.getPauseBeforeCleanTimeout() != 0) {
         setPauseBeforeCleanTimeout(other.getPauseBeforeCleanTimeout());
       }
+      if (other.getSkipCleanup() != false) {
+        setSkipCleanup(other.getSkipCleanup());
+      }
+      if (other.bpftraceFilter_ != 0) {
+        setBpftraceFilterValue(other.getBpftraceFilterValue());
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -394,26 +595,109 @@ private static final long serialVersionUID = 0L;
 
     private int pauseBeforeCleanTimeout_ ;
     /**
-     * <code>uint32 pause_before_clean_timeout = 1;</code>
+     * <code>uint32 pause_before_clean_timeout = 1 [deprecated = true];</code>
      */
-    public int getPauseBeforeCleanTimeout() {
+    @java.lang.Deprecated public int getPauseBeforeCleanTimeout() {
       return pauseBeforeCleanTimeout_;
     }
     /**
-     * <code>uint32 pause_before_clean_timeout = 1;</code>
+     * <code>uint32 pause_before_clean_timeout = 1 [deprecated = true];</code>
      */
-    public Builder setPauseBeforeCleanTimeout(int value) {
+    @java.lang.Deprecated public Builder setPauseBeforeCleanTimeout(int value) {
       
       pauseBeforeCleanTimeout_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>uint32 pause_before_clean_timeout = 1;</code>
+     * <code>uint32 pause_before_clean_timeout = 1 [deprecated = true];</code>
      */
-    public Builder clearPauseBeforeCleanTimeout() {
+    @java.lang.Deprecated public Builder clearPauseBeforeCleanTimeout() {
       
       pauseBeforeCleanTimeout_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private boolean skipCleanup_ ;
+    /**
+     * <pre>
+     * should skip cleanup on the worker
+     * </pre>
+     *
+     * <code>bool skip_cleanup = 2;</code>
+     */
+    public boolean getSkipCleanup() {
+      return skipCleanup_;
+    }
+    /**
+     * <pre>
+     * should skip cleanup on the worker
+     * </pre>
+     *
+     * <code>bool skip_cleanup = 2;</code>
+     */
+    public Builder setSkipCleanup(boolean value) {
+      
+      skipCleanup_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * should skip cleanup on the worker
+     * </pre>
+     *
+     * <code>bool skip_cleanup = 2;</code>
+     */
+    public Builder clearSkipCleanup() {
+      
+      skipCleanup_ = false;
+      onChanged();
+      return this;
+    }
+
+    private int bpftraceFilter_ = 0;
+    /**
+     * <code>.facebook.remote_execution.DebugInfo.BpftraceFilter bpftrace_filter = 3;</code>
+     */
+    public int getBpftraceFilterValue() {
+      return bpftraceFilter_;
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo.BpftraceFilter bpftrace_filter = 3;</code>
+     */
+    public Builder setBpftraceFilterValue(int value) {
+      bpftraceFilter_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo.BpftraceFilter bpftrace_filter = 3;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter getBpftraceFilter() {
+      @SuppressWarnings("deprecation")
+      com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter result = com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter.valueOf(bpftraceFilter_);
+      return result == null ? com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter.UNRECOGNIZED : result;
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo.BpftraceFilter bpftrace_filter = 3;</code>
+     */
+    public Builder setBpftraceFilter(com.facebook.buck.remoteexecution.proto.DebugInfo.BpftraceFilter value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      
+      bpftraceFilter_ = value.getNumber();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo.BpftraceFilter bpftrace_filter = 3;</code>
+     */
+    public Builder clearBpftraceFilter() {
+      
+      bpftraceFilter_ = 0;
       onChanged();
       return this;
     }

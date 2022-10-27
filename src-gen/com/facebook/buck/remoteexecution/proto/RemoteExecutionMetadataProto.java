@@ -57,11 +57,6 @@ public final class RemoteExecutionMetadataProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_facebook_remote_execution_CasClientInfo_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_facebook_remote_execution_CapabilityValue_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_facebook_remote_execution_CapabilityValue_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_facebook_remote_execution_ClientJobInfo_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -72,10 +67,20 @@ public final class RemoteExecutionMetadataProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_facebook_remote_execution_ClientActionInfo_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_facebook_remote_execution_ActionHistoryInfo_descriptor;
+    internal_static_facebook_remote_execution_StorageBackendStats_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_facebook_remote_execution_ActionHistoryInfo_fieldAccessorTable;
+      internal_static_facebook_remote_execution_StorageBackendStats_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_StorageStats_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_StorageStats_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_ExecutedActionStorageStats_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_ExecutedActionStorageStats_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
     internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor;
   static final 
@@ -86,6 +91,41 @@ public final class RemoteExecutionMetadataProto {
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_facebook_remote_execution_DebugInfo_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_ResourceRequirements_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_ResourceRequirements_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_HostResourceRequirements_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_HostResourceRequirements_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_ActionHistoryInfo_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_ActionHistoryInfo_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_EngineActionSchedulingInfo_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_EngineActionSchedulingInfo_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_DataflowTraceInfo_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_DataflowTraceInfo_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_REClientInfo_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_REClientInfo_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_RequestInfo_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_RequestInfo_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor;
   static final 
@@ -101,68 +141,127 @@ public final class RemoteExecutionMetadataProto {
   static {
     java.lang.String[] descriptorData = {
       "\n$remoteexecution/proto/metadata.proto\022\031" +
-      "facebook.remote_execution\032\036google/protob" +
-      "uf/wrappers.proto\0326build/bazel/remote/ex" +
-      "ecution/v2/remote_execution.proto\".\n\tTra" +
-      "ceInfo\022\020\n\010trace_id\030\001 \001(\t\022\017\n\007edge_id\030\002 \001(" +
-      "\t\"\031\n\013RESessionID\022\n\n\002id\030\001 \001(\t\"\210\001\n\010BuckInf" +
-      "o\022\020\n\010build_id\030\001 \001(\t\022\021\n\trule_name\030\002 \001(\t\022\033" +
-      "\n\023auxiliary_build_tag\030\003 \001(\t\022\026\n\016project_p" +
-      "refix\030\004 \001(\t\022\017\n\007version\030\005 \001(\t\022\021\n\trule_typ" +
-      "e\030\006 \001(\t\"4\n\013CreatorInfo\022\020\n\010username\030\001 \001(\t" +
-      "\022\023\n\013client_type\030\002 \001(\t\"\'\n\023ExecutionEngine" +
-      "Info\022\020\n\010hostname\030\001 \001(\t\"6\n\nWorkerInfo\022\020\n\010" +
-      "hostname\030\001 \001(\t\022\026\n\016execution_path\030\002 \001(\t\"\036" +
-      "\n\016ManifoldBucket\022\014\n\004name\030\001 \001(\t\"\357\001\n\rCasCl" +
-      "ientInfo\022\014\n\004name\030\001 \001(\t\022\016\n\006job_id\030\002 \001(\t\022Q" +
-      "\n\016streaming_mode\030\003 \001(\01629.facebook.remote" +
-      "_execution.CasClientInfo.CasStreamingMod" +
-      "e\022B\n\017manifold_bucket\030\004 \001(\0132).facebook.re" +
-      "mote_execution.ManifoldBucket\")\n\020CasStre" +
-      "amingMode\022\013\n\007BUCKETS\020\000\022\010\n\004HTTP\020\001\" \n\017Capa" +
-      "bilityValue\022\r\n\005value\030\001 \001(\t\"\207\001\n\rClientJob" +
-      "Info\022\030\n\020deployment_stage\030\001 \001(\t\022\023\n\013instan" +
-      "ce_id\030\002 \001(\t\022\020\n\010group_id\030\003 \001(\t\022\032\n\022client_" +
-      "side_tenant\030\004 \001(\t\022\031\n\021client_side_alias\030\005" +
-      " \001(\t\"j\n\020ClientActionInfo\022\022\n\nrepository\030\001" +
-      " \001(\t\022\025\n\rschedule_type\030\002 \001(\t\022\030\n\020re_sessio" +
-      "n_label\030\003 \001(\t\022\021\n\ttenant_id\030\004 \001(\t\"E\n\021Acti" +
-      "onHistoryInfo\022\022\n\naction_key\030\001 \001(\t\022\034\n\024dis" +
-      "able_retry_on_oom\030\002 \001(\010\"\333\002\n\022ExecutedActi" +
-      "onInfo\022\033\n\023cpu_stat_usage_usec\030\001 \001(\003\022\032\n\022c" +
-      "pu_stat_user_usec\030\002 \001(\003\022\034\n\024cpu_stat_syst" +
-      "em_usec\030\003 \001(\003\022L\n(is_fallback_enabled_for" +
-      "_completed_action\030\004 \001(\0132\032.google.protobu" +
-      "f.BoolValue\022\036\n\026engine_scheduled_count\030\005 " +
-      "\001(\003\022\024\n\014max_used_mem\030\006 \001(\003\022\026\n\016host_total_" +
-      "mem\030\007 \001(\003\022\026\n\016task_total_mem\030\010 \001(\003\022$\n\034exe" +
-      "cuted_on_elastic_capacity\030\t \001(\010\022\024\n\014dedup" +
-      "licated\030\n \001(\010\"/\n\tDebugInfo\022\"\n\032pause_befo" +
-      "re_clean_timeout\030\001 \001(\r\"\374\006\n\027RemoteExecuti" +
-      "onMetadata\022=\n\rre_session_id\030\001 \001(\0132&.face" +
-      "book.remote_execution.RESessionID\0226\n\tbuc" +
-      "k_info\030\002 \001(\0132#.facebook.remote_execution" +
-      ".BuckInfo\0228\n\ntrace_info\030\003 \001(\0132$.facebook" +
-      ".remote_execution.TraceInfo\022<\n\014creator_i" +
-      "nfo\030\004 \001(\0132&.facebook.remote_execution.Cr" +
-      "eatorInfo\022C\n\013engine_info\030\005 \001(\0132..faceboo" +
-      "k.remote_execution.ExecutionEngineInfo\022:" +
-      "\n\013worker_info\030\006 \001(\0132%.facebook.remote_ex" +
-      "ecution.WorkerInfo\022A\n\017cas_client_info\030\007 " +
-      "\001(\0132(.facebook.remote_execution.CasClien" +
-      "tInfo\022G\n\022client_action_info\030\n \001(\0132+.face" +
-      "book.remote_execution.ClientActionInfo\022K" +
-      "\n\024executed_action_info\030\013 \001(\0132-.facebook." +
-      "remote_execution.ExecutedActionInfo\0228\n\nd" +
-      "ebug_info\030\014 \001(\0132$.facebook.remote_execut" +
-      "ion.DebugInfo\022A\n\017client_job_info\030\r \001(\0132(" +
-      ".facebook.remote_execution.ClientJobInfo" +
-      "\022;\n\010platform\030\017 \001(\0132).build.bazel.remote." +
-      "execution.v2.Platform\022\023\n\013use_case_id\030\022 \001" +
-      "(\t\022I\n\023action_history_info\030\023 \001(\0132,.facebo" +
-      "ok.remote_execution.ActionHistoryInfoBI\n" +
-      "\'com.facebook.buck.remoteexecution.proto" +
-      "B\034RemoteExecutionMetadataProtoP\001b\006proto3"
+      "facebook.remote_execution\032\037google/protob" +
+      "uf/timestamp.proto\032\036google/protobuf/wrap" +
+      "pers.proto\0326build/bazel/remote/execution" +
+      "/v2/remote_execution.proto\".\n\tTraceInfo\022" +
+      "\020\n\010trace_id\030\001 \001(\t\022\017\n\007edge_id\030\002 \001(\t\"\031\n\013RE" +
+      "SessionID\022\n\n\002id\030\001 \001(\t\"\210\001\n\010BuckInfo\022\020\n\010bu" +
+      "ild_id\030\001 \001(\t\022\021\n\trule_name\030\002 \001(\t\022\033\n\023auxil" +
+      "iary_build_tag\030\003 \001(\t\022\026\n\016project_prefix\030\004" +
+      " \001(\t\022\017\n\007version\030\005 \001(\t\022\021\n\trule_type\030\006 \001(\t" +
+      "\"q\n\013CreatorInfo\022\020\n\010username\030\001 \001(\t\022\023\n\013cli" +
+      "ent_type\030\002 \001(\t\022;\n\016client_network\030\003 \001(\0162#" +
+      ".facebook.remote_execution.Networks\"6\n\023E" +
+      "xecutionEngineInfo\022\020\n\010hostname\030\001 \001(\t\022\r\n\005" +
+      "nonce\030\002 \001(\t\"6\n\nWorkerInfo\022\020\n\010hostname\030\001 " +
+      "\001(\t\022\026\n\016execution_path\030\002 \001(\t\"\036\n\016ManifoldB" +
+      "ucket\022\014\n\004name\030\001 \001(\t\"\372\002\n\rCasClientInfo\022\014\n" +
+      "\004name\030\001 \001(\t\022\016\n\006job_id\030\002 \001(\t\022Q\n\016streaming" +
+      "_mode\030\003 \001(\01629.facebook.remote_execution." +
+      "CasClientInfo.CasStreamingMode\022B\n\017manifo" +
+      "ld_bucket\030\004 \001(\0132).facebook.remote_execut" +
+      "ion.ManifoldBucket\022\031\n\021skip_quota_checks\030" +
+      "\005 \001(\010\022#\n\033request_start_timestamps_ms\030\006 \001" +
+      "(\004\022\023\n\013log_request\030\007 \001(\010\022\030\n\020operating_sys" +
+      "tem\030\010 \001(\t\022\032\n\022skip_decompression\030\t \001(\010\")\n" +
+      "\020CasStreamingMode\022\013\n\007BUCKETS\020\000\022\010\n\004HTTP\020\001" +
+      "\"\207\001\n\rClientJobInfo\022\030\n\020deployment_stage\030\001" +
+      " \001(\t\022\023\n\013instance_id\030\002 \001(\t\022\020\n\010group_id\030\003 " +
+      "\001(\t\022\032\n\022client_side_tenant\030\004 \001(\t\022\031\n\021clien" +
+      "t_side_alias\030\005 \001(\t\"W\n\020ClientActionInfo\022\022" +
+      "\n\nrepository\030\001 \001(\t\022\025\n\rschedule_type\030\002 \001(" +
+      "\t\022\030\n\020re_session_label\030\003 \001(\t\"M\n\023StorageBa" +
+      "ckendStats\022\016\n\006bytes_\030\001 \001(\004\022\025\n\rqueries_co" +
+      "unt\030\002 \001(\004\022\017\n\007backend\030\003 \001(\t\"n\n\014StorageSta" +
+      "ts\022\023\n\013total_bytes\030\001 \001(\004\022I\n\021per_backend_s" +
+      "tats\030\002 \003(\0132..facebook.remote_execution.S" +
+      "torageBackendStats\"\222\001\n\032ExecutedActionSto" +
+      "rageStats\022:\n\tdownloads\030\001 \001(\0132\'.facebook." +
+      "remote_execution.StorageStats\0228\n\007uploads" +
+      "\030\002 \001(\0132\'.facebook.remote_execution.Stora" +
+      "geStats\"\200\005\n\022ExecutedActionInfo\022\033\n\023cpu_st" +
+      "at_usage_usec\030\001 \001(\003\022\032\n\022cpu_stat_user_use" +
+      "c\030\002 \001(\003\022\034\n\024cpu_stat_system_usec\030\003 \001(\003\022L\n" +
+      "(is_fallback_enabled_for_completed_actio" +
+      "n\030\004 \001(\0132\032.google.protobuf.BoolValue\022\036\n\026e" +
+      "ngine_scheduled_count\030\005 \001(\003\022\024\n\014max_used_" +
+      "mem\030\006 \001(\003\022\026\n\016host_total_mem\030\007 \001(\003\022\026\n\016tas" +
+      "k_total_mem\030\010 \001(\003\022$\n\034executed_on_elastic" +
+      "_capacity\030\t \001(\010\022\024\n\014deduplicated\030\n \001(\010\022=\n" +
+      "\014trace_digest\030\013 \001(\0132\'.build.bazel.remote" +
+      ".execution.v2.Digest\022&\n\036executed_on_expe" +
+      "rimental_setup\030\014 \001(\010\022\027\n\017used_input_size\030" +
+      "\r \001(\003\022\031\n\021action_result_ttl\030\016 \001(\003\022\\\n\035exec" +
+      "uted_action_storage_stats\030\017 \001(\01325.facebo" +
+      "ok.remote_execution.ExecutedActionStorag" +
+      "eStats\022\027\n\017reserved_memory\030\020 \001(\004\022\021\n\tcpu_u" +
+      "nits\030\021 \001(\004\"\332\001\n\tDebugInfo\022&\n\032pause_before" +
+      "_clean_timeout\030\001 \001(\rB\002\030\001\022\024\n\014skip_cleanup" +
+      "\030\002 \001(\010\022L\n\017bpftrace_filter\030\003 \001(\01623.facebo" +
+      "ok.remote_execution.DebugInfo.BpftraceFi" +
+      "lter\"A\n\016BpftraceFilter\022\010\n\004NONE\020\000\022\010\n\004EXEC" +
+      "\020\001\022\010\n\004KILL\020\002\022\010\n\004OPEN\020\003\022\007\n\003TCP\020\004\"1\n\024Resou" +
+      "rceRequirements\022\031\n\021resource_metadata\030\001 \003" +
+      "(\t\"r\n\030HostResourceRequirements\022\021\n\tmem_by" +
+      "tes\030\001 \001(\003\022\021\n\tcpu_units\030\002 \001(\003\022\025\n\raffinity" +
+      "_keys\030\003 \003(\t\022\031\n\021input_files_bytes\030\004 \001(\003\"E" +
+      "\n\021ActionHistoryInfo\022\022\n\naction_key\030\001 \001(\t\022" +
+      "\034\n\024disable_retry_on_oom\030\002 \001(\010\"\236\002\n\032Engine" +
+      "ActionSchedulingInfo\022\033\n\023engine_execution" +
+      "_id\030\001 \001(\t\022:\n\026first_queued_timestamp\030\002 \001(" +
+      "\0132\032.google.protobuf.Timestamp\0229\n\025last_qu" +
+      "eued_timestamp\030\003 \001(\0132\032.google.protobuf.T" +
+      "imestamp\022<\n\030last_scheduled_timestamp\030\004 \001" +
+      "(\0132\032.google.protobuf.Timestamp\022\027\n\017schedu" +
+      "led_count\030\005 \001(\r\022\025\n\rwas_throttled\030\006 \001(\010\"S" +
+      "\n\021DataflowTraceInfo\022\022\n\nsession_id\030\001 \001(\t\022" +
+      "\020\n\010trace_id\030\002 \001(\014\022\030\n\020incoming_edge_id\030\003 " +
+      "\001(\003\";\n\014REClientInfo\022\023\n\013client_type\030\001 \001(\t" +
+      "\022\026\n\016client_version\030\002 \001(\t\"b\n\013RequestInfo\022" +
+      "\017\n\007attempt\030\001 \001(\r\022B\n\013criticality\030\002 \001(\0162-." +
+      "facebook.remote_execution.RequestCritica" +
+      "lity\"\354\n\n\027RemoteExecutionMetadata\022=\n\rre_s" +
+      "ession_id\030\001 \001(\0132&.facebook.remote_execut" +
+      "ion.RESessionID\0226\n\tbuck_info\030\002 \001(\0132#.fac" +
+      "ebook.remote_execution.BuckInfo\0228\n\ntrace" +
+      "_info\030\003 \001(\0132$.facebook.remote_execution." +
+      "TraceInfo\022<\n\014creator_info\030\004 \001(\0132&.facebo" +
+      "ok.remote_execution.CreatorInfo\022C\n\013engin" +
+      "e_info\030\005 \001(\0132..facebook.remote_execution" +
+      ".ExecutionEngineInfo\022:\n\013worker_info\030\006 \001(" +
+      "\0132%.facebook.remote_execution.WorkerInfo" +
+      "\022A\n\017cas_client_info\030\007 \001(\0132(.facebook.rem" +
+      "ote_execution.CasClientInfo\022G\n\022client_ac" +
+      "tion_info\030\n \001(\0132+.facebook.remote_execut" +
+      "ion.ClientActionInfo\022K\n\024executed_action_" +
+      "info\030\013 \001(\0132-.facebook.remote_execution.E" +
+      "xecutedActionInfo\0228\n\ndebug_info\030\014 \001(\0132$." +
+      "facebook.remote_execution.DebugInfo\022A\n\017c" +
+      "lient_job_info\030\r \001(\0132(.facebook.remote_e" +
+      "xecution.ClientJobInfo\022;\n\010platform\030\017 \001(\013" +
+      "2).build.bazel.remote.execution.v2.Platf" +
+      "orm\022N\n\025resource_requirements\030\020 \001(\0132/.fac" +
+      "ebook.remote_execution.ResourceRequireme" +
+      "nts\022W\n\032host_resource_requirements\030\021 \001(\0132" +
+      "3.facebook.remote_execution.HostResource" +
+      "Requirements\022I\n\023action_history_info\030\023 \001(" +
+      "\0132,.facebook.remote_execution.ActionHist" +
+      "oryInfo\022\023\n\013use_case_id\030\022 \001(\t\022\032\n\022do_not_d" +
+      "eduplicate\030\024 \001(\010\022<\n\014request_info\030\025 \001(\0132&" +
+      ".facebook.remote_execution.RequestInfo\022]" +
+      "\n\035engine_action_scheduling_info\030\351\007 \001(\01325" +
+      ".facebook.remote_execution.EngineActionS" +
+      "chedulingInfo\022J\n\023dataflow_trace_info\030\352\007 " +
+      "\001(\0132,.facebook.remote_execution.Dataflow" +
+      "TraceInfo\022@\n\016re_client_info\030\353\007 \001(\0132\'.fac" +
+      "ebook.remote_execution.REClientInfo*+\n\010N" +
+      "etworks\022\013\n\007UNKNOWN\020\000\022\010\n\004PROD\020\001\022\010\n\004CORP\020\002" +
+      "*X\n\022RequestCriticality\022\r\n\tSHEDDABLE\020\000\022\022\n" +
+      "\016SHEDDABLE_PLUS\020\001\022\014\n\010CRITICAL\020\002\022\021\n\rCRITI" +
+      "CAL_PLUS\020\003BI\n\'com.facebook.buck.remoteex" +
+      "ecution.protoB\034RemoteExecutionMetadataPr" +
+      "otoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -175,6 +274,7 @@ public final class RemoteExecutionMetadataProto {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          com.google.protobuf.TimestampProto.getDescriptor(),
           com.google.protobuf.WrappersProto.getDescriptor(),
           build.bazel.remote.execution.v2.RemoteExecutionProto.getDescriptor(),
         }, assigner);
@@ -201,13 +301,13 @@ public final class RemoteExecutionMetadataProto {
     internal_static_facebook_remote_execution_CreatorInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_CreatorInfo_descriptor,
-        new java.lang.String[] { "Username", "ClientType", });
+        new java.lang.String[] { "Username", "ClientType", "ClientNetwork", });
     internal_static_facebook_remote_execution_ExecutionEngineInfo_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_facebook_remote_execution_ExecutionEngineInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ExecutionEngineInfo_descriptor,
-        new java.lang.String[] { "Hostname", });
+        new java.lang.String[] { "Hostname", "Nonce", });
     internal_static_facebook_remote_execution_WorkerInfo_descriptor =
       getDescriptor().getMessageTypes().get(5);
     internal_static_facebook_remote_execution_WorkerInfo_fieldAccessorTable = new
@@ -225,49 +325,98 @@ public final class RemoteExecutionMetadataProto {
     internal_static_facebook_remote_execution_CasClientInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_CasClientInfo_descriptor,
-        new java.lang.String[] { "Name", "JobId", "StreamingMode", "ManifoldBucket", });
-    internal_static_facebook_remote_execution_CapabilityValue_descriptor =
-      getDescriptor().getMessageTypes().get(8);
-    internal_static_facebook_remote_execution_CapabilityValue_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_facebook_remote_execution_CapabilityValue_descriptor,
-        new java.lang.String[] { "Value", });
+        new java.lang.String[] { "Name", "JobId", "StreamingMode", "ManifoldBucket", "SkipQuotaChecks", "RequestStartTimestampsMs", "LogRequest", "OperatingSystem", "SkipDecompression", });
     internal_static_facebook_remote_execution_ClientJobInfo_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_facebook_remote_execution_ClientJobInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ClientJobInfo_descriptor,
         new java.lang.String[] { "DeploymentStage", "InstanceId", "GroupId", "ClientSideTenant", "ClientSideAlias", });
     internal_static_facebook_remote_execution_ClientActionInfo_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_facebook_remote_execution_ClientActionInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ClientActionInfo_descriptor,
-        new java.lang.String[] { "Repository", "ScheduleType", "ReSessionLabel", "TenantId", });
-    internal_static_facebook_remote_execution_ActionHistoryInfo_descriptor =
+        new java.lang.String[] { "Repository", "ScheduleType", "ReSessionLabel", });
+    internal_static_facebook_remote_execution_StorageBackendStats_descriptor =
+      getDescriptor().getMessageTypes().get(10);
+    internal_static_facebook_remote_execution_StorageBackendStats_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_StorageBackendStats_descriptor,
+        new java.lang.String[] { "Bytes", "QueriesCount", "Backend", });
+    internal_static_facebook_remote_execution_StorageStats_descriptor =
       getDescriptor().getMessageTypes().get(11);
+    internal_static_facebook_remote_execution_StorageStats_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_StorageStats_descriptor,
+        new java.lang.String[] { "TotalBytes", "PerBackendStats", });
+    internal_static_facebook_remote_execution_ExecutedActionStorageStats_descriptor =
+      getDescriptor().getMessageTypes().get(12);
+    internal_static_facebook_remote_execution_ExecutedActionStorageStats_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_ExecutedActionStorageStats_descriptor,
+        new java.lang.String[] { "Downloads", "Uploads", });
+    internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor =
+      getDescriptor().getMessageTypes().get(13);
+    internal_static_facebook_remote_execution_ExecutedActionInfo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor,
+        new java.lang.String[] { "CpuStatUsageUsec", "CpuStatUserUsec", "CpuStatSystemUsec", "IsFallbackEnabledForCompletedAction", "EngineScheduledCount", "MaxUsedMem", "HostTotalMem", "TaskTotalMem", "ExecutedOnElasticCapacity", "Deduplicated", "TraceDigest", "ExecutedOnExperimentalSetup", "UsedInputSize", "ActionResultTtl", "ExecutedActionStorageStats", "ReservedMemory", "CpuUnits", });
+    internal_static_facebook_remote_execution_DebugInfo_descriptor =
+      getDescriptor().getMessageTypes().get(14);
+    internal_static_facebook_remote_execution_DebugInfo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_DebugInfo_descriptor,
+        new java.lang.String[] { "PauseBeforeCleanTimeout", "SkipCleanup", "BpftraceFilter", });
+    internal_static_facebook_remote_execution_ResourceRequirements_descriptor =
+      getDescriptor().getMessageTypes().get(15);
+    internal_static_facebook_remote_execution_ResourceRequirements_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_ResourceRequirements_descriptor,
+        new java.lang.String[] { "ResourceMetadata", });
+    internal_static_facebook_remote_execution_HostResourceRequirements_descriptor =
+      getDescriptor().getMessageTypes().get(16);
+    internal_static_facebook_remote_execution_HostResourceRequirements_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_HostResourceRequirements_descriptor,
+        new java.lang.String[] { "MemBytes", "CpuUnits", "AffinityKeys", "InputFilesBytes", });
+    internal_static_facebook_remote_execution_ActionHistoryInfo_descriptor =
+      getDescriptor().getMessageTypes().get(17);
     internal_static_facebook_remote_execution_ActionHistoryInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ActionHistoryInfo_descriptor,
         new java.lang.String[] { "ActionKey", "DisableRetryOnOom", });
-    internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor =
-      getDescriptor().getMessageTypes().get(12);
-    internal_static_facebook_remote_execution_ExecutedActionInfo_fieldAccessorTable = new
+    internal_static_facebook_remote_execution_EngineActionSchedulingInfo_descriptor =
+      getDescriptor().getMessageTypes().get(18);
+    internal_static_facebook_remote_execution_EngineActionSchedulingInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor,
-        new java.lang.String[] { "CpuStatUsageUsec", "CpuStatUserUsec", "CpuStatSystemUsec", "IsFallbackEnabledForCompletedAction", "EngineScheduledCount", "MaxUsedMem", "HostTotalMem", "TaskTotalMem", "ExecutedOnElasticCapacity", "Deduplicated", });
-    internal_static_facebook_remote_execution_DebugInfo_descriptor =
-      getDescriptor().getMessageTypes().get(13);
-    internal_static_facebook_remote_execution_DebugInfo_fieldAccessorTable = new
+        internal_static_facebook_remote_execution_EngineActionSchedulingInfo_descriptor,
+        new java.lang.String[] { "EngineExecutionId", "FirstQueuedTimestamp", "LastQueuedTimestamp", "LastScheduledTimestamp", "ScheduledCount", "WasThrottled", });
+    internal_static_facebook_remote_execution_DataflowTraceInfo_descriptor =
+      getDescriptor().getMessageTypes().get(19);
+    internal_static_facebook_remote_execution_DataflowTraceInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_facebook_remote_execution_DebugInfo_descriptor,
-        new java.lang.String[] { "PauseBeforeCleanTimeout", });
+        internal_static_facebook_remote_execution_DataflowTraceInfo_descriptor,
+        new java.lang.String[] { "SessionId", "TraceId", "IncomingEdgeId", });
+    internal_static_facebook_remote_execution_REClientInfo_descriptor =
+      getDescriptor().getMessageTypes().get(20);
+    internal_static_facebook_remote_execution_REClientInfo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_REClientInfo_descriptor,
+        new java.lang.String[] { "ClientType", "ClientVersion", });
+    internal_static_facebook_remote_execution_RequestInfo_descriptor =
+      getDescriptor().getMessageTypes().get(21);
+    internal_static_facebook_remote_execution_RequestInfo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_RequestInfo_descriptor,
+        new java.lang.String[] { "Attempt", "Criticality", });
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(22);
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor,
-        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "ClientActionInfo", "ExecutedActionInfo", "DebugInfo", "ClientJobInfo", "Platform", "UseCaseId", "ActionHistoryInfo", });
+        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "ClientActionInfo", "ExecutedActionInfo", "DebugInfo", "ClientJobInfo", "Platform", "ResourceRequirements", "HostResourceRequirements", "ActionHistoryInfo", "UseCaseId", "DoNotDeduplicate", "RequestInfo", "EngineActionSchedulingInfo", "DataflowTraceInfo", "ReClientInfo", });
+    com.google.protobuf.TimestampProto.getDescriptor();
     com.google.protobuf.WrappersProto.getDescriptor();
     build.bazel.remote.execution.v2.RemoteExecutionProto.getDescriptor();
   }

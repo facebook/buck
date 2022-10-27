@@ -18,4 +18,24 @@ public interface ExecutionEngineInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getHostnameBytes();
+
+  /**
+   * <pre>
+   * Used to identify a worker-engine session. Worker will reject actions
+   * for unknown sources. An example would be a pairing id.
+   * </pre>
+   *
+   * <code>string nonce = 2;</code>
+   */
+  java.lang.String getNonce();
+  /**
+   * <pre>
+   * Used to identify a worker-engine session. Worker will reject actions
+   * for unknown sources. An example would be a pairing id.
+   * </pre>
+   *
+   * <code>string nonce = 2;</code>
+   */
+  com.google.protobuf.ByteString
+      getNonceBytes();
 }

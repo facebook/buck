@@ -29,12 +29,20 @@ syntax = "proto3";
 
 package facebook.remote_execution;
 
+import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 import "build/bazel/remote/execution/v2/remote_execution.proto";
 
 option java_multiple_files = true;
 option java_outer_classname = "RemoteExecutionMetadataProto";
 option java_package = "com.facebook.buck.remoteexecution.proto";
+
+// Can be used to locate client and workers
+enum Networks {
+  UNKNOWN = 0;
+  PROD = 1;
+  CORP = 2;
+};
 
 // Contains tracing information.
 message TraceInfo {
@@ -75,11 +83,16 @@ message CreatorInfo {
   string username = 1;
   // Freeform string that a client (e.g. an IDE, CI) may set to identify itself.
   string client_type = 2;
+  // Set by engine (or any other ingestion point) e.g. to tag corp to prod traffic
+  Networks client_network = 3;
 }
 
 // Information related with the ExecutionEngine involved in this request.
 message ExecutionEngineInfo {
   string hostname = 1;
+  // Used to identify a worker-engine session. Worker will reject actions
+  // for unknown sources. An example would be a pairing id.
+  string nonce = 2;
 }
 
 // Information related to any Worker involved in this request.
@@ -108,10 +121,20 @@ message CasClientInfo {
   CasStreamingMode streaming_mode = 3;
   // This allows overriding the manifold bucket
   ManifoldBucket manifold_bucket = 4;
-}
+  // This allows skipping quota checks when uploading action results
+  bool skip_quota_checks = 5;
 
-message CapabilityValue {
-  string value = 1;
+  uint64 request_start_timestamps_ms = 6;
+
+  // Make CAS server log this request to scuba (i.e. bypass any sampling). Might be useful for
+  // debugging.
+  bool log_request = 7;
+
+  // Platform the client is on
+  string operating_system = 8;
+
+  // whether the server should skip the decompression
+  bool skip_decompression = 9;
 }
 
 // Information about the job that generated an action. Unknown fields can simply be left empty.
@@ -142,17 +165,23 @@ message ClientActionInfo {
   // Freeform label identifying groups of jobs triggering actions.
   string re_session_label = 3;
 
-  // Tells workers of this tenant type to give priority to this action.
-  // Note: it might still be picked up by a different worker
-  string tenant_id = 4;
+  // 4 - Do not use, deprecated field
 }
 
-message ActionHistoryInfo {
-  // Key across which multiple actions consume similar memory
-  // Empty means none provided
-  string action_key = 1;
+message StorageBackendStats {
+  uint64 bytes_ = 1;
+  uint64 queries_count = 2;
+  string backend = 3;
+}
 
-  bool disable_retry_on_oom = 2;
+message StorageStats {
+  uint64 total_bytes = 1;
+  repeated StorageBackendStats per_backend_stats = 2;
+}
+
+message ExecutedActionStorageStats {
+  StorageStats downloads = 1;
+  StorageStats uploads = 2;
 }
 
 // Executed action information
@@ -178,11 +207,107 @@ message ExecutedActionInfo {
   // Reflects if the action was deduplicated (= observed execution time can
   // significantly differ from a real one).
   bool deduplicated = 10;
+
+  // digest of bpftrace output (if bpftrace was run)
+  // deprecated in favour of server_logs
+  build.bazel.remote.execution.v2.Digest trace_digest = 11;
+
+  // reflects if the action was ran on a a worker with an experimental setup
+  bool executed_on_experimental_setup = 12;
+
+  // input space used by the task for materialization
+  int64 used_input_size = 13;
+
+    // action result ttl reflecting the minimal ttl of just executed action result outputs
+  int64 action_result_ttl = 14;
+
+  ExecutedActionStorageStats executed_action_storage_stats = 15;
+
+  uint64 reserved_memory = 16;
+  uint64 cpu_units = 17;
 }
 
 message DebugInfo {
-  uint32 pause_before_clean_timeout = 1;
+  uint32 pause_before_clean_timeout = 1 [deprecated = true];
+  // should skip cleanup on the worker
+  bool skip_cleanup = 2;
+
+  BpftraceFilter bpftrace_filter = 3;
+
+
+  enum BpftraceFilter {
+      NONE = 0;
+      EXEC = 1;
+      KILL = 2;
+      OPEN = 3;
+      TCP = 4;
+  }
 }
+
+message ResourceRequirements {
+  // Specifies the resource metadata types to be collected (e.g. video, logs, tcpdump etc.)
+  repeated string resource_metadata = 1;
+}
+
+// Host resource requirements (e.g. mem, cpu, device) for executing an action
+message HostResourceRequirements {
+  int64 mem_bytes = 1;
+  // Number of cpu that action needs. For e.g., set to 2 if you need 2 threads.
+  int64 cpu_units = 2;
+  // List of affinities requested by actions, sorted by client-decided priority. RE will try to schedule actions with same affinity key
+  // on same hosts, for better cache locality. RE will try to schedule this action to a host which recently ran affinity_keys[0], if it cannot
+  // find such free host, then one which ran affinity_keys[1]... and so on, finally falling back to run on a random host.
+  repeated string affinity_keys = 3;
+  // Total size of the files used as input for the action.
+  int64 input_files_bytes = 4;
+}
+
+message ActionHistoryInfo {
+  // Key across which multiple actions consume similar memory
+  // Empty means none provided
+  string action_key = 1;
+
+  bool disable_retry_on_oom = 2;
+}
+
+/////////////////////////// RE Internal protobufs //////////////////////////////
+
+// Filled by Engine during the scheduling process and meant to allow Workers
+// better understand execution process and log more detailed metadata.
+message EngineActionSchedulingInfo {
+  string engine_execution_id = 1;
+  google.protobuf.Timestamp first_queued_timestamp = 2;
+  google.protobuf.Timestamp last_queued_timestamp = 3;
+  google.protobuf.Timestamp last_scheduled_timestamp = 4;
+  uint32 scheduled_count = 5;
+  bool was_throttled = 6;
+}
+
+message DataflowTraceInfo {
+  string session_id = 1;
+  bytes trace_id = 2;
+  int64 incoming_edge_id = 3;
+}
+
+message REClientInfo {
+  string client_type = 1;
+  string client_version = 2;
+}
+
+enum RequestCriticality {
+  SHEDDABLE = 0;
+  SHEDDABLE_PLUS = 1;
+  CRITICAL = 2;
+  CRITICAL_PLUS = 3;
+}
+
+message RequestInfo {
+  uint32 attempt = 1;
+  RequestCriticality criticality = 2;
+}
+
+///////////////////////// End of RE Internal protobufs /////////////////////////
+
 
 // This is propagated in GRPC header "re-metadata-bin".
 message RemoteExecutionMetadata {
@@ -200,12 +325,22 @@ message RemoteExecutionMetadata {
   DebugInfo debug_info = 12;
   ClientJobInfo client_job_info = 13;
   build.bazel.remote.execution.v2.Platform platform = 15;
-
-  // use case (and related configuration) to use to execute this action.
-  string use_case_id = 18;
-
+  ResourceRequirements resource_requirements = 16;
+  HostResourceRequirements host_resource_requirements = 17;
   ActionHistoryInfo action_history_info = 19;
+  // Name of the use case (and related configuration) to use to execute this action.
+  string use_case_id = 18;
+  bool do_not_deduplicate = 20;
+  RequestInfo request_info = 21;
 
 
   // 1000-2000 reserved for RE internal protobufs.
+  //
+  // NOTE: This is an odd one, some clients use it, but it should be internal
+  // Firstly set by the client (buck, tps, etc.), could be given without the lcs descriptors
+  // Then if present should be enriched by the engine
+  // 1000 - is deprecated
+  EngineActionSchedulingInfo engine_action_scheduling_info = 1001;
+  DataflowTraceInfo dataflow_trace_info = 1002;
+  REClientInfo re_client_info = 1003;
 }
