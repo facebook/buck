@@ -60,7 +60,7 @@ public class StringResourcesUtils {
    *
    * @param resDirs List of directories that contains values-xx/strings.
    */
-  public static void copyAabStringResources(
+  public static void copyVoltronStringResources(
       AbsPath projectRoot,
       ImmutableList<Path> resDirs,
       ProjectFilesystem projectFilesystem,

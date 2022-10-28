@@ -49,14 +49,14 @@ import javax.annotation.Nullable;
  * Move filtered non-English string resources (values-es/strings.xml) files to output directory.
  * These will be used by i18n aab language pack preparations.
  */
-public class GenerateAabStringResources extends AbstractBuildRule {
+public class GenerateVoltronStringResources extends AbstractBuildRule {
   @AddToRuleKey private final ImmutableList<SourcePath> filteredResources;
 
   private final ImmutableList<FilteredResourcesProvider> filteredResourcesProviders;
   private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
 
-  protected GenerateAabStringResources(
+  protected GenerateVoltronStringResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
@@ -103,7 +103,7 @@ public class GenerateAabStringResources extends AbstractBuildRule {
                                     fileSystem, buildContext.getSourcePathResolver(), true)
                                 .stream())
                     .collect(ImmutableList.toImmutableList());
-            StringResourcesUtils.copyAabStringResources(
+            StringResourcesUtils.copyVoltronStringResources(
                 fileSystem.getRootPath(), resDirs, projectFilesystem, outputDirPath.getPath());
             return StepExecutionResults.SUCCESS;
           }

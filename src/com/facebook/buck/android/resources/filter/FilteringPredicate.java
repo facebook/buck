@@ -92,7 +92,7 @@ public class FilteringPredicate {
     return pathPredicates.stream().reduce(p -> true, Predicate::and);
   }
 
-  public static Predicate<Path> getAabLanguagePackPredicate() {
+  public static Predicate<Path> getVoltronLanguagePackPredicate() {
     List<Predicate<Path>> pathPredicates = new ArrayList<>();
     pathPredicates.add(
         path -> {

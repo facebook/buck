@@ -112,7 +112,7 @@ public class ResourcesFilter extends AbstractBuildRule
   @AddToRuleKey private final ImmutableList<SourcePath> resDirectories;
   @AddToRuleKey private final ImmutableSet<SourcePath> whitelistedStringDirs;
   @AddToRuleKey private final ImmutableSet<String> packagedLocales;
-  @AddToRuleKey private final boolean isI18nAabLangaugePackEnabled;
+  @AddToRuleKey private final boolean isVoltronLanguagePackEnabled;
   @AddToRuleKey private final ImmutableSet<String> locales;
   @AddToRuleKey private final ResourceCompressionMode resourceCompressionMode;
   @AddToRuleKey private final FilterResourcesSteps.ResourceFilter resourceFilter;
@@ -130,7 +130,7 @@ public class ResourcesFilter extends AbstractBuildRule
       ImmutableList<SourcePath> resDirectories,
       ImmutableSet<SourcePath> whitelistedStringDirs,
       ImmutableSet<String> packagedLocales,
-      boolean isI18nAabLangaugePackEnabled,
+      boolean isVoltronLanguagePackEnabled,
       ImmutableSet<String> locales,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesSteps.ResourceFilter resourceFilter,
@@ -143,7 +143,7 @@ public class ResourcesFilter extends AbstractBuildRule
     this.resDirectories = resDirectories;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.packagedLocales = packagedLocales;
-    this.isI18nAabLangaugePackEnabled = isI18nAabLangaugePackEnabled;
+    this.isVoltronLanguagePackEnabled = isVoltronLanguagePackEnabled;
     this.locales = locales;
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourceFilter;
@@ -153,14 +153,14 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<SourcePath> getResDirectories(boolean isForAabLanguagePack) {
-    return RichStream.from(getRawResDirectories(isForAabLanguagePack))
+  public ImmutableList<SourcePath> getResDirectories(boolean isForVoltronLanguagePack) {
+    return RichStream.from(getRawResDirectories(isForVoltronLanguagePack))
         .map(p -> (SourcePath) ExplicitBuildTargetSourcePath.of(getBuildTarget(), p))
         .toImmutableList();
   }
 
-  private ImmutableList<Path> getRawResDirectories(boolean isForAabLanguagePack) {
-    String format = isForAabLanguagePack ? "__filtered__aab__%s__" : "__filtered__%s__";
+  private ImmutableList<Path> getRawResDirectories(boolean isForVoltronLanguagePack) {
+    String format = isForVoltronLanguagePack ? "__filtered__voltron__%s__" : "__filtered__%s__";
     RelPath resDestinationBasePath =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), format);
 
@@ -220,9 +220,9 @@ public class ResourcesFilter extends AbstractBuildRule
             .collect(ImmutableList.toImmutableList());
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
         createInResDirToOutResDirMap(resPaths, filteredResDirectoriesBuilder, false);
-    ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap =
-        isI18nAabLangaugePackEnabled
-            ? createInResDirToOutResDirMap(resPaths, null, isI18nAabLangaugePackEnabled)
+    ImmutableBiMap<Path, Path> voltronStringInResDirToOutResDirMap =
+        isVoltronLanguagePackEnabled
+            ? createInResDirToOutResDirMap(resPaths, null, isVoltronLanguagePackEnabled)
             : null;
     FilterResourcesSteps filterResourcesSteps =
         createFilterResourcesSteps(
@@ -230,7 +230,7 @@ public class ResourcesFilter extends AbstractBuildRule
             packagedLocales,
             locales,
             inResDirToOutResDirMap,
-            aabStringInResDirToOutResDirMap,
+            voltronStringInResDirToOutResDirMap,
             withDownwardApi);
     steps.add(filterResourcesSteps.getCopyStep());
     maybeAddPostFilterCmdStep(context, buildableContext, steps, inResDirToOutResDirMap);
@@ -375,13 +375,13 @@ public class ResourcesFilter extends AbstractBuildRule
       ImmutableSet<String> packagedLocales,
       ImmutableSet<String> locales,
       ImmutableBiMap<Path, Path> resSourceToDestDirMap,
-      ImmutableBiMap<Path, Path> aabStringResSourceToDestDirMap,
+      ImmutableBiMap<Path, Path> voltronStringResSourceToDestDirMap,
       boolean withDownwardApi) {
     FilterResourcesSteps.Builder filterResourcesStepBuilder =
         FilterResourcesSteps.builder()
             .setProjectFilesystem(getProjectFilesystem())
             .setInResToOutResDirMap(resSourceToDestDirMap)
-            .setAabStringInResToOutResDirMap(aabStringResSourceToDestDirMap)
+            .setVoltronStringInResToOutResDirMap(voltronStringResSourceToDestDirMap)
             .setResourceFilter(resourceFilter)
             .withDownwardApi(withDownwardApi);
 
@@ -399,10 +399,10 @@ public class ResourcesFilter extends AbstractBuildRule
   ImmutableBiMap<Path, Path> createInResDirToOutResDirMap(
       ImmutableList<Path> resourceDirectories,
       ImmutableList.Builder<Path> filteredResDirectories,
-      boolean isForAabLanguagePack) {
+      boolean isForVoltronLanguagePack) {
     ImmutableBiMap.Builder<Path, Path> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
 
-    List<Path> outputDirs = getRawResDirectories(isForAabLanguagePack);
+    List<Path> outputDirs = getRawResDirectories(isForVoltronLanguagePack);
     Preconditions.checkState(
         outputDirs.size() == resourceDirectories.size(),
         "Directory list sizes don't match.  This is a bug.");
@@ -410,7 +410,7 @@ public class ResourcesFilter extends AbstractBuildRule
     for (Path resDir : resourceDirectories) {
       Path filteredResourceDir = outIter.next();
       filteredResourcesDirMapBuilder.put(resDir, filteredResourceDir);
-      if (!isForAabLanguagePack) {
+      if (!isForVoltronLanguagePack) {
         filteredResDirectories.add(filteredResourceDir);
       }
     }

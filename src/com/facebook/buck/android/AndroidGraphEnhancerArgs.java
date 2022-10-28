@@ -175,7 +175,7 @@ public interface AndroidGraphEnhancerArgs
   ImmutableSet<String> getPackagedLocales();
 
   @Value.Default
-  default boolean getIsI18nAabLangaugePackEnabled() {
+  default boolean getIsVoltronLanguagePackEnabled() {
     return false;
   }
 

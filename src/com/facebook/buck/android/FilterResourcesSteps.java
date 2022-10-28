@@ -62,7 +62,7 @@ public class FilterResourcesSteps {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
-  private final ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap;
+  private final ImmutableBiMap<Path, Path> voltronStringInResDirToOutResDirMap;
   private final boolean filterByDensity;
   private final boolean enableStringWhitelisting;
   private final ImmutableSet<Path> whitelistedStringDirs;
@@ -77,7 +77,7 @@ public class FilterResourcesSteps {
    * Creates a command that filters a specified set of directories.
    *
    * @param inResDirToOutResDirMap set of {@code res} directories to filter
-   * @param aabStringInResDirToOutResDirMap set of {@code res} directories to filter for aab
+   * @param voltronStringInResDirToOutResDirMap set of {@code res} directories to filter for voltron
    *     language packs
    * @param filterByDensity whether to filter all resources by DPI
    * @param enableStringWhitelisting whether to filter strings based on a whitelist
@@ -96,7 +96,7 @@ public class FilterResourcesSteps {
   FilterResourcesSteps(
       ProjectFilesystem filesystem,
       ImmutableBiMap<Path, Path> inResDirToOutResDirMap,
-      ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap,
+      ImmutableBiMap<Path, Path> voltronStringInResDirToOutResDirMap,
       boolean filterByDensity,
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
@@ -109,7 +109,7 @@ public class FilterResourcesSteps {
 
     this.filesystem = filesystem;
     this.inResDirToOutResDirMap = inResDirToOutResDirMap;
-    this.aabStringInResDirToOutResDirMap = aabStringInResDirToOutResDirMap;
+    this.voltronStringInResDirToOutResDirMap = voltronStringInResDirToOutResDirMap;
     this.filterByDensity = filterByDensity;
     this.enableStringWhitelisting = enableStringWhitelisting;
     this.whitelistedStringDirs = whitelistedStringDirs;
@@ -132,13 +132,13 @@ public class FilterResourcesSteps {
               filesystem.getRootPath(), true, filesystem.getIgnoredPaths()),
           inResDirToOutResDirMap,
           getFilteringPredicate(context));
-      if (aabStringInResDirToOutResDirMap != null) {
+      if (voltronStringInResDirToOutResDirMap != null) {
         FilteredDirectoryCopier.copyDirs(
             filesystem.getRootPath(),
             ProjectFilesystemUtils.getIgnoreFilter(
                 filesystem.getRootPath(), true, filesystem.getIgnoredPaths()),
-            aabStringInResDirToOutResDirMap,
-            getAabLanguagePackPredicate());
+            voltronStringInResDirToOutResDirMap,
+            getVoltronLanguagePackPredicate());
       }
       return StepExecutionResults.SUCCESS;
     }
@@ -204,8 +204,8 @@ public class FilterResourcesSteps {
   }
 
   @VisibleForTesting
-  Predicate<Path> getAabLanguagePackPredicate() throws IOException {
-    return FilteringPredicate.getAabLanguagePackPredicate();
+  Predicate<Path> getVoltronLanguagePackPredicate() throws IOException {
+    return FilteringPredicate.getVoltronLanguagePackPredicate();
   }
 
   /**
@@ -400,7 +400,7 @@ public class FilterResourcesSteps {
   public static class Builder {
     @Nullable private ProjectFilesystem filesystem;
     @Nullable private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
-    @Nullable private ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap;
+    @Nullable private ImmutableBiMap<Path, Path> voltronStringInResDirToOutResDirMap;
     @Nullable private ResourceFilter resourceFilter;
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
     private ImmutableSet<String> packagedLocales = ImmutableSet.of();
@@ -420,9 +420,9 @@ public class FilterResourcesSteps {
       return this;
     }
 
-    public Builder setAabStringInResToOutResDirMap(
-        ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap) {
-      this.aabStringInResDirToOutResDirMap = aabStringInResDirToOutResDirMap;
+    public Builder setVoltronStringInResToOutResDirMap(
+        ImmutableBiMap<Path, Path> voltronStringInResDirToOutResDirMap) {
+      this.voltronStringInResDirToOutResDirMap = voltronStringInResDirToOutResDirMap;
       return this;
     }
 
@@ -464,7 +464,7 @@ public class FilterResourcesSteps {
       return new FilterResourcesSteps(
           filesystem,
           inResDirToOutResDirMap,
-          aabStringInResDirToOutResDirMap,
+          voltronStringInResDirToOutResDirMap,
           /* filterByDensity */ resourceFilter.isEnabled(),
           enableStringWhitelisting,
           whitelistedStringDirs,

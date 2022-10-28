@@ -83,7 +83,7 @@ public class AndroidBinaryDescription
           AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR,
           AndroidBinaryGraphEnhancer.PROGUARD_TEXT_OUTPUT_FLAVOR,
           AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR,
-          AndroidBinaryResourcesGraphEnhancer.GENERATE_AAB_STRING_RESOURCES_FLAVOR,
+          AndroidBinaryResourcesGraphEnhancer.GENERATE_VOLTRON_STRING_RESOURCES_FLAVOR,
           AndroidApkFactory.EXO_SYMLINK_TREE);
 
   private final JavaBuckConfig javaBuckConfig;

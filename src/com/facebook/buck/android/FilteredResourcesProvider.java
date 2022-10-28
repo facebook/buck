@@ -28,10 +28,11 @@ import java.util.Optional;
 public interface FilteredResourcesProvider {
 
   /**
-   * @param isForAabLanguagePack Aab LanguagePack is a folder only contain values-xx/strings.xml
+   * @param isForVoltronLanguagePack Voltron LanguagePack is a folder only contain
+   *     values-xx/strings.xml
    * @return The set of res/ directories that should be used to calculate the final R.java file.
    */
-  ImmutableList<SourcePath> getResDirectories(boolean isForAabLanguagePack);
+  ImmutableList<SourcePath> getResDirectories(boolean isForVoltronLanguagePack);
 
   default ImmutableList<SourcePath> getResDirectories() {
     return getResDirectories(false);
@@ -40,8 +41,8 @@ public interface FilteredResourcesProvider {
   default ImmutableList<Path> getRelativeResDirectories(
       ProjectFilesystem filesystem,
       SourcePathResolverAdapter resolver,
-      boolean isForAabLanguagePack) {
-    return RichStream.from(getResDirectories(isForAabLanguagePack))
+      boolean isForVoltronLanguagePack) {
+    return RichStream.from(getResDirectories(isForVoltronLanguagePack))
         .map(d -> filesystem.relativize(resolver.getAbsolutePath(d)).getPath())
         .toImmutableList();
   }

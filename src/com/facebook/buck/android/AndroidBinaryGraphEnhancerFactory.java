@@ -165,7 +165,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.getResourceUnionPackage(),
         addFallbackLocales(args.getLocales()),
         args.getPackagedLocales(),
-        args.getIsI18nAabLangaugePackEnabled(),
+        args.getIsVoltronLanguagePackEnabled(),
         args.getManifest(),
         args.getManifestSkeleton(),
         args.getModuleManifestSkeleton(),

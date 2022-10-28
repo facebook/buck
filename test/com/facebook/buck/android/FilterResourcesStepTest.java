@@ -79,7 +79,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             inResDirToOutResDirMap,
-            /* aabStringInResDirToOutResDirMap */ null,
+            /* voltronStringInResDirToOutResDirMap */ null,
             /* filterByDensity */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -210,8 +210,8 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testI18nAabEnabled() throws IOException {
-    Predicate<Path> filePredicate = getTestAabPathPredicate();
+  public void testI18nVoltronEnabled() throws IOException {
+    Predicate<Path> filePredicate = getTestVoltronPathPredicate();
 
     assertFalse(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
     assertFalse(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
@@ -255,7 +255,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
-            /* aabStringInResDirToOutResDirMap */ null,
+            /* voltronStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -309,7 +309,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
-            /* aabStringInResDirToOutResDirMap */ null,
+            /* voltronStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -361,7 +361,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
-            /* aabStringInResDirToOutResDirMap */ null,
+            /* voltronStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -422,7 +422,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
-            /* aabStringInResDirToOutResDirMap */ null,
+            /* voltronStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -476,7 +476,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
-            /* aabStringInResDirToOutResDirMap */ null,
+            /* voltronStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -517,7 +517,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             new FakeProjectFilesystem(tmpFolder.getRoot()),
             /* inResDirToOutResDirMap */ ImmutableBiMap.of(),
-            /* aabStringInResDirToOutResDirMap */ ImmutableBiMap.of(),
+            /* voltronStringInResDirToOutResDirMap */ ImmutableBiMap.of(),
             /* filterByDensity */ false,
             /* enableStringWhitelisting */ enableStringWhitelisting,
             /* whitelistedStringDirs */ whitelistedStringDirs,
@@ -529,12 +529,12 @@ public class FilterResourcesStepTest {
     return step.getFilteringPredicate(TestExecutionContext.newInstance());
   }
 
-  private Predicate<Path> getTestAabPathPredicate() throws IOException {
+  private Predicate<Path> getTestVoltronPathPredicate() throws IOException {
     FilterResourcesSteps step =
         new FilterResourcesSteps(
             new FakeProjectFilesystem(tmpFolder.getRoot()),
             /* inResDirToOutResDirMap */ ImmutableBiMap.of(),
-            /* aabStringInResDirToOutResDirMap */ ImmutableBiMap.of(),
+            /* voltronStringInResDirToOutResDirMap */ ImmutableBiMap.of(),
             /* filterByDensity */ false,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -543,6 +543,6 @@ public class FilterResourcesStepTest {
             /* targetDensities */ null,
             /* imageScaler */ null);
 
-    return step.getAabLanguagePackPredicate();
+    return step.getVoltronLanguagePackPredicate();
   }
 }

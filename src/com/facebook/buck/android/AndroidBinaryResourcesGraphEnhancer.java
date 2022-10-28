@@ -64,8 +64,8 @@ class AndroidBinaryResourcesGraphEnhancer {
   private static final Flavor SPLIT_RESOURCES_FLAVOR = InternalFlavor.of("split_resources");
   static final Flavor GENERATE_STRING_RESOURCES_FLAVOR =
       InternalFlavor.of("generate_string_resources");
-  static final Flavor GENERATE_AAB_STRING_RESOURCES_FLAVOR =
-      InternalFlavor.of("generate_aab_string_resources");
+  static final Flavor GENERATE_VOLTRON_STRING_RESOURCES_FLAVOR =
+      InternalFlavor.of("generate_voltron_string_resources");
   private static final Flavor MERGE_THIRD_PARTY_JAR_RESOURCES_FLAVOR =
       InternalFlavor.of("merge_third_party_jar_resources");
   private static final Flavor WRITE_EXO_RESOURCES_HASH_FLAVOR =
@@ -77,7 +77,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<String> locales;
   private final ImmutableSet<String> packagedLocales;
-  private final boolean isI18nAabLangaugePackEnabled;
+  private final boolean isVoltronLanguagePackEnabled;
   private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
   private final ActionGraphBuilder graphBuilder;
@@ -125,7 +125,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ResourcesFilter.ResourceCompressionMode resourceCompressionMode,
       ImmutableSet<String> locales,
       ImmutableSet<String> packagedLocales,
-      boolean isI18nAabLangaugePackEnabled,
+      boolean isVoltronLanguagePackEnabled,
       Optional<String> resourceUnionPackage,
       boolean shouldBuildStringSourceMap,
       boolean skipCrunchPngs,
@@ -155,7 +155,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.resourceCompressionMode = resourceCompressionMode;
     this.locales = locales;
     this.packagedLocales = packagedLocales;
-    this.isI18nAabLangaugePackEnabled = isI18nAabLangaugePackEnabled;
+    this.isVoltronLanguagePackEnabled = isVoltronLanguagePackEnabled;
     this.aaptMode = aaptMode;
     this.additionalAaptParams = additionalAaptParams;
     this.rawManifest = rawManifest;
@@ -422,9 +422,9 @@ class AndroidBinaryResourcesGraphEnhancer {
       if (shouldBuildStringSourceMap) {
         graphBuilder.addToIndex(
             createGenerateStringResources(allFilteredResourceProviders.values().asList()));
-        if (isI18nAabLangaugePackEnabled) {
+        if (isVoltronLanguagePackEnabled) {
           graphBuilder.addToIndex(
-              createGenerateAabStringResources(allFilteredResourceProviders.values().asList()));
+              createGenerateVoltronStringResources(allFilteredResourceProviders.values().asList()));
         }
       }
     }
@@ -684,10 +684,10 @@ class AndroidBinaryResourcesGraphEnhancer {
         filteredResourcesProviders);
   }
 
-  private GenerateAabStringResources createGenerateAabStringResources(
+  private GenerateVoltronStringResources createGenerateVoltronStringResources(
       ImmutableList<FilteredResourcesProvider> filteredResourcesProviders) {
-    return new GenerateAabStringResources(
-        buildTarget.withAppendedFlavors(GENERATE_AAB_STRING_RESOURCES_FLAVOR),
+    return new GenerateVoltronStringResources(
+        buildTarget.withAppendedFlavors(GENERATE_VOLTRON_STRING_RESOURCES_FLAVOR),
         projectFilesystem,
         graphBuilder,
         filteredResourcesProviders);
@@ -707,7 +707,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         resourceDetails.getResourceDirectories(),
         ImmutableSet.copyOf(resourceDetails.getWhitelistedStringDirectories()),
         packagedLocales,
-        isI18nAabLangaugePackEnabled,
+        isVoltronLanguagePackEnabled,
         locales,
         resourceCompressionMode,
         resourceFilter,
