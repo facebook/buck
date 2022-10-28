@@ -150,12 +150,22 @@ public class NdkCxxPlatforms {
           "-Wl,--as-needed");
 
   private static final Pattern NDK_MAJOR_VERSION_PATTERN = Pattern.compile("^[rR]?(\\d+).*");
+  private static final Pattern NDK_MINOR_VERSION_PATTERN = Pattern.compile("^[rR]?\\d+\\.(\\d+).*");
 
   // Utility class, do not instantiate.
   private NdkCxxPlatforms() {}
 
   static int getNdkMajorVersion(String ndkVersion) {
     return Integer.parseInt(NDK_MAJOR_VERSION_PATTERN.matcher(ndkVersion).replaceAll("$1"));
+  }
+
+  static int getNdkMinorVersion(String ndkVersion) {
+    String minorVersion = NDK_MINOR_VERSION_PATTERN.matcher(ndkVersion).replaceAll("$1");
+    if (minorVersion.startsWith("r") || minorVersion.startsWith("R")) {
+      // Failed to find a minor version, 0 is a safe fallback.
+      return 0;
+    }
+    return Integer.parseInt(minorVersion);
   }
 
   public static NdkCompilerType getDefaultCompilerTypeForNdk(String ndkVersion) {
@@ -172,6 +182,8 @@ public class NdkCxxPlatforms {
 
   public static String getDefaultClangVersionForNdk(String ndkVersion) {
     int ndkMajorVersion = getNdkMajorVersion(ndkVersion);
+    int ndkMinorVersion = getNdkMinorVersion(ndkVersion);
+
     if (ndkMajorVersion < 11) {
       return "3.5";
     } else if (ndkMajorVersion < 15) {
@@ -186,8 +198,10 @@ public class NdkCxxPlatforms {
       return "8.0.2";
     } else if (ndkMajorVersion < 21) {
       return "8.0.7";
-    } else {
+    } else if (ndkMajorVersion == 21 && ndkMinorVersion <= 3) {
       return "9.0.8";
+    } else {
+      return "9.0.9";
     }
   }
 
