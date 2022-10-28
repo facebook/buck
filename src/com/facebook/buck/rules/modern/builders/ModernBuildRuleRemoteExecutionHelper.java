@@ -432,7 +432,12 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     ImmutableList.Builder<UploadDataSupplier> requiredDataBuilder = ImmutableList.builder();
 
-    RelPath buckOut = rule.getProjectFilesystem().getBuckPaths().getBuckOut();
+    RelPath buckOut =
+        RelPath.of(
+            rule.getProjectFilesystem()
+                .getBuckPaths()
+                .getFileSystem()
+                .getPath(BuckConstant.getBuckOutputPath().toString()));
     try (Scope ignored = PerfEvents.scope(eventBus, "constructing_inputs_tree")) {
       getSharedFilesData(requiredDataPredicate).forEach(requiredDataBuilder::add);
 
