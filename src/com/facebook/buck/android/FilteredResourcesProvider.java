@@ -27,14 +27,28 @@ import java.util.Optional;
 
 public interface FilteredResourcesProvider {
 
-  /** @return The set of res/ directories that should be used to calculate the final R.java file. */
-  ImmutableList<SourcePath> getResDirectories();
+  /**
+   * @param isForAabLanguagePack Aab LanguagePack is a folder only contain values-xx/strings.xml
+   * @return The set of res/ directories that should be used to calculate the final R.java file.
+   */
+  ImmutableList<SourcePath> getResDirectories(boolean isForAabLanguagePack);
+
+  default ImmutableList<SourcePath> getResDirectories() {
+    return getResDirectories(false);
+  }
+
+  default ImmutableList<Path> getRelativeResDirectories(
+      ProjectFilesystem filesystem,
+      SourcePathResolverAdapter resolver,
+      boolean isForAabLanguagePack) {
+    return RichStream.from(getResDirectories(isForAabLanguagePack))
+        .map(d -> filesystem.relativize(resolver.getAbsolutePath(d)).getPath())
+        .toImmutableList();
+  }
 
   default ImmutableList<Path> getRelativeResDirectories(
       ProjectFilesystem filesystem, SourcePathResolverAdapter resolver) {
-    return RichStream.from(getResDirectories())
-        .map(d -> filesystem.relativize(resolver.getAbsolutePath(d)).getPath())
-        .toImmutableList();
+    return getRelativeResDirectories(filesystem, resolver, false);
   }
 
   /**

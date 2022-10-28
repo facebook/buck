@@ -153,8 +153,8 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<SourcePath> getResDirectories() {
-    return RichStream.from(getRawResDirectories())
+  public ImmutableList<SourcePath> getResDirectories(boolean isForAabLanguagePack) {
+    return RichStream.from(getRawResDirectories(isForAabLanguagePack))
         .map(p -> (SourcePath) ExplicitBuildTargetSourcePath.of(getBuildTarget(), p))
         .toImmutableList();
   }
@@ -167,10 +167,6 @@ public class ResourcesFilter extends AbstractBuildRule
     return IntStream.range(0, resDirectories.size())
         .mapToObj(count -> resDestinationBasePath.resolve(String.valueOf(count)))
         .collect(ImmutableList.toImmutableList());
-  }
-
-  private ImmutableList<Path> getRawResDirectories() {
-    return getRawResDirectories(false);
   }
 
   @Override

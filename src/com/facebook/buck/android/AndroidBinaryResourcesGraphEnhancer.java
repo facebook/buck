@@ -64,6 +64,8 @@ class AndroidBinaryResourcesGraphEnhancer {
   private static final Flavor SPLIT_RESOURCES_FLAVOR = InternalFlavor.of("split_resources");
   static final Flavor GENERATE_STRING_RESOURCES_FLAVOR =
       InternalFlavor.of("generate_string_resources");
+  static final Flavor GENERATE_AAB_STRING_RESOURCES_FLAVOR =
+      InternalFlavor.of("generate_aab_string_resources");
   private static final Flavor MERGE_THIRD_PARTY_JAR_RESOURCES_FLAVOR =
       InternalFlavor.of("merge_third_party_jar_resources");
   private static final Flavor WRITE_EXO_RESOURCES_HASH_FLAVOR =
@@ -420,6 +422,10 @@ class AndroidBinaryResourcesGraphEnhancer {
       if (shouldBuildStringSourceMap) {
         graphBuilder.addToIndex(
             createGenerateStringResources(allFilteredResourceProviders.values().asList()));
+        if (isI18nAabLangaugePackEnabled) {
+          graphBuilder.addToIndex(
+              createGenerateAabStringResources(allFilteredResourceProviders.values().asList()));
+        }
       }
     }
 
@@ -673,6 +679,15 @@ class AndroidBinaryResourcesGraphEnhancer {
       ImmutableList<FilteredResourcesProvider> filteredResourcesProviders) {
     return new GenerateStringResources(
         buildTarget.withAppendedFlavors(GENERATE_STRING_RESOURCES_FLAVOR),
+        projectFilesystem,
+        graphBuilder,
+        filteredResourcesProviders);
+  }
+
+  private GenerateAabStringResources createGenerateAabStringResources(
+      ImmutableList<FilteredResourcesProvider> filteredResourcesProviders) {
+    return new GenerateAabStringResources(
+        buildTarget.withAppendedFlavors(GENERATE_AAB_STRING_RESOURCES_FLAVOR),
         projectFilesystem,
         graphBuilder,
         filteredResourcesProviders);

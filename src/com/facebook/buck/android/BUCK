@@ -111,6 +111,7 @@ RULES_SRCS = [
     "FilteredResourcesProvider.java",
     "GenAidl.java",
     "GenAidlDescription.java",
+    "GenerateAabStringResources.java",
     "GenerateRDotJava.java",
     "GenerateStringResources.java",
     "HasAndroidResourceDeps.java",

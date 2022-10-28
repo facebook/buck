@@ -31,7 +31,7 @@ public class IdentityResourcesProvider implements FilteredResourcesProvider {
   }
 
   @Override
-  public ImmutableList<SourcePath> getResDirectories() {
+  public ImmutableList<SourcePath> getResDirectories(boolean isForAabLanguagePack) {
     return resDirectories;
   }
 

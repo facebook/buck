@@ -17,7 +17,9 @@
 package com.facebook.buck.android.resources.strings;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,6 +34,9 @@ public class StringResourcesUtils {
   private static final String NEW_RES_DIR_FORMAT = "%04x";
   // "4 digit hex" => 65536 files
 
+  /*
+   * Copy all strings.xml under resDir/values to output Path
+   */
   public static void copyResources(
       AbsPath projectRoot, ImmutableList<Path> resDirs, Path outputDirPath) throws IOException {
     int i = 0;
@@ -46,6 +51,44 @@ public class StringResourcesUtils {
         // <output_dir>/<new_res_dir>/values/strings.xml
         ProjectFilesystemUtils.copyFile(
             projectRoot, stringsFilePath, newStringsFileDir.resolve(STRINGS_XML));
+      }
+    }
+  }
+
+  /**
+   * Copy all strings.xml under resDir/values-xx to output Path
+   *
+   * @param resDirs List of directories that contains values-xx/strings.
+   */
+  public static void copyAabStringResources(
+      AbsPath projectRoot,
+      ImmutableList<Path> resDirs,
+      ProjectFilesystem projectFilesystem,
+      Path outputDirPath)
+      throws IOException {
+    int i = 0;
+    for (Path resDir : resDirs) {
+      ImmutableCollection<Path> dirs = projectFilesystem.getDirectoryContents(resDir);
+      boolean containNonEnglishStrings = false;
+      for (Path dir : dirs) {
+        String filename = dir.getFileName().toString();
+        if (filename.startsWith(VALUES) && !filename.equals(VALUES)) {
+          Path stringsFilePath = resDir.resolve(filename).resolve(STRINGS_XML);
+          if (ProjectFilesystemUtils.exists(projectRoot, stringsFilePath)) {
+            // create <output_dir>/<new_res_dir>/values-xx
+            Path newStringsFileDir =
+                outputDirPath.resolve(String.format(NEW_RES_DIR_FORMAT, i)).resolve(filename);
+            ProjectFilesystemUtils.mkdirs(projectRoot, newStringsFileDir);
+            // copy <res_dir>/values-es/strings.xml ->
+            // <output_dir>/<new_res_dir>/values-es/strings.xml
+            ProjectFilesystemUtils.copyFile(
+                projectRoot, stringsFilePath, newStringsFileDir.resolve(STRINGS_XML));
+            containNonEnglishStrings = true;
+          }
+        }
+      }
+      if (containNonEnglishStrings) {
+        ++i;
       }
     }
   }
