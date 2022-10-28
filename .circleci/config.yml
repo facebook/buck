@@ -197,7 +197,7 @@ macos_environment: &macos_environment
   TERM: "dumb"
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
-  JAVA_HOME: "/usr/local/Cellar/openjdk@8/1.8.0+322"
+  JAVA_HOME: "/usr/local/Cellar/openjdk@8/1.8.0+345"
 
 windows_environment: &windows_environment
   PLATFORM: "windows"
@@ -1004,7 +1004,7 @@ jobs:
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             export PATH="$(pyenv root)/shims:${PATH}"
             export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
-            export JAVA_HOME="/usr/local/Cellar/openjdk@8/1.8.0+322"
+            export JAVA_HOME="/usr/local/Cellar/openjdk@8/1.8.0+345"
             export PATH="${JAVA_HOME}/bin:${PATH}"
             source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
@@ -1062,7 +1062,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
-            export JAVA_HOME="/usr/local/Cellar/openjdk@8/1.8.0+322"
+            export JAVA_HOME="/usr/local/Cellar/openjdk@8/1.8.0+345"
             export PATH="${JAVA_HOME}/bin:${PATH}"
             source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
