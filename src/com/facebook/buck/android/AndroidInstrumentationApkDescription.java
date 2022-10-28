@@ -227,6 +227,7 @@ public class AndroidInstrumentationApkDescription
             /* resourceUnionPackage */ Optional.empty(),
             /* locales */ ImmutableSet.of(),
             /* packagedLocales */ ImmutableSet.of(),
+            /* isI18nAabLangaugePackEnabled */ false,
             args.getManifest(),
             args.getManifestSkeleton(),
             /* moduleManifestSkeleton */ Optional.empty(),

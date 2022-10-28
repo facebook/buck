@@ -92,6 +92,17 @@ public class FilteringPredicate {
     return pathPredicates.stream().reduce(p -> true, Predicate::and);
   }
 
+  public static Predicate<Path> getAabLanguagePackPredicate() {
+    List<Predicate<Path>> pathPredicates = new ArrayList<>();
+    pathPredicates.add(
+        path -> {
+          String filePath = PathFormatter.pathWithUnixSeparators(path);
+          Matcher matcher = NON_ENGLISH_STRINGS_FILE_PATH.matcher(filePath);
+          return matcher.matches() && filePath.endsWith(DEFAULT_STRINGS_FILE_NAME);
+        });
+    return pathPredicates.stream().reduce(p -> true, Predicate::and);
+  }
+
   private static boolean isPathWhitelisted(
       Path path,
       String locale,

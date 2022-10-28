@@ -174,6 +174,11 @@ public interface AndroidGraphEnhancerArgs
 
   ImmutableSet<String> getPackagedLocales();
 
+  @Value.Default
+  default boolean getIsI18nAabLangaugePackEnabled() {
+    return false;
+  }
+
   ImmutableList<Pattern> getRelinkerWhitelist();
 
   @Value.Default

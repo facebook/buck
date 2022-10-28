@@ -75,6 +75,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<String> locales;
   private final ImmutableSet<String> packagedLocales;
+  private final boolean isI18nAabLangaugePackEnabled;
   private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
   private final ActionGraphBuilder graphBuilder;
@@ -122,6 +123,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ResourcesFilter.ResourceCompressionMode resourceCompressionMode,
       ImmutableSet<String> locales,
       ImmutableSet<String> packagedLocales,
+      boolean isI18nAabLangaugePackEnabled,
       Optional<String> resourceUnionPackage,
       boolean shouldBuildStringSourceMap,
       boolean skipCrunchPngs,
@@ -151,6 +153,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.resourceCompressionMode = resourceCompressionMode;
     this.locales = locales;
     this.packagedLocales = packagedLocales;
+    this.isI18nAabLangaugePackEnabled = isI18nAabLangaugePackEnabled;
     this.aaptMode = aaptMode;
     this.additionalAaptParams = additionalAaptParams;
     this.rawManifest = rawManifest;
@@ -689,6 +692,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         resourceDetails.getResourceDirectories(),
         ImmutableSet.copyOf(resourceDetails.getWhitelistedStringDirectories()),
         packagedLocales,
+        isI18nAabLangaugePackEnabled,
         locales,
         resourceCompressionMode,
         resourceFilter,

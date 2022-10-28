@@ -112,6 +112,7 @@ public class ResourcesFilter extends AbstractBuildRule
   @AddToRuleKey private final ImmutableList<SourcePath> resDirectories;
   @AddToRuleKey private final ImmutableSet<SourcePath> whitelistedStringDirs;
   @AddToRuleKey private final ImmutableSet<String> packagedLocales;
+  @AddToRuleKey private final boolean isI18nAabLangaugePackEnabled;
   @AddToRuleKey private final ImmutableSet<String> locales;
   @AddToRuleKey private final ResourceCompressionMode resourceCompressionMode;
   @AddToRuleKey private final FilterResourcesSteps.ResourceFilter resourceFilter;
@@ -129,6 +130,7 @@ public class ResourcesFilter extends AbstractBuildRule
       ImmutableList<SourcePath> resDirectories,
       ImmutableSet<SourcePath> whitelistedStringDirs,
       ImmutableSet<String> packagedLocales,
+      boolean isI18nAabLangaugePackEnabled,
       ImmutableSet<String> locales,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesSteps.ResourceFilter resourceFilter,
@@ -141,6 +143,7 @@ public class ResourcesFilter extends AbstractBuildRule
     this.resDirectories = resDirectories;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.packagedLocales = packagedLocales;
+    this.isI18nAabLangaugePackEnabled = isI18nAabLangaugePackEnabled;
     this.locales = locales;
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourceFilter;
@@ -156,14 +159,18 @@ public class ResourcesFilter extends AbstractBuildRule
         .toImmutableList();
   }
 
-  private ImmutableList<Path> getRawResDirectories() {
+  private ImmutableList<Path> getRawResDirectories(boolean isForAabLanguagePack) {
+    String format = isForAabLanguagePack ? "__filtered__aab__%s__" : "__filtered__%s__";
     RelPath resDestinationBasePath =
-        BuildTargetPaths.getScratchPath(
-            getProjectFilesystem(), getBuildTarget(), "__filtered__%s__");
+        BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), format);
 
     return IntStream.range(0, resDirectories.size())
         .mapToObj(count -> resDestinationBasePath.resolve(String.valueOf(count)))
         .collect(ImmutableList.toImmutableList());
+  }
+
+  private ImmutableList<Path> getRawResDirectories() {
+    return getRawResDirectories(false);
   }
 
   @Override
@@ -216,13 +223,18 @@ public class ResourcesFilter extends AbstractBuildRule
                         .getPath())
             .collect(ImmutableList.toImmutableList());
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
-        createInResDirToOutResDirMap(resPaths, filteredResDirectoriesBuilder);
+        createInResDirToOutResDirMap(resPaths, filteredResDirectoriesBuilder, false);
+    ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap =
+        isI18nAabLangaugePackEnabled
+            ? createInResDirToOutResDirMap(resPaths, null, isI18nAabLangaugePackEnabled)
+            : null;
     FilterResourcesSteps filterResourcesSteps =
         createFilterResourcesSteps(
             whitelistedStringPaths,
             packagedLocales,
             locales,
             inResDirToOutResDirMap,
+            aabStringInResDirToOutResDirMap,
             withDownwardApi);
     steps.add(filterResourcesSteps.getCopyStep());
     maybeAddPostFilterCmdStep(context, buildableContext, steps, inResDirToOutResDirMap);
@@ -367,11 +379,13 @@ public class ResourcesFilter extends AbstractBuildRule
       ImmutableSet<String> packagedLocales,
       ImmutableSet<String> locales,
       ImmutableBiMap<Path, Path> resSourceToDestDirMap,
+      ImmutableBiMap<Path, Path> aabStringResSourceToDestDirMap,
       boolean withDownwardApi) {
     FilterResourcesSteps.Builder filterResourcesStepBuilder =
         FilterResourcesSteps.builder()
             .setProjectFilesystem(getProjectFilesystem())
             .setInResToOutResDirMap(resSourceToDestDirMap)
+            .setAabStringInResToOutResDirMap(aabStringResSourceToDestDirMap)
             .setResourceFilter(resourceFilter)
             .withDownwardApi(withDownwardApi);
 
@@ -380,7 +394,6 @@ public class ResourcesFilter extends AbstractBuildRule
       filterResourcesStepBuilder.setWhitelistedStringDirs(whitelistedStringDirs);
       filterResourcesStepBuilder.setPackagedLocales(packagedLocales);
     }
-
     filterResourcesStepBuilder.setLocales(locales);
 
     return filterResourcesStepBuilder.build();
@@ -388,10 +401,12 @@ public class ResourcesFilter extends AbstractBuildRule
 
   @VisibleForTesting
   ImmutableBiMap<Path, Path> createInResDirToOutResDirMap(
-      ImmutableList<Path> resourceDirectories, ImmutableList.Builder<Path> filteredResDirectories) {
+      ImmutableList<Path> resourceDirectories,
+      ImmutableList.Builder<Path> filteredResDirectories,
+      boolean isForAabLanguagePack) {
     ImmutableBiMap.Builder<Path, Path> filteredResourcesDirMapBuilder = ImmutableBiMap.builder();
 
-    List<Path> outputDirs = getRawResDirectories();
+    List<Path> outputDirs = getRawResDirectories(isForAabLanguagePack);
     Preconditions.checkState(
         outputDirs.size() == resourceDirectories.size(),
         "Directory list sizes don't match.  This is a bug.");
@@ -399,7 +414,9 @@ public class ResourcesFilter extends AbstractBuildRule
     for (Path resDir : resourceDirectories) {
       Path filteredResourceDir = outIter.next();
       filteredResourcesDirMapBuilder.put(resDir, filteredResourceDir);
-      filteredResDirectories.add(filteredResourceDir);
+      if (!isForAabLanguagePack) {
+        filteredResDirectories.add(filteredResourceDir);
+      }
     }
     return filteredResourcesDirMapBuilder.build();
   }

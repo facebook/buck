@@ -79,6 +79,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             inResDirToOutResDirMap,
+            /* aabStringInResDirToOutResDirMap */ null,
             /* filterByDensity */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -209,6 +210,20 @@ public class FilterResourcesStepTest {
   }
 
   @Test
+  public void testI18nAabEnabled() throws IOException {
+    Predicate<Path> filePredicate = getTestAabPathPredicate();
+
+    assertFalse(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
+    assertFalse(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es-rUS/strings.xml")));
+    assertFalse(filePredicate.test(Paths.get("com/example/res/values-es/integers.xml")));
+    assertFalse(filePredicate.test(Paths.get("com/example/res/values-en/integers.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-en/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es-rES/strings.xml")));
+  }
+
+  @Test
   public void nonDrawableResourcesFiltered() throws IOException, InterruptedException {
     ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
     ResourceFilters.Density excludedDensity = ResourceFilters.Density.LDPI;
@@ -240,6 +255,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
+            /* aabStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -293,6 +309,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
+            /* aabStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -344,6 +361,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
+            /* aabStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -404,6 +422,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
+            /* aabStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -457,6 +476,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
+            /* aabStringInResDirToOutResDirMap */ null,
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
@@ -497,6 +517,7 @@ public class FilterResourcesStepTest {
         new FilterResourcesSteps(
             new FakeProjectFilesystem(tmpFolder.getRoot()),
             /* inResDirToOutResDirMap */ ImmutableBiMap.of(),
+            /* aabStringInResDirToOutResDirMap */ ImmutableBiMap.of(),
             /* filterByDensity */ false,
             /* enableStringWhitelisting */ enableStringWhitelisting,
             /* whitelistedStringDirs */ whitelistedStringDirs,
@@ -506,5 +527,22 @@ public class FilterResourcesStepTest {
             /* imageScaler */ null);
 
     return step.getFilteringPredicate(TestExecutionContext.newInstance());
+  }
+
+  private Predicate<Path> getTestAabPathPredicate() throws IOException {
+    FilterResourcesSteps step =
+        new FilterResourcesSteps(
+            new FakeProjectFilesystem(tmpFolder.getRoot()),
+            /* inResDirToOutResDirMap */ ImmutableBiMap.of(),
+            /* aabStringInResDirToOutResDirMap */ ImmutableBiMap.of(),
+            /* filterByDensity */ false,
+            /* enableStringWhitelisting */ false,
+            /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* packaged locales */ ImmutableSet.of(),
+            /* locales */ ImmutableSet.of(),
+            /* targetDensities */ null,
+            /* imageScaler */ null);
+
+    return step.getAabLanguagePackPredicate();
   }
 }

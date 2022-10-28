@@ -62,6 +62,7 @@ public class FilterResourcesSteps {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
+  private final ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap;
   private final boolean filterByDensity;
   private final boolean enableStringWhitelisting;
   private final ImmutableSet<Path> whitelistedStringDirs;
@@ -76,6 +77,8 @@ public class FilterResourcesSteps {
    * Creates a command that filters a specified set of directories.
    *
    * @param inResDirToOutResDirMap set of {@code res} directories to filter
+   * @param aabStringInResDirToOutResDirMap set of {@code res} directories to filter for aab
+   *     language packs
    * @param filterByDensity whether to filter all resources by DPI
    * @param enableStringWhitelisting whether to filter strings based on a whitelist
    * @param whitelistedStringDirs set of directories containing string resource files that must not
@@ -93,6 +96,7 @@ public class FilterResourcesSteps {
   FilterResourcesSteps(
       ProjectFilesystem filesystem,
       ImmutableBiMap<Path, Path> inResDirToOutResDirMap,
+      ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap,
       boolean filterByDensity,
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
@@ -105,6 +109,7 @@ public class FilterResourcesSteps {
 
     this.filesystem = filesystem;
     this.inResDirToOutResDirMap = inResDirToOutResDirMap;
+    this.aabStringInResDirToOutResDirMap = aabStringInResDirToOutResDirMap;
     this.filterByDensity = filterByDensity;
     this.enableStringWhitelisting = enableStringWhitelisting;
     this.whitelistedStringDirs = whitelistedStringDirs;
@@ -127,6 +132,14 @@ public class FilterResourcesSteps {
               filesystem.getRootPath(), true, filesystem.getIgnoredPaths()),
           inResDirToOutResDirMap,
           getFilteringPredicate(context));
+      if (aabStringInResDirToOutResDirMap != null) {
+        FilteredDirectoryCopier.copyDirs(
+            filesystem.getRootPath(),
+            ProjectFilesystemUtils.getIgnoreFilter(
+                filesystem.getRootPath(), true, filesystem.getIgnoredPaths()),
+            aabStringInResDirToOutResDirMap,
+            getAabLanguagePackPredicate());
+      }
       return StepExecutionResults.SUCCESS;
     }
 
@@ -188,6 +201,11 @@ public class FilterResourcesSteps {
         packagedLocales,
         enableStringWhitelisting,
         whitelistedStringDirs);
+  }
+
+  @VisibleForTesting
+  Predicate<Path> getAabLanguagePackPredicate() throws IOException {
+    return FilteringPredicate.getAabLanguagePackPredicate();
   }
 
   /**
@@ -382,6 +400,7 @@ public class FilterResourcesSteps {
   public static class Builder {
     @Nullable private ProjectFilesystem filesystem;
     @Nullable private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
+    @Nullable private ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap;
     @Nullable private ResourceFilter resourceFilter;
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
     private ImmutableSet<String> packagedLocales = ImmutableSet.of();
@@ -398,6 +417,12 @@ public class FilterResourcesSteps {
 
     public Builder setInResToOutResDirMap(ImmutableBiMap<Path, Path> inResDirToOutResDirMap) {
       this.inResDirToOutResDirMap = inResDirToOutResDirMap;
+      return this;
+    }
+
+    public Builder setAabStringInResToOutResDirMap(
+        ImmutableBiMap<Path, Path> aabStringInResDirToOutResDirMap) {
+      this.aabStringInResDirToOutResDirMap = aabStringInResDirToOutResDirMap;
       return this;
     }
 
@@ -439,6 +464,7 @@ public class FilterResourcesSteps {
       return new FilterResourcesSteps(
           filesystem,
           inResDirToOutResDirMap,
+          aabStringInResDirToOutResDirMap,
           /* filterByDensity */ resourceFilter.isEnabled(),
           enableStringWhitelisting,
           whitelistedStringDirs,
