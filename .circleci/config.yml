@@ -44,15 +44,15 @@ install_ocaml: &install_ocaml
     fi
     ocaml -version
 
-install_openjdk8: &install_openjdk8
-  name: Install OpenJDK8
+install_openjdk11: &install_openjdk11
+  name: Install OpenJDK11
   command: |
     if [ "${PLATFORM}" == "linux" ]; then
-      sudo apt-get update && sudo apt-get install openjdk-8-jdk
-      sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
+      sudo apt-get update && sudo apt-get install openjdk-11-jdk
+      sudo update-java-alternatives -s java-1.11.0-openjdk-amd64
     elif [ "${PLATFORM}" == "macos" ]; then
-      brew install openjdk@8
-      export PATH="/usr/local/opt/openjdk@8/bin:$PATH"
+      brew install openjdk@11
+      export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
     fi
     java -version
 
@@ -197,7 +197,7 @@ macos_environment: &macos_environment
   TERM: "dumb"
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
-  JAVA_HOME: "/usr/local/Cellar/openjdk@8/1.8.0+345"
+  JAVA_HOME: "/usr/local/Cellar/openjdk@11/11.0.16.1"
 
 windows_environment: &windows_environment
   PLATFORM: "windows"
@@ -219,7 +219,7 @@ tags_only_filter: &tags_only_filter
       ignore: /.*/
 
 jobs:
-  linux_build_openjdk8:
+  linux_build_openjdk11:
     environment:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
@@ -230,7 +230,7 @@ jobs:
       # Steps run sequentially in separate shells
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -279,7 +279,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -324,7 +324,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -362,7 +362,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -417,7 +417,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -470,7 +470,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -519,7 +519,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -568,7 +568,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -626,7 +626,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -675,7 +675,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -724,7 +724,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -773,7 +773,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
@@ -813,7 +813,7 @@ jobs:
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
-  mac_build_openjdk8:
+  mac_build_openjdk11:
     environment:
       <<: *macos_environment
     working_directory: "/Users/distiller/buck"
@@ -823,7 +823,7 @@ jobs:
       # Steps run sequentially in separate shells
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -872,7 +872,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -916,7 +916,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -955,7 +955,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -1004,7 +1004,7 @@ jobs:
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             export PATH="$(pyenv root)/shims:${PATH}"
             export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
-            export JAVA_HOME="/usr/local/Cellar/openjdk@8/1.8.0+345"
+            export JAVA_HOME="/usr/local/Cellar/openjdk@11/11.0.16.1"
             export PATH="${JAVA_HOME}/bin:${PATH}"
             source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
@@ -1024,7 +1024,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -1062,7 +1062,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
-            export JAVA_HOME="/usr/local/Cellar/openjdk@8/1.8.0+345"
+            export JAVA_HOME="/usr/local/Cellar/openjdk@11/11.0.16.1"
             export PATH="${JAVA_HOME}/bin:${PATH}"
             source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
@@ -1079,7 +1079,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -1128,7 +1128,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -1177,7 +1177,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -1237,7 +1237,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -1286,7 +1286,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -1335,7 +1335,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -1384,7 +1384,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - restore_cache:
           # Change this key when upgrading sdk.
           key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
@@ -1588,7 +1588,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - run:
           # android_sdk needed to build java docs.
           <<: *install_android_sdk
@@ -1614,7 +1614,7 @@ workflows:
   linux_jobs:
     # jobs run in parallel
     jobs:
-      - linux_build_openjdk8
+      - linux_build_openjdk11
       - linux_unit_groovy
       - linux_build_ant
       - linux_test_integration
@@ -1629,7 +1629,7 @@ workflows:
 
   macos_jobs:
     jobs:
-      - mac_build_openjdk8
+      - mac_build_openjdk11
       - macos_unit_groovy
       - macos_build_ant
       - macos_test_integration
