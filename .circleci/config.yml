@@ -131,7 +131,7 @@ install_python: &install_python
 install_groovy: &install_groovy
   name: Install Groovy
   command: |
-    curl -s get.sdkman.io | bash
+    curl -s "https://get.sdkman.io" | bash
     source "$HOME/.sdkman/bin/sdkman-init.sh"
     sdk install groovy 2.4.18
     groovy -version
