@@ -98,7 +98,7 @@ public class RustLibraryIntegrationTest {
                 "//messenger:messenger#check")
             .getStderr(),
         either(containsString("error: method is never used: `unused`"))
-            .or(containsString("error: associated function is never used: `unused`")));
+            .or(containsString("error: associated function `unused` is never used")));
   }
 
   @Test
