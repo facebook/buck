@@ -437,8 +437,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=true"),
         "NameError: name 'java_library' is not defined",
-        "extension.bzl\", line 5",
-        "BUCK\", line 3");
+        "extension.bzl\", line 5");
     assertParseFailedWithSubstrings(
         workspace.runBuckBuild(
             "//python/native_in_build_file:main",
