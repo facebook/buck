@@ -899,6 +899,7 @@ jobs:
           <<: *run_buck_build
       - run:
           name: Run Unit Tests
+          no_output_timeout: 30m
           command: |
             cd "${BUCKROOT}"
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
