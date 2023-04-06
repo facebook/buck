@@ -8,6 +8,14 @@
   Buck is a build tool. To see what Buck can do for you, check out the documentation at http://buck.build/.
 </p>
 
+# Use buck2
+
+This repo is dead.
+
+Please use https://github.com/facebook/buck2
+
+
+
 [![Build Status](https://circleci.com/gh/facebook/buck.svg?style=svg)](https://circleci.com/gh/facebook/buck)
 
 Installation
