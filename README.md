@@ -1,12 +1,25 @@
-<p align="center">
-  <img src="https://buck.build/static/og.png" alt="logo" width="20%" />
-</p>
-<h1 align="center">
-  Buck
-</h1>
-<p align="center">
-  Buck is a build tool. To see what Buck can do for you, check out the documentation at http://buck.build/.
-</p>
+# Use Buck2
+
+This repo is dead.
+
+Please see https://github.com/facebook/buck2 for the build system that replaces it.
+
+Old content continues below for historical purposes.
+
+-----
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+
+# ~Buck~
+
+~Buck is a build tool. To see what Buck can do for you, check out the documentation at http://buck.build/.~
+
+
 
 [![Build Status](https://circleci.com/gh/facebook/buck.svg?style=svg)](https://circleci.com/gh/facebook/buck)
 
