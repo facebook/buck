@@ -1,16 +1,13 @@
-Project: Java Objective-C Bridge
-Version: Git revision c38d607820e18bdc607067457ba6680a6277f7cd
-Release Date: Sun Nov 3 19:35:06 2019 +0100
-Website: https://github.com/shannah/Java-Objective-C-Bridge/
+README for ObjCBridge
+
+URL: https://github.com/shannah/Java-Objective-C-Bridge
+Downloaded From:
+  https://repo1.maven.org/maven2/ca/weblite/java-objc-bridge/1.1/java-objc-bridge-1.1.jar
+  https://repo1.maven.org/maven2/ca/weblite/java-objc-bridge/1.1/java-objc-bridge-1.1-sources.jar
+  https://repo1.maven.org/maven2/ca/weblite/java-objc-bridge/1.1/java-objc-bridge-1.1-javadoc.jar
 License: Apache 2.0
-Description: JNA library to allow Java programs to invoke Objective-C APIs
 Instructions:
-    brew install maven
-    brew install gpg
-    gpg --gen-key
-    git clone https://github.com/shannah/Java-Objective-C-Bridge.git
-    cd Java-Objective-C-Bridge
-    Edit pom.xml (or apply patch.diff)
-        Change <maven.compiler.target> to version 8
-        Change <maven.compiler.source> to version 8
-    mvn clean install -Drelease=true
+  Download jars
+  Run jar xf java-objc-bridge-1.1.jar
+  Delete folders ca and META-INF
+  Delete files Application.xib, Info.plist and Window.xib

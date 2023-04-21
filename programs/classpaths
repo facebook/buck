@@ -59,8 +59,8 @@ third-party/java/jackson/jackson-datatype-jdk8-2.9.7.jar
 third-party/java/jackson/jackson-module-kotlin-2.9.9.jar
 third-party/java/jdom/jdom-2.0.6.jar
 third-party/java/jetty/jetty-all-9.4.9.v20180320-uber.jar
-third-party/java/jna/jna-5.6.0.jar
-third-party/java/jna/jna-platform-5.6.0.jar
+third-party/java/jna/jna-5.7.0.jar
+third-party/java/jna/jna-platform-5.7.0.jar
 third-party/java/jopt-simple/jopt-simple-4.6.jar
 third-party/java/json-simple/json-simple-1.1.1.jar
 third-party/java/jsr/javax.inject-1.jar
@@ -68,7 +68,7 @@ third-party/java/jsr/jsr305.jar
 third-party/java/kxml2/kxml2-2.3.0.jar
 third-party/java/nailgun/nailgun-server-1.0.1.jar
 third-party/java/nuprocess/nuprocess-2.0.1.jar
-third-party/java/ObjCBridge/java-objc-bridge-1.1-SNAPSHOT.jar
+third-party/java/ObjCBridge/java-objc-bridge-1.1.jar
 third-party/java/objenesis/objenesis-1.2.jar
 third-party/java/okhttp/okhttp-3.9.0.jar
 third-party/java/okio/okio-1.13.0.jar
@@ -80,7 +80,7 @@ third-party/java/protobuf/protobuf-java-3.7.0.jar
 third-party/java/protobuf/protobuf-java-util-3.7.0.jar
 third-party/java/protobuf/protobuf-lite-3.0.1.jar
 third-party/java/slf4j/slf4j-jdk14-1.7.5.jar
-third-party/java/sqlite/sqlite-jdbc-3.20.0.jar
+third-party/java/sqlite/sqlite-jdbc-3.34.0.jar
 third-party/java/stringtemplate/ST-4.0.8.jar
 third-party/java/thrift/libthrift-0.12.0.jar
 third-party/java/xz-java-1.5/xz-1.5.jar

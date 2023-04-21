@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="jna-platform">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-5.6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-5.7.0.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-5.6.0-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-5.7.0-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-5.6.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-5.7.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

@@ -1,6 +1,6 @@
 prebuilt_jar(
     name = "zstd-jni",
-    binary_jar = "zstd-jni-1.4.0-1.jar",
+    binary_jar = "zstd-jni-1.4.9-5.jar",
     licenses = [
         "LICENSE",
     ],
