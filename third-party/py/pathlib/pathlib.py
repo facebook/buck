@@ -7,7 +7,7 @@ import posixpath
 import re
 import sys
 import time
-from collections import Sequence
+from collections.abc import Sequence
 from contextlib import contextmanager
 from errno import EINVAL, ENOENT
 from operator import attrgetter
