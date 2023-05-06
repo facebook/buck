@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 public class AppleResourceBuilder
@@ -49,6 +50,11 @@ public class AppleResourceBuilder
 
   public AppleResourceBuilder setVariants(Set<SourcePath> variants) {
     getArgForPopulating().setVariants(variants);
+    return this;
+  }
+
+  public AppleResourceBuilder setResourcesFromDeps(Set<BuildTarget> deps) {
+    getArgForPopulating().setResourcesFromDeps(deps);
     return this;
   }
 }

@@ -164,7 +164,13 @@ public final class AppleBuildRules {
                   .map(TargetNode::getConstructorArg)
                   .map(arg -> targetGraph.getAll(arg.getResourcesFromDeps()));
           if (iterable.isPresent()) {
-            return iterable.get().iterator();
+            if (mode == RecursiveDependenciesMode.LINKING) {
+              // If this is a resource dependency, we should not be providing
+              // the underlying libraries for linking
+              return Collections.emptyIterator();
+            } else {
+              return iterable.get().iterator();
+            }
           }
 
           // Stop traversal for rules outside the specific set.

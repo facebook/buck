@@ -42,8 +42,10 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -218,6 +220,85 @@ public class AppleBuildRulesTest {
           ImmutableSortedSet.of(barFrameworkNode, fooFrameworkNode),
           ImmutableSortedSet.copyOf(rules));
     }
+  }
+
+  @Test
+  public void resourcesFromDepsAreIncludedButNotLinked() {
+    BuildTarget fooResourceTarget = BuildTargetFactory.newInstance("//shared:resource");
+    TargetNode<?> fooResourceNode =
+      AppleResourceBuilder.createBuilder(fooResourceTarget).build();
+
+    BuildTarget fooLibTarget =
+      BuildTargetFactory.newInstance("//foo:lib");
+    TargetNode<?> fooLibNode =
+      AppleLibraryBuilder.createBuilder(fooLibTarget)
+        .setDeps(ImmutableSortedSet.of(fooResourceTarget))
+        .build();
+
+    // Create new resource w/ resources from foo:lib
+    BuildTarget transitiveResourceTarget = BuildTargetFactory.newInstance("//shared:resource2");
+    TargetNode<?> transitiveResourceNode =
+      AppleResourceBuilder.createBuilder(transitiveResourceTarget)
+        .setResourcesFromDeps(ImmutableSortedSet.of(fooLibTarget))
+        .build();
+
+    BuildTarget barLibTarget =
+      BuildTargetFactory.newInstance("//foo:lib2");
+    TargetNode<?> barLibNode =
+      AppleLibraryBuilder.createBuilder(barLibTarget)
+        .setDeps(ImmutableSortedSet.of(transitiveResourceTarget))
+        .build();
+
+    ImmutableSet<TargetNode<?>> targetNodes =
+      ImmutableSet.<TargetNode<?>>builder()
+        .add(
+          fooResourceNode,
+          fooLibNode,
+          transitiveResourceNode,
+          barLibNode)
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
+
+    ImmutableSortedSet<?> expectedFullDeps = ImmutableSortedSet.of(
+      fooResourceNode,
+      fooLibNode,
+      transitiveResourceNode
+    );
+
+    ImmutableSortedSet<?> expectedLinkingDeps = ImmutableSortedSet.of(transitiveResourceNode);
+
+    Iterable<TargetNode<?>> buildingRules =
+      AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+        xcodeDescriptions,
+        targetGraph,
+        Optional.empty(),
+        AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+        barLibNode,
+        Optional.empty());
+    assertEquals(expectedFullDeps, ImmutableSortedSet.copyOf(buildingRules));
+
+    Iterable<TargetNode<?>> linkingRules =
+      AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+        xcodeDescriptions,
+        targetGraph,
+        Optional.empty(),
+        AppleBuildRules.RecursiveDependenciesMode.LINKING,
+        barLibNode,
+        Optional.empty());
+    assertEquals(expectedLinkingDeps, ImmutableSortedSet.copyOf(linkingRules));
+
+    Iterable<TargetNode<?>> copyingRules =
+      AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+        xcodeDescriptions,
+        targetGraph,
+        Optional.empty(),
+        AppleBuildRules.RecursiveDependenciesMode.COPYING,
+        barLibNode,
+        Optional.empty());
+    assertEquals(expectedFullDeps, ImmutableSortedSet.copyOf(copyingRules));
+
+
   }
 
   @Test
