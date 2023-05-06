@@ -40,7 +40,7 @@ public class UmbrellaHeaderModuleMap implements ModuleMap {
   @Nullable private String generatedModule;
   private static final String template =
       "module <module_name> {\n"
-          + "    umbrella header \"<module_name>.h\"\n"
+          + "    umbrella header \"<umbrella_name>.h\"\n"
           + "\n"
           + "    export *\n"
           + "    module * { export * }\n"
@@ -71,6 +71,7 @@ public class UmbrellaHeaderModuleMap implements ModuleMap {
       ST st =
           new ST(template)
               .add("module_name", moduleName)
+              .add("umbrella_name", moduleName + "-umbrella")
               .add("include_swift_header", false)
               .add("exclude_swift_header", false);
       switch (swiftMode) {
