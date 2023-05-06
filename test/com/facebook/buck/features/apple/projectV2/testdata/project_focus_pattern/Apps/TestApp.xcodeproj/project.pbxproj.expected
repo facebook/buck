@@ -417,7 +417,7 @@
 				<string>49524373A439BFE700000000</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
-			<false/>
+			<string>0</string>
 		</dict>
 		<key>E66DC04E79CC7D5400000000</key>
 		<dict>
@@ -508,7 +508,7 @@
 				<string>49524373A439BFE700000001</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
-			<false/>
+			<string>0</string>
 		</dict>
 		<key>E66DC04E79CC7D5500000000</key>
 		<dict>
@@ -599,7 +599,7 @@
 				<string>49524373A439BFE700000002</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
-			<false/>
+			<string>0</string>
 		</dict>
 		<key>E66DC04E0E6F340F00000000</key>
 		<dict>
@@ -670,7 +670,7 @@
 				<string>49524373A439BFE700000003</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
-			<false/>
+			<string>0</string>
 		</dict>
 		<key>96C847930E6F340F00000000</key>
 		<dict>
