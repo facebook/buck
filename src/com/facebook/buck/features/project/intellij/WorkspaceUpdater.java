@@ -42,6 +42,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import javax.xml.XMLConstants;
 
 /**
  * Updates .idea/workspace.xml to avoid doing some operations by IntelliJ.
@@ -112,7 +113,15 @@ public class WorkspaceUpdater {
   }
 
   private static DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
-    DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilderFactory documentBuilderFactory =  DocumentBuilderFactory.newInstance("com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl", ClassLoader.getSystemClassLoader());
+    documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    documentBuilderFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+    documentBuilderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+    documentBuilderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+    documentBuilderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+    documentBuilderFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+    documentBuilderFactory.setXIncludeAware(false);
+    documentBuilderFactory.setExpandEntityReferences(false);
     documentBuilderFactory.setNamespaceAware(true);
     return documentBuilderFactory.newDocumentBuilder();
   }
